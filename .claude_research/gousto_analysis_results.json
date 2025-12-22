@@ -1,0 +1,146 @@
+{
+  "recipe_page_analysis": {
+    "json_ld_data": [
+      {
+        "@context": "http://schema.org/",
+        "@type": "Recipe",
+        "name": "Butter Chicken With Coriander Rice",
+        "author": {
+          "@type": "Organization",
+          "@id": "https://www.gousto.co.uk/",
+          "name": "Gousto",
+          "url": "https://gousto.co.uk/cookbook/butter-chicken-with-coriander-rice"
+        },
+        "image": "https://production-media.gousto.co.uk/cms/mood-image/890_Butter-Chicken-With-Coriander-Rice--1873-1611139093994.jpg",
+        "description": "Butter chicken or 'murgh makhani' is a curry house favourite. To make your own, you'll simmer chicken breast in a mild tomato sauce swirled with clotted cream. Serve with coriander rice to the side. Add both naan and salted caramel chocolate pot to save 20% on your side and dessert.",
+        "recipeYield": "2 or 4 servings",
+        "recipeIngredient": [
+          "Cornish clotted cream (40g)",
+          "Chicken breast strips (125g) x0",
+          "Chicken breast strips (250g)",
+          "Ground coriander (2tsp) x0",
+          "Tomato paste (32g)",
+          "Ground turmeric (0.5tsp) x0",
+          "Ground turmeric (1tsp)",
+          "White long grain rice (65g) x0",
+          "Garam masala (1tsp) x0",
+          "Ground coriander (1tsp)",
+          "Garlic clove x2",
+          "Fresh root ginger (15g)",
+          "Garam masala (1tbsp)",
+          "Coriander (10g)",
+          "Brown onion",
+          "White long grain rice (130g)",
+          "Tomato paste (16g) x0",
+          "Coriander (5g) x0",
+          "Chicken stock mix (5.5g)"
+        ],
+        "recipeInstructions": [
+          "Take your chicken out of the fridge, open the packet and let it air\nAdd your white long grain rice to a pot with a lid with 225ml [300ml] [450ml] cold water and bring to the boil over a high heat\nOnce boiling, reduce the heat to very low and cook, covered, for 12-15 min or until all the water has absorbed and the rice is cooked\nOnce done, remove from the heat and set aside (lid on) to steam until serving\n",
+          "Cut your chicken into large, bite-sized pieces\nCombine the chopped chicken with your ground coriander, 1/2 tsp per person garam masala (save the rest for later!) and a generous pinch of salt in a large bowl \u2013 this is your coated chicken\n",
+          "Heat a large, wide-based pan (preferably non-stick with a matching lid) with a drizzle of vegetable oil over a high heat\nOnce hot, add the coated chicken and cook for 5-6 min, turning occasionally until the chicken is browned\nOnce done, transfer the browned chicken to a plate (reserve the pan for later!)\n",
+          "Boil half a kettle\nPeel and finely dice your brown onion[s]\nReturn the reserved pan to a medium heat with 1 tbsp [1 1/2 tbsp] [2 tbsp] butter\nOnce the butter has melted, add the diced onion with a pinch of salt and cook for 5 min or until softened and starting to caramelise\n",
+          "Peel (scrape the skin off with a teaspoon) and finely chop (or grate) your ginger\nPeel and finely chop (or grate) your garlic\nOnce softened, add the chopped ginger, chopped garlic, your ground turmeric, tomato paste and the remaining garam masala to the pan and cook for 1 min or until fragrant\nAdd your chicken stock mix, then add 250ml [325ml] [450ml] boiled water\n",
+          "Return the browned chicken to the pan, increase the heat to medium-high and cook, covered, for 5-6 min or until the sauce has thickened to a curry-like consistency and the chicken is cooked through (no pink meat!)\nMeanwhile, chop most of your coriander finely, including the stalks (save a few leaves for garnish!)\nFluff the cooked rice with a fork, stir through the chopped coriander and season with salt \u2013 this is your coriander rice\n",
+          "Once the chicken is cooked, remove the pan from the heat and stir in your clotted cream \u2013 this is your butter chicken\n",
+          "Serve the butter chicken over the coriander rice\nGarnish with the reserved coriander leaves\nEnjoy!\n"
+        ],
+        "nutrition": {
+          "@type": "NutritionInformation",
+          "calories": "565 calories",
+          "carbohydrateContent": "67.12",
+          "fatContent": "17.70",
+          "fiberContent": "4.83",
+          "proteinContent": "34.68",
+          "sugarContent": "5.63",
+          "sodiumContent": "289.06"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": 4.5,
+          "reviewCount": 77163
+        },
+        "recipeCategory": "Indian",
+        "recipeCuisine": "Indian",
+        "totalTime": "PT35M"
+      }
+    ],
+    "recipe_schema": {
+      "@context": "http://schema.org/",
+      "@type": "Recipe",
+      "name": "Butter Chicken With Coriander Rice",
+      "author": {
+        "@type": "Organization",
+        "@id": "https://www.gousto.co.uk/",
+        "name": "Gousto",
+        "url": "https://gousto.co.uk/cookbook/butter-chicken-with-coriander-rice"
+      },
+      "image": "https://production-media.gousto.co.uk/cms/mood-image/890_Butter-Chicken-With-Coriander-Rice--1873-1611139093994.jpg",
+      "description": "Butter chicken or 'murgh makhani' is a curry house favourite. To make your own, you'll simmer chicken breast in a mild tomato sauce swirled with clotted cream. Serve with coriander rice to the side. Add both naan and salted caramel chocolate pot to save 20% on your side and dessert.",
+      "recipeYield": "2 or 4 servings",
+      "recipeIngredient": [
+        "Cornish clotted cream (40g)",
+        "Chicken breast strips (125g) x0",
+        "Chicken breast strips (250g)",
+        "Ground coriander (2tsp) x0",
+        "Tomato paste (32g)",
+        "Ground turmeric (0.5tsp) x0",
+        "Ground turmeric (1tsp)",
+        "White long grain rice (65g) x0",
+        "Garam masala (1tsp) x0",
+        "Ground coriander (1tsp)",
+        "Garlic clove x2",
+        "Fresh root ginger (15g)",
+        "Garam masala (1tbsp)",
+        "Coriander (10g)",
+        "Brown onion",
+        "White long grain rice (130g)",
+        "Tomato paste (16g) x0",
+        "Coriander (5g) x0",
+        "Chicken stock mix (5.5g)"
+      ],
+      "recipeInstructions": [
+        "Take your chicken out of the fridge, open the packet and let it air\nAdd your white long grain rice to a pot with a lid with 225ml [300ml] [450ml] cold water and bring to the boil over a high heat\nOnce boiling, reduce the heat to very low and cook, covered, for 12-15 min or until all the water has absorbed and the rice is cooked\nOnce done, remove from the heat and set aside (lid on) to steam until serving\n",
+        "Cut your chicken into large, bite-sized pieces\nCombine the chopped chicken with your ground coriander, 1/2 tsp per person garam masala (save the rest for later!) and a generous pinch of salt in a large bowl \u2013 this is your coated chicken\n",
+        "Heat a large, wide-based pan (preferably non-stick with a matching lid) with a drizzle of vegetable oil over a high heat\nOnce hot, add the coated chicken and cook for 5-6 min, turning occasionally until the chicken is browned\nOnce done, transfer the browned chicken to a plate (reserve the pan for later!)\n",
+        "Boil half a kettle\nPeel and finely dice your brown onion[s]\nReturn the reserved pan to a medium heat with 1 tbsp [1 1/2 tbsp] [2 tbsp] butter\nOnce the butter has melted, add the diced onion with a pinch of salt and cook for 5 min or until softened and starting to caramelise\n",
+        "Peel (scrape the skin off with a teaspoon) and finely chop (or grate) your ginger\nPeel and finely chop (or grate) your garlic\nOnce softened, add the chopped ginger, chopped garlic, your ground turmeric, tomato paste and the remaining garam masala to the pan and cook for 1 min or until fragrant\nAdd your chicken stock mix, then add 250ml [325ml] [450ml] boiled water\n",
+        "Return the browned chicken to the pan, increase the heat to medium-high and cook, covered, for 5-6 min or until the sauce has thickened to a curry-like consistency and the chicken is cooked through (no pink meat!)\nMeanwhile, chop most of your coriander finely, including the stalks (save a few leaves for garnish!)\nFluff the cooked rice with a fork, stir through the chopped coriander and season with salt \u2013 this is your coriander rice\n",
+        "Once the chicken is cooked, remove the pan from the heat and stir in your clotted cream \u2013 this is your butter chicken\n",
+        "Serve the butter chicken over the coriander rice\nGarnish with the reserved coriander leaves\nEnjoy!\n"
+      ],
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "calories": "565 calories",
+        "carbohydrateContent": "67.12",
+        "fatContent": "17.70",
+        "fiberContent": "4.83",
+        "proteinContent": "34.68",
+        "sugarContent": "5.63",
+        "sodiumContent": "289.06"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 4.5,
+        "reviewCount": 77163
+      },
+      "recipeCategory": "Indian",
+      "recipeCuisine": "Indian",
+      "totalTime": "PT35M"
+    },
+    "title": "Butter Chicken With Coriander Rice | Gousto",
+    "recipe_links_count": 189
+  },
+  "list_page_analysis": {
+    "total_urls_found": 6,
+    "sample_urls": [
+      "/cookbook/recipes/paneer-jalfrezi-with-buttery-cardamom-rice-naan",
+      "/cookbook/recipes/21-day-aged-fillet-steak-chips-creamy-peppercorn-sauce",
+      "/cookbook/low-calorie-recipes",
+      "/cookbook/recipes/roast-duck-leg-truffled-cauliflower-cheese-roast-potatoes",
+      "/cookbook/plant-based-recipes",
+      "/cookbook/recipes"
+    ],
+    "api_requests": []
+  }
+}

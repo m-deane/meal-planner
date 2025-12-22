@@ -1,0 +1,42 @@
+{
+  "url": "https://www.gousto.co.uk/cookbook/recipes/chicken-tikka-masala",
+  "name": "Chicken Tikka Masala",
+  "description": "A rich and creamy chicken tikka masala with aromatic spices",
+  "totalTime": "PT35M",
+  "recipeYield": "2 servings",
+  "recipeIngredient": [
+    "Chicken Breast (300g)",
+    "Onion, diced x2",
+    "Garlic Clove x2",
+    "Ginger (15g)",
+    "Tomato Paste (30g)",
+    "Coconut Milk (200ml)",
+    "Garam Masala (10g)",
+    "Fresh Coriander x0"
+  ],
+  "recipeInstructions": [
+    "Heat oil in a large pan over medium-high heat. Add the chicken and cook for 5-6 minutes until golden.",
+    "Add the onions [2] [3] and cook for 3-4 minutes until softened.",
+    "Stir in garlic, ginger, and spices. Cook for 1 minute.",
+    "Add tomato paste and cook for another 2 minutes.",
+    "Pour in coconut milk and simmer for 15 [20] [25] minutes until sauce thickens.",
+    "Garnish with fresh coriander and serve with rice."
+  ],
+  "nutrition": {
+    "calories": "520",
+    "carbohydrateContent": "28g",
+    "proteinContent": "35g",
+    "fatContent": "30g",
+    "fiberContent": "4g",
+    "sugarContent": "8g",
+    "sodiumContent": "650mg",
+    "saturatedFatContent": "18g"
+  },
+  "recipeCategory": "Indian",
+  "recipeCuisine": "Indian",
+  "aggregateRating": {
+    "ratingValue": 4.8,
+    "reviewCount": 247
+  },
+  "image": "https://production-media.gousto.co.uk/cms/dish-image/chicken-tikka-masala.jpg"
+}

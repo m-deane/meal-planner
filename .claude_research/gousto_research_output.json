@@ -1,0 +1,407 @@
+{
+  "search_summary": {
+    "platforms_searched": [
+      "gousto.co.uk",
+      "github.com",
+      "stackoverflow",
+      "technical documentation"
+    ],
+    "repositories_analyzed": 3,
+    "docs_reviewed": 5
+  },
+  "repositories": [
+    {
+      "citation": "[1] hhursev. \"recipe-scrapers: Python package for scraping recipes data.\" GitHub, 2025. https://github.com/hhursev/recipe-scrapers",
+      "platform": "github",
+      "stats": {
+        "stars": "Not specified in analysis",
+        "forks": "Not specified in analysis",
+        "contributors": "Community-maintained",
+        "last_updated": "2024-11-01"
+      },
+      "key_features": [
+        "Supports 500+ recipe websites including Gousto",
+        "Schema.org JSON-LD extraction",
+        "HTML parsing fallback",
+        "Standardized recipe data output format",
+        "Gousto scraper migrated from HTML to JSON-LD in 2022"
+      ],
+      "architecture": "Abstract scraper pattern with site-specific implementations. Gousto implementation uses schema.org JSON-LD extraction after JavaScript rendering issues in 2022. Parent AbstractScraper class provides common functionality.",
+      "code_quality": {
+        "testing": "comprehensive",
+        "documentation": "good",
+        "maintenance": "active"
+      },
+      "usage_example": "from recipe_scrapers import scrape_me\nscraper = scrape_me('https://www.gousto.co.uk/cookbook/chicken-recipes/butter-chicken-with-coriander-rice')\nprint(scraper.to_json())",
+      "limitations": [
+        "Depends on website maintaining schema.org markup",
+        "Known ingredient quantity duplication issues with Gousto (issue #1156)",
+        "No URL discovery functionality (only scrapes given URLs)",
+        "May require updates when websites change structure"
+      ],
+      "alternatives": [
+        "Custom Playwright scraper",
+        "Scrapy + Playwright integration",
+        "BeautifulSoup + Selenium"
+      ]
+    },
+    {
+      "citation": "[2] miwels. \"gousto-recipes-api: Laravel 5.3 REST API for recipes.\" GitHub, 2020. https://github.com/miwels/gousto-recipes-api",
+      "platform": "github",
+      "stats": {
+        "stars": "Not specified",
+        "forks": "Not specified",
+        "contributors": 1,
+        "last_updated": "2020 (26 commits)"
+      },
+      "key_features": [
+        "Laravel 5.3 based REST API",
+        "Repository and Factory patterns",
+        "SQLite database with migrations",
+        "CSV data import via seeder",
+        "SimplePaginate for flexible pagination",
+        "Generic CRUD operations"
+      ],
+      "architecture": "Laravel MVC with Repository pattern. Separates business logic from data access. Uses database migrations and seeders for data management.",
+      "code_quality": {
+        "testing": "adequate",
+        "documentation": "fair",
+        "maintenance": "abandoned"
+      },
+      "usage_example": "php artisan serve\nphp artisan db:seed --class=RecipesTableSeeder\nphpunit",
+      "limitations": [
+        "Outdated Laravel version (5.3)",
+        "Not actively maintained",
+        "Does not scrape Gousto directly (uses CSV import)",
+        "PHP 5.6.4 minimum requirement outdated"
+      ],
+      "alternatives": [
+        "Modern Laravel 10+ implementation",
+        "Node.js/Express API",
+        "Python FastAPI"
+      ]
+    },
+    {
+      "citation": "[3] VFjr. \"gousto-meal-planner: Gousto Recipe Finder and Recipe Card Generator.\" GitHub, 2020. https://github.com/VFjr/gousto-meal-planner",
+      "platform": "github",
+      "stats": {
+        "stars": "Not specified",
+        "forks": "Not specified",
+        "contributors": 1,
+        "last_updated": "Unknown"
+      },
+      "key_features": [
+        "Recipe search functionality",
+        "Recipe card generation",
+        "Integration with Gousto recipes"
+      ],
+      "architecture": "Not analyzed (minimal information available)",
+      "code_quality": {
+        "testing": "unknown",
+        "documentation": "minimal",
+        "maintenance": "unknown"
+      },
+      "usage_example": "Not available",
+      "limitations": [
+        "Limited information available",
+        "Maintenance status unknown"
+      ],
+      "alternatives": []
+    }
+  ],
+  "technical_insights": {
+    "common_patterns": [
+      "Schema.org JSON-LD is the preferred extraction method for recipe sites",
+      "Browser automation (Playwright/Selenium) required for JavaScript-rendered React applications",
+      "Migration from HTML parsing to JSON-LD extraction provides resilience against website changes",
+      "Recipe discovery (URL enumeration) is separate challenge from recipe scraping",
+      "Community-maintained scraper libraries (recipe-scrapers) reduce maintenance burden"
+    ],
+    "best_practices": [
+      "Use JSON-LD extraction over HTML parsing when available (more resilient to UI changes)",
+      "Implement headless browser automation for JavaScript-heavy sites",
+      "Normalize ingredient data post-extraction (handle quantity duplications)",
+      "Use sitemap.xml for URL discovery when pagination is unavailable",
+      "Monitor network requests to discover API endpoints",
+      "Handle multi-serving recipe formats with bracket notation [2 servings][4 servings]",
+      "Store high-resolution images locally rather than linking to CDN"
+    ],
+    "pitfalls": [
+      "Gousto's ingredient format includes serving multipliers that create duplicate quantities (e.g., '1 1 tbsp')",
+      "Recipe list pages have limited pagination - cannot easily discover all recipes",
+      "JavaScript detection mechanisms can block simple HTTP scrapers",
+      "HTML-based scrapers break when websites update structure (Gousto 2022 incident)",
+      "No obvious API endpoints exposed for recipe data",
+      "Total recipe count not displayed - requires full crawl to determine",
+      "Instructions contain newlines and serving-specific content in brackets requiring parsing"
+    ],
+    "emerging_trends": [
+      "Schema.org JSON-LD becoming standard for recipe SEO and data extraction",
+      "Single-page React applications increasingly common for recipe sites",
+      "Move from server-rendered HTML to client-rendered JavaScript",
+      "Recipe sites implementing anti-scraping measures (JavaScript detection)"
+    ]
+  },
+  "implementation_recommendations": [
+    {
+      "scenario": "Quick recipe scraping for known URLs",
+      "recommended_solution": "Use recipe-scrapers Python library",
+      "rationale": "Battle-tested, maintained, handles Gousto JSON-LD extraction, minimal code required"
+    },
+    {
+      "scenario": "Comprehensive Gousto recipe archival",
+      "recommended_solution": "Playwright-based custom scraper with sitemap/category crawling",
+      "rationale": "Need URL discovery (recipe-scrapers doesn't handle this), full control over extraction, can monitor network for API endpoints"
+    },
+    {
+      "scenario": "Real-time recipe monitoring and updates",
+      "recommended_solution": "Investigate /menu API endpoint + scheduled scraping",
+      "rationale": "Weekly menu rotation suggests API may exist, more efficient than full crawls, can detect new recipes"
+    },
+    {
+      "scenario": "Recipe data API for application integration",
+      "recommended_solution": "Scrape to database, expose via FastAPI/GraphQL",
+      "rationale": "Decouple scraping from application, enable efficient queries, add caching layer, normalize ingredient data"
+    },
+    {
+      "scenario": "Building similar scraper for other recipe sites",
+      "recommended_solution": "Extend recipe-scrapers library with new site implementation",
+      "rationale": "Leverage existing infrastructure, contribute to community, handle schema.org + HTML parsing"
+    }
+  ],
+  "community_insights": {
+    "popular_solutions": [
+      "recipe-scrapers Python library (500+ sites supported)",
+      "Schema.org JSON-LD extraction (Google-recommended)",
+      "Playwright for JavaScript-rendered sites",
+      "Selenium for broader browser compatibility"
+    ],
+    "controversial_topics": [
+      "Web scraping legality and terms of service compliance",
+      "Whether to fix ingredient parsing issues or preserve original website data",
+      "HTML parsing vs schema.org extraction trade-offs",
+      "Browser automation overhead vs simple HTTP requests"
+    ],
+    "expert_opinions": [
+      "recipe-scrapers maintainer closed ingredient duplication issue as 'NOT_PLANNED' since it reflects actual website display",
+      "Migration from HTML to JSON-LD (PR #390) was recommended for resilience against website changes",
+      "Selenium recommended for pagination handling in Gousto scraper discussion (issue #140)"
+    ]
+  },
+  "gousto_specific_findings": {
+    "json_ld_availability": {
+      "status": "CONFIRMED",
+      "implementation": "Single <script type='application/ld+json'> tag per recipe page",
+      "schema_type": "http://schema.org/ Recipe",
+      "completeness": "Comprehensive - includes all standard recipe fields"
+    },
+    "data_fields": {
+      "available_fields": [
+        "@context",
+        "@type",
+        "name",
+        "author (Organization)",
+        "image (high-res CDN URL)",
+        "description",
+        "recipeYield",
+        "recipeIngredient (Array[String])",
+        "recipeInstructions (Array[String])",
+        "nutrition (NutritionInformation)",
+        "aggregateRating (AggregateRating)",
+        "recipeCategory",
+        "recipeCuisine",
+        "totalTime (ISO 8601 duration)"
+      ],
+      "missing_standard_fields": [
+        "prepTime (only totalTime provided)",
+        "cookTime (only totalTime provided)",
+        "keywords",
+        "recipeVideo",
+        "suitableForDiet"
+      ],
+      "data_quality_issues": [
+        "Ingredient quantities include serving multipliers (x0, x2)",
+        "Duplicate quantities in some ingredients (1 1 tbsp)",
+        "Instructions contain newlines and bracket-notation for serving variations",
+        "Ingredients not structured (strings instead of objects)"
+      ]
+    },
+    "url_patterns": {
+      "primary_pattern": "https://www.gousto.co.uk/cookbook/{category}/{recipe-slug}",
+      "alternative_pattern": "https://www.gousto.co.uk/cookbook/recipes/{recipe-slug}",
+      "examples": [
+        "https://www.gousto.co.uk/cookbook/chicken-recipes/butter-chicken-with-coriander-rice",
+        "https://www.gousto.co.uk/cookbook/recipes/summery-roast-chicken-salad"
+      ]
+    },
+    "pagination_navigation": {
+      "status": "LIMITED",
+      "observations": [
+        "Only 5-6 recipe URLs discovered on /cookbook/recipes page",
+        "No pagination controls detected",
+        "No infinite scroll indicators",
+        "No API endpoints discovered in network traffic",
+        "189 links to /cookbook/ paths (mostly categories/navigation)"
+      ],
+      "recommended_discovery_strategy": [
+        "1. Check sitemap.xml for complete URL list",
+        "2. Enumerate all category pages and extract recipe links",
+        "3. Investigate /menu page for API endpoints (weekly recipes)",
+        "4. Use community-maintained URL lists"
+      ]
+    },
+    "javascript_requirements": {
+      "browser_automation_required": true,
+      "evidence": [
+        "Initial HTTP request returns: 'You need to enable JavaScript to run this app'",
+        "React-based single-page application",
+        "Content loaded client-side after JavaScript execution"
+      ],
+      "recommended_tools": [
+        "Playwright (preferred - modern, fast)",
+        "Selenium (alternative - mature ecosystem)",
+        "recipe-scrapers library (may work without full browser if JSON-LD in initial HTML)"
+      ]
+    },
+    "sample_recipe_object": {
+      "@context": "http://schema.org/",
+      "@type": "Recipe",
+      "name": "Butter Chicken With Coriander Rice",
+      "author": {
+        "@type": "Organization",
+        "@id": "https://www.gousto.co.uk/",
+        "name": "Gousto"
+      },
+      "image": "https://production-media.gousto.co.uk/cms/mood-image/890_Butter-Chicken-With-Coriander-Rice--1873-1611139093994.jpg",
+      "description": "Butter chicken or 'murgh makhani' is a curry house favourite. To make your own, you'll simmer chicken breast in a mild tomato sauce swirled with clotted cream.",
+      "recipeYield": "2 or 4 servings",
+      "recipeIngredient": [
+        "Cornish clotted cream (40g)",
+        "Chicken breast strips (250g)",
+        "Ground turmeric (1tsp)",
+        "Garlic clove x2",
+        "Fresh root ginger (15g)",
+        "White long grain rice (130g)"
+      ],
+      "recipeInstructions": [
+        "Take your chicken out of the fridge, open the packet and let it air...",
+        "Cut your chicken into large, bite-sized pieces..."
+      ],
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "calories": "565 calories",
+        "carbohydrateContent": "67.12",
+        "fatContent": "17.70",
+        "fiberContent": "4.83",
+        "proteinContent": "34.68",
+        "sugarContent": "5.63",
+        "sodiumContent": "289.06"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 4.5,
+        "reviewCount": 77163
+      },
+      "recipeCategory": "Indian",
+      "recipeCuisine": "Indian",
+      "totalTime": "PT35M"
+    },
+    "total_recipe_count": {
+      "discovered": false,
+      "estimate": "Hundreds to low thousands",
+      "notes": "Website mentions ~150 weekly recipes, but no total count displayed. Requires full sitemap or category crawl to determine exact count."
+    }
+  },
+  "next_steps": [
+    {
+      "priority": 1,
+      "action": "Test recipe-scrapers library with Gousto URLs",
+      "command": "pip install recipe-scrapers && python -c \"from recipe_scrapers import scrape_me; print(scrape_me('https://www.gousto.co.uk/cookbook/chicken-recipes/butter-chicken-with-coriander-rice').to_json())\""
+    },
+    {
+      "priority": 2,
+      "action": "Analyze sitemap for complete recipe URL list",
+      "urls_to_check": [
+        "https://www.gousto.co.uk/sitemap.xml",
+        "https://www.gousto.co.uk/robots.txt"
+      ]
+    },
+    {
+      "priority": 3,
+      "action": "Enumerate category pages and extract recipe links",
+      "starting_url": "https://www.gousto.co.uk/cookbook/recipes"
+    },
+    {
+      "priority": 4,
+      "action": "Investigate /menu page for API endpoints",
+      "url": "https://www.gousto.co.uk/menu",
+      "method": "Monitor network traffic with Playwright"
+    },
+    {
+      "priority": 5,
+      "action": "Implement data cleaning pipeline for ingredient normalization",
+      "focus_areas": [
+        "Remove serving multipliers (x0, x2)",
+        "Fix duplicate quantities (1 1 tbsp -> 1 tbsp)",
+        "Parse quantities and units from parentheses",
+        "Handle multi-serving variations in brackets"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "recipe-scrapers GitHub repository",
+      "url": "https://github.com/hhursev/recipe-scrapers",
+      "type": "code_repository"
+    },
+    {
+      "id": 2,
+      "title": "Gousto.co.uk scraper broken - Issue #376",
+      "url": "https://github.com/hhursev/recipe-scrapers/issues/376",
+      "type": "github_issue"
+    },
+    {
+      "id": 3,
+      "title": "Gousto.co.uk not parsing ingredients correctly - Issue #1156",
+      "url": "https://github.com/hhursev/recipe-scrapers/issues/1156",
+      "type": "github_issue"
+    },
+    {
+      "id": 4,
+      "title": "Please add gousto.co.uk/cookbook/all-recipes - Issue #140",
+      "url": "https://github.com/hhursev/recipe-scrapers/issues/140",
+      "type": "github_issue"
+    },
+    {
+      "id": 5,
+      "title": "gousto-recipes-api GitHub repository",
+      "url": "https://github.com/miwels/gousto-recipes-api",
+      "type": "code_repository"
+    },
+    {
+      "id": 6,
+      "title": "Schema.org Recipe specification",
+      "url": "https://schema.org/Recipe",
+      "type": "technical_documentation"
+    },
+    {
+      "id": 7,
+      "title": "Google Recipe Schema Markup",
+      "url": "https://developers.google.com/search/docs/appearance/structured-data/recipe",
+      "type": "technical_documentation"
+    },
+    {
+      "id": 8,
+      "title": "Gousto Cookbook - Recipes Page",
+      "url": "https://www.gousto.co.uk/cookbook/recipes",
+      "type": "target_website"
+    },
+    {
+      "id": 9,
+      "title": "Sample Recipe - Butter Chicken",
+      "url": "https://www.gousto.co.uk/cookbook/chicken-recipes/butter-chicken-with-coriander-rice",
+      "type": "target_website"
+    }
+  ]
+}

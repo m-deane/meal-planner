@@ -1,0 +1,422 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.10.14, pytest-8.4.2, pluggy-1.6.0 -- /Users/matthewdeane/anaconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/matthewdeane/Documents/Data Science/python/_projects/__utils-recipes
+configfile: pytest.ini
+plugins: mock-3.15.1, langsmith-0.3.30, anyio-4.7.0, dash-2.18.2, cov-7.0.0
+collecting ... collected 177 items
+
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_simple_ingredient PASSED [  0%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_quantity_in_parens PASSED [  1%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_multiplier PASSED [  1%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_zero_multiplier PASSED [  2%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_preparation_comma PASSED [  2%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_preparation_parens PASSED [  3%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_complex PASSED [  3%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_ml_unit PASSED [  4%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_parse_ingredient_with_kg_unit PASSED [  5%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_unit_normalization PASSED [  5%]
+tests/unit/test_data_normalizer.py::TestIngredientParser::test_build_unit_map PASSED [  6%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_parse_simple_instruction PASSED [  6%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_parse_instruction_with_time PASSED [  7%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_parse_instruction_with_time_range PASSED [  7%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_parse_instruction_with_serving_variants PASSED [  8%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_parse_instructions_list PASSED [  9%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_clean_instruction_text PASSED [  9%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_extract_serving_variants_multiple PASSED [ 10%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_extract_serving_variants_none PASSED [ 10%]
+tests/unit/test_data_normalizer.py::TestInstructionParser::test_extract_time_estimate_patterns PASSED [ 11%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_normalize_nutrition_complete PASSED [ 11%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_normalize_nutrition_partial PASSED [ 12%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_parse_numeric_value_from_string PASSED [ 12%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_parse_numeric_value_from_number PASSED [ 13%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_parse_numeric_value_none PASSED [ 14%]
+tests/unit/test_data_normalizer.py::TestNutritionNormalizer::test_parse_numeric_value_invalid PASSED [ 14%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_normalize_complete_recipe PASSED [ 15%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_normalize_ingredients PASSED [ 15%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_normalize_instructions PASSED [ 16%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_normalize_nutrition PASSED [ 16%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_iso_duration_hours_minutes PASSED [ 17%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_iso_duration_minutes_only PASSED [ 18%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_iso_duration_hours_only PASSED [ 18%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_iso_duration_invalid PASSED [ 19%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_servings_simple PASSED [ 19%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_servings_with_text PASSED [ 20%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_servings_range PASSED [ 20%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_parse_servings_invalid PASSED [ 21%]
+tests/unit/test_data_normalizer.py::TestDataNormalizer::test_normalize_empty_recipe PASSED [ 22%]
+tests/unit/test_data_normalizer.py::test_create_data_normalizer PASSED   [ 22%]
+tests/unit/test_data_validator.py::TestValidationResult::test_initialization PASSED [ 23%]
+tests/unit/test_data_validator.py::TestValidationResult::test_add_error PASSED [ 23%]
+tests/unit/test_data_validator.py::TestValidationResult::test_add_warning PASSED [ 24%]
+tests/unit/test_data_validator.py::TestValidationResult::test_bool_conversion PASSED [ 24%]
+tests/unit/test_data_validator.py::TestValidationResult::test_repr PASSED [ 25%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_valid_recipe PASSED [ 25%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_missing_name PASSED [ 26%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_missing_url PASSED [ 27%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_name_too_short PASSED [ 27%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_name_too_long PASSED [ 28%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_name_no_letters PASSED [ 28%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_ingredients_required PASSED [ 29%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_instructions_required PASSED [ 29%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_ingredient_missing_name PASSED [ 30%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_ingredient_negative_quantity PASSED [ 31%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_ingredient_zero_quantity_warning PASSED [ 31%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_instruction_too_short PASSED [ 32%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_instruction_negative_time PASSED [ 32%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_instruction_excessive_time PASSED [ 33%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_missing_warning PASSED [ 33%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_negative_calories PASSED [ 34%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_calories_too_low PASSED [ 35%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_calories_too_high PASSED [ 35%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_negative_macros PASSED [ 36%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_nutrition_excessive_macros PASSED [ 36%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_total_time_negative PASSED [ 37%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_total_time_zero_warning PASSED [ 37%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_total_time_excessive PASSED [ 38%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_servings_too_low PASSED [ 38%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_servings_excessive PASSED [ 39%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_url_missing_protocol PASSED [ 40%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_validate_url_not_gousto PASSED [ 40%]
+tests/unit/test_data_validator.py::TestRecipeValidator::test_strict_mode_converts_warnings_to_errors PASSED [ 41%]
+tests/unit/test_data_validator.py::test_validate_recipe_function PASSED  [ 41%]
+tests/unit/test_data_validator.py::test_validate_recipe_function_strict PASSED [ 42%]
+tests/unit/test_config.py::TestConfig::test_default_values PASSED        [ 42%]
+tests/unit/test_config.py::TestConfig::test_database_url_validation_sqlite PASSED [ 43%]
+tests/unit/test_config.py::TestConfig::test_database_url_validation_postgresql PASSED [ 44%]
+tests/unit/test_config.py::TestConfig::test_database_url_validation_invalid PASSED [ 44%]
+tests/unit/test_config.py::TestConfig::test_log_level_validation_valid PASSED [ 45%]
+tests/unit/test_config.py::TestConfig::test_log_level_validation_case_insensitive PASSED [ 45%]
+tests/unit/test_config.py::TestConfig::test_log_level_validation_invalid PASSED [ 46%]
+tests/unit/test_config.py::TestConfig::test_scraper_delay_validation_valid PASSED [ 46%]
+tests/unit/test_config.py::TestConfig::test_scraper_delay_validation_min PASSED [ 47%]
+tests/unit/test_config.py::TestConfig::test_scraper_delay_validation_max PASSED [ 48%]
+tests/unit/test_config.py::TestConfig::test_scraper_max_retries_validation PASSED [ 48%]
+tests/unit/test_config.py::TestConfig::test_database_pool_size_validation PASSED [ 49%]
+tests/unit/test_config.py::TestConfig::test_get_log_file_path PASSED     [ 49%]
+tests/unit/test_config.py::TestConfig::test_get_log_file_path_none PASSED [ 50%]
+tests/unit/test_config.py::TestConfig::test_ensure_directories PASSED    [ 50%]
+tests/unit/test_config.py::TestConfig::test_user_agents_list PASSED      [ 51%]
+tests/unit/test_config.py::TestConfig::test_gousto_urls PASSED           [ 51%]
+tests/unit/test_config.py::TestConfig::test_validation_settings PASSED   [ 52%]
+tests/unit/test_config.py::TestConfig::test_calories_validation_range PASSED [ 53%]
+tests/unit/test_config.py::TestConfig::test_export_settings PASSED       [ 53%]
+tests/unit/test_config.py::TestConfig::test_checkpoint_settings PASSED   [ 54%]
+tests/unit/test_checkpoint.py::TestCheckpointData::test_initialization PASSED [ 54%]
+tests/unit/test_checkpoint.py::TestCheckpointData::test_model_validation PASSED [ 55%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_initialization PASSED [ 55%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_create_session PASSED [ 56%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_save_and_load PASSED [ 57%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_load_nonexistent_checkpoint PASSED [ 57%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_mark_success PASSED [ 58%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_mark_failure PASSED [ 58%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_mark_success_removes_from_failed PASSED [ 59%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_next_url PASSED [ 59%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_next_url_empty PASSED [ 60%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_progress PASSED [ 61%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_progress_no_data PASSED [ 61%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_auto_save PASSED [ 62%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_clear_checkpoint PASSED [ 62%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_is_complete_true PASSED [ 63%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_is_complete_false PASSED [ 63%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_is_complete_no_data PASSED [ 64%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_session_duration PASSED [ 64%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_get_session_duration_no_data PASSED [ 65%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_save_without_data PASSED [ 66%]
+tests/unit/test_checkpoint.py::TestCheckpointManager::test_checkpoint_persistence PASSED [ 66%]
+tests/unit/test_checkpoint.py::test_create_checkpoint_manager PASSED     [ 67%]
+tests/unit/test_logger.py::TestScraperLogger::test_initialization_console_only PASSED [ 67%]
+tests/unit/test_logger.py::TestScraperLogger::test_initialization_with_file PASSED [ 68%]
+tests/unit/test_logger.py::TestScraperLogger::test_parse_size_megabytes PASSED [ 68%]
+tests/unit/test_logger.py::TestScraperLogger::test_parse_size_kilobytes PASSED [ 69%]
+tests/unit/test_logger.py::TestScraperLogger::test_parse_size_gigabytes PASSED [ 70%]
+tests/unit/test_logger.py::TestScraperLogger::test_parse_size_invalid PASSED [ 70%]
+tests/unit/test_logger.py::TestScraperLogger::test_debug_logging PASSED  [ 71%]
+tests/unit/test_logger.py::TestScraperLogger::test_info_logging PASSED   [ 71%]
+tests/unit/test_logger.py::TestScraperLogger::test_warning_logging PASSED [ 72%]
+tests/unit/test_logger.py::TestScraperLogger::test_error_logging PASSED  [ 72%]
+tests/unit/test_logger.py::TestScraperLogger::test_critical_logging PASSED [ 73%]
+tests/unit/test_logger.py::TestScraperLogger::test_scraping_progress PASSED [ 74%]
+tests/unit/test_logger.py::TestScraperLogger::test_recipe_scraped PASSED [ 74%]
+tests/unit/test_logger.py::TestScraperLogger::test_recipe_error PASSED   [ 75%]
+tests/unit/test_logger.py::TestScraperLogger::test_validation_error PASSED [ 75%]
+tests/unit/test_logger.py::test_get_logger PASSED                        [ 76%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_initialization PASSED [ 76%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_create_session PASSED [ 77%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_load_robots_txt_success PASSED [ 77%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_load_robots_txt_failure PASSED [ 78%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_can_fetch_no_robot_parser PASSED [ 79%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_can_fetch_with_robot_parser PASSED [ 79%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_can_fetch_disallowed PASSED [ 80%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_user_agent PASSED [ 80%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_user_agent_from_config PASSED [ 81%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_user_agent_empty_config PASSED [ 81%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_enforce_rate_limit PASSED [ 82%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_enforce_rate_limit_no_delay_needed PASSED [ 83%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_success PASSED [ 83%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_custom_headers FAILED [ 84%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_timeout FAILED [ 84%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_raises_on_http_error PASSED [ 85%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_disallowed_by_robots PASSED [ 85%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_retry_success_first_attempt PASSED [ 86%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_retry_success_after_failures PASSED [ 87%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_retry_all_attempts_fail PASSED [ 87%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_close PASSED [ 88%]
+tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_context_manager PASSED [ 88%]
+tests/unit/test_http_client.py::test_create_http_client PASSED           [ 89%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_initialization PASSED [ 89%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_is_recipe_url_valid PASSED [ 90%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_is_recipe_url_invalid PASSED [ 90%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_sitemap PASSED [ 91%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_sitemap_filters_non_recipes PASSED [ 92%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_sitemap_error PASSED [ 92%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_sitemap_index PASSED [ 93%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_sitemap_index_not_index PASSED [ 93%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_categories PASSED [ 94%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_from_categories_error PASSED [ 94%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_extract_recipe_urls_from_html PASSED [ 95%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_extract_recipe_urls_from_html_resolves_relative PASSED [ 96%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_get_category_urls PASSED [ 96%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_all_sitemap_only PASSED [ 97%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_all_categories_only PASSED [ 97%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_all_both_methods PASSED [ 98%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_all_deduplicates PASSED [ 98%]
+tests/unit/test_recipe_discoverer.py::TestRecipeDiscoverer::test_discover_all_handles_errors PASSED [ 99%]
+tests/unit/test_recipe_discoverer.py::test_create_recipe_discoverer PASSED [100%]
+ERROR: Coverage failure: total of 55 is less than fail-under=80
+
+
+=================================== FAILURES ===================================
+____________ TestRateLimitedHTTPClient.test_get_with_custom_headers ____________
+
+self = <tests.unit.test_http_client.TestRateLimitedHTTPClient object at 0x1079bc340>
+client = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b8be50>
+
+    def test_get_with_custom_headers(self, client):
+        """Test GET request with custom headers."""
+        with patch.object(client.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_get.return_value = mock_response
+    
+            custom_headers = {'X-Custom': 'value'}
+>           client.get('https://example.com', headers=custom_headers)
+
+client     = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b8be50>
+custom_headers = {'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)',
+ 'X-Custom': 'value'}
+mock_get   = <MagicMock name='get' id='4424440112'>
+mock_response = <Mock name='get()' id='4424415216'>
+self       = <tests.unit.test_http_client.TestRateLimitedHTTPClient object at 0x1079bc340>
+
+tests/unit/test_http_client.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b8be50>
+url = 'https://example.com'
+headers = {'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)', 'X-Custom': 'value'}
+timeout = 30, kwargs = {}, response = <Mock name='get()' id='4424415216'>
+
+    def get(
+        self,
+        url: str,
+        headers: Optional[dict] = None,
+        timeout: Optional[int] = None,
+        **kwargs
+    ) -> requests.Response:
+        """
+        Perform GET request with rate limiting and retries.
+    
+        Args:
+            url: URL to fetch
+            headers: Optional custom headers
+            timeout: Request timeout in seconds
+            **kwargs: Additional arguments for requests.get
+    
+        Returns:
+            Response object
+    
+        Raises:
+            RequestException: If request fails after all retries
+            ValueError: If URL is disallowed by robots.txt
+        """
+        if not self._can_fetch(url):
+            raise ValueError(f"URL disallowed by robots.txt: {url}")
+    
+        self._enforce_rate_limit()
+    
+        if headers is None:
+            headers = {}
+    
+        headers["User-Agent"] = self._get_user_agent()
+    
+        timeout = timeout or config.scraper_timeout_seconds
+    
+        try:
+            logger.debug(f"GET {url}")
+            response = self.session.get(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs
+            )
+            response.raise_for_status()
+    
+            self.last_request_time = time.time()
+            self.request_count += 1
+    
+            logger.debug(
+                f"Response: {response.status_code} | "
+>               f"Size: {len(response.content)} bytes"
+            )
+E           TypeError: object of type 'Mock' has no len()
+
+headers    = {'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)',
+ 'X-Custom': 'value'}
+kwargs     = {}
+response   = <Mock name='get()' id='4424415216'>
+self       = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b8be50>
+timeout    = 30
+url        = 'https://example.com'
+
+src/utils/http_client.py:164: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2025-12-20 14:27:22,733 - http_client - INFO - Loaded robots.txt from https://www.gousto.co.uk/robots.txt
+------------------------------ Captured log setup ------------------------------
+INFO     http_client:logger.py:94 Loaded robots.txt from https://www.gousto.co.uk/robots.txt
+--------------------------- Captured stdout teardown ---------------------------
+2025-12-20 14:27:22,779 - http_client - INFO - HTTP client closed. Total requests: 1
+---------------------------- Captured log teardown -----------------------------
+INFO     http_client:logger.py:94 HTTP client closed. Total requests: 1
+_______________ TestRateLimitedHTTPClient.test_get_with_timeout ________________
+
+self = <tests.unit.test_http_client.TestRateLimitedHTTPClient object at 0x1079bdc90>
+client = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b4e080>
+test_config = Config(database_url='sqlite:///:memory:', database_echo=False, database_pool_size=5, database_max_overflow=10, scraper...True, validation_min_calories=50, validation_max_calories=5000, export_include_inactive=False, export_pretty_json=True)
+
+    def test_get_with_timeout(self, client, test_config):
+        """Test GET request with timeout."""
+        with patch.object(client.session, 'get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_get.return_value = mock_response
+    
+>           client.get('https://example.com', timeout=10)
+
+client     = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b4e080>
+mock_get   = <MagicMock name='get' id='4422142608'>
+mock_response = <Mock name='get()' id='4424228320'>
+self       = <tests.unit.test_http_client.TestRateLimitedHTTPClient object at 0x1079bdc90>
+test_config = Config(database_url='sqlite:///:memory:', database_echo=False, database_pool_size=5, database_max_overflow=10, scraper_delay_seconds=0.1, scraper_max_retries=1, scraper_retry_backoff=2.0, scraper_timeout_seconds=30, scraper_batch_size=10, scraper_max_recipes=None, user_agents=[], gousto_base_url='https://www.gousto.co.uk', gousto_sitemap_url='https://www.gousto.co.uk/sitemap.xml', gousto_robots_url='https://www.gousto.co.uk/robots.txt', log_level='ERROR', log_format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', log_file='logs/scraper.log', log_rotation='10 MB', log_retention=10, checkpoint_enabled=True, checkpoint_interval=2, checkpoint_file='.scraper_checkpoint.json', validation_strict=False, validation_require_ingredients=True, validation_require_instructions=True, validation_min_calories=50, validation_max_calories=5000, export_include_inactive=False, export_pretty_json=True)
+
+tests/unit/test_http_client.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b4e080>
+url = 'https://example.com'
+headers = {'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)'}
+timeout = 10, kwargs = {}, response = <Mock name='get()' id='4424228320'>
+
+    def get(
+        self,
+        url: str,
+        headers: Optional[dict] = None,
+        timeout: Optional[int] = None,
+        **kwargs
+    ) -> requests.Response:
+        """
+        Perform GET request with rate limiting and retries.
+    
+        Args:
+            url: URL to fetch
+            headers: Optional custom headers
+            timeout: Request timeout in seconds
+            **kwargs: Additional arguments for requests.get
+    
+        Returns:
+            Response object
+    
+        Raises:
+            RequestException: If request fails after all retries
+            ValueError: If URL is disallowed by robots.txt
+        """
+        if not self._can_fetch(url):
+            raise ValueError(f"URL disallowed by robots.txt: {url}")
+    
+        self._enforce_rate_limit()
+    
+        if headers is None:
+            headers = {}
+    
+        headers["User-Agent"] = self._get_user_agent()
+    
+        timeout = timeout or config.scraper_timeout_seconds
+    
+        try:
+            logger.debug(f"GET {url}")
+            response = self.session.get(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs
+            )
+            response.raise_for_status()
+    
+            self.last_request_time = time.time()
+            self.request_count += 1
+    
+            logger.debug(
+                f"Response: {response.status_code} | "
+>               f"Size: {len(response.content)} bytes"
+            )
+E           TypeError: object of type 'Mock' has no len()
+
+headers    = {'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)'}
+kwargs     = {}
+response   = <Mock name='get()' id='4424228320'>
+self       = <src.utils.http_client.RateLimitedHTTPClient object at 0x107b4e080>
+timeout    = 10
+url        = 'https://example.com'
+
+src/utils/http_client.py:164: TypeError
+---------------------------- Captured stdout setup -----------------------------
+2025-12-20 14:27:22,781 - http_client - INFO - Loaded robots.txt from https://www.gousto.co.uk/robots.txt
+------------------------------ Captured log setup ------------------------------
+INFO     http_client:logger.py:94 Loaded robots.txt from https://www.gousto.co.uk/robots.txt
+--------------------------- Captured stdout teardown ---------------------------
+2025-12-20 14:27:22,787 - http_client - INFO - HTTP client closed. Total requests: 1
+---------------------------- Captured log teardown -----------------------------
+INFO     http_client:logger.py:94 HTTP client closed. Total requests: 1
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.10.14-final-0 _______________
+
+Name                                Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------
+src/__init__.py                         1      0      0      0   100%
+src/cli.py                            191    191     26      0     0%   6-418
+src/config.py                          68      0     10      2    97%   220->224, 224->exit
+src/database/__init__.py                4      0      0      0   100%
+src/database/connection.py             78     60     20      0    18%   33-55, 69-98, 117-122, 135-136, 154-162, 173-179, 198-205, 218-227
+src/database/example_usage.py         148    148     40      0     0%   6-339
+src/database/models.py                223     30     10      0    83%   109-111, 116, 119, 147, 172-173, 176, 199, 220, 242, 270, 315-319, 322, 372, 406-413, 416, 446, 461, 472-473, 479
+src/database/queries.py                70     50     32      0    20%   28, 32, 38, 44, 65, 107-163, 181-202, 206, 219, 236, 249, 255, 271, 292-296
+src/database/seed.py                   34     34     10      0     0%   6-174
+src/scrapers/__init__.py                0      0      0      0   100%
+src/scrapers/data_normalizer.py       160      9     60      3    95%   106-110, 115, 328->338, 334-336
+src/scrapers/gousto_scraper.py        229    229     78      0     0%   6-557
+src/scrapers/recipe_discoverer.py     137      8     40      3    94%   54->52, 64-65, 90->88, 110->108, 116-117, 289-290, 298-299
+src/utils/__init__.py                   0      0      0      0   100%
+src/utils/checkpoint.py               119      9     32      6    90%   120-122, 144-145, 156, 179, 184->187, 188, 235, 245->249
+src/utils/http_client.py               92      0     14      0   100%
+src/utils/logger.py                    64      3      8      1    94%   85-86, 136
+src/validators/__init__.py              0      0      0      0   100%
+src/validators/data_validator.py      173     17    100      6    92%   98->102, 102->exit, 136-140, 161-162, 182, 190->178, 205-206, 224-225, 243-244, 272-273, 298-299, 319-320
+-------------------------------------------------------------------------------
+TOTAL                                1791    788    480     21    55%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+FAIL Required test coverage of 80% not reached. Total coverage: 54.87%
+=========================== short test summary info ============================
+FAILED tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_custom_headers - TypeError: object of type 'Mock' has no len()
+FAILED tests/unit/test_http_client.py::TestRateLimitedHTTPClient::test_get_with_timeout - TypeError: object of type 'Mock' has no len()
+======================== 2 failed, 175 passed in 9.27s =========================
