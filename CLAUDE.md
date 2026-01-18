@@ -4,93 +4,89 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Claude Code project template** - a reusable starting point for new projects optimized for Claude Code workflows. It includes pre-configured slash commands, specialized agents, workflow templates, and directory structure conventions.
+**Gousto Recipe Database Scraper** - A production-ready web scraping system that extracts recipes from Gousto's cookbook website and stores them in a normalized database. The system includes recipe discovery, data extraction using schema.org JSON-LD, validation, database storage, and meal planning features.
 
-## Repository Structure
+**Technology Stack**: Python 3.10+, SQLAlchemy ORM, Click CLI, Pydantic settings, pytest
 
-```
-.claude/                    # Claude Code configuration (core of this template)
-├── CLAUDE.md               # Core behavioral directives
-├── TEMPLATE_GUIDE.md       # Customization instructions
-├── example_prompt.md       # Project requirements template
-├── agents/                 # 16 specialized agents
-├── commands/               # 14 slash commands
-├── scripts/                # Utility scripts
-└── skills/                 # MCP skills (webapp-testing, mcp-builder)
+## Common Commands
 
-.claude_plans/              # Project planning documents
-.claude_prompts/            # Workflow prompt templates
-.claude_research/           # Research document storage
-src/                        # Source code placeholder
-tests/                      # Test files placeholder
-```
+```bash
+# Setup
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 
-## Key Slash Commands
+# CLI operations
+python -m src.cli init-db              # Initialize database
+python -m src.cli discover --save-to-db # Find all recipe URLs
+python -m src.cli scrape --limit 10    # Scrape recipes (test run)
+python -m src.cli scrape --resume      # Resume interrupted scrape
+python -m src.cli stats --detailed     # View statistics
+python -m src.cli export --format json --output recipes.json
+python -m src.cli meal-plan --with-nutrition --output meal_plans/plan.md
 
-| Command | Purpose |
-|---------|---------|
-| `/ultra-think [problem]` | Deep multi-dimensional analysis |
-| `/code-review [file]` | Comprehensive code review |
-| `/generate-tests [component]` | Generate test suite |
-| `/security-scan [scope]` | Security audit |
-| `/explain-code [file]` | Detailed code explanation |
-| `/create-pr [branch]` | Auto-generate PR description |
-| `/dependency-update` | Check/update dependencies |
-| `/architecture-review` | Review architecture patterns |
-| `/create-architecture-documentation` | Generate architecture docs |
+# Testing
+pytest                                  # Run all tests with coverage
+pytest tests/unit/test_data_normalizer.py -v  # Single test file
+pytest -k "test_normalize" -v          # Run tests matching pattern
+pytest --cov=src --cov-report=html     # Generate HTML coverage report
 
-## Key Agents
-
-| Agent | Use For |
-|-------|---------|
-| `python-pro` | Python best practices, optimization |
-| `typescript-pro` | TypeScript type system, strict mode |
-| `sql-expert` | Schema design, query optimization |
-| `ml-engineer` | ML pipelines, MLOps |
-| `test-engineer` | Test strategy, coverage |
-| `code-reviewer` | Code quality, security |
-| `debugger` | Error investigation |
-
-## Template Customization Workflow
-
-When using this template for a new project:
-
-1. Clone/copy this repository
-2. Edit root `CLAUDE.md` - replace `<!-- CUSTOMIZE -->` sections with project specifics
-3. Copy `.claude/example_prompt.md` to `.claude_prompts/` and customize
-4. Delete `.claude/TEMPLATE_GUIDE.md` after setup
-5. Update `.gitignore` for your language/framework
-
-## Core Directives (from .claude/CLAUDE.md)
-
-The template enforces these behavioral patterns:
-
-- **No partial implementations** - Complete working code, no mocks/stubs/TODOs
-- **Direct implementation** - Skip hedging language and excessive explanation
-- **File organization** - Use `.claude_plans/` for planning, `tests/` for tests
-- **Testing discipline** - Run tests after each checkpoint
-
-## Adding New Commands
-
-Create a markdown file in `.claude/commands/` with frontmatter:
-
-```yaml
----
-description: Brief description
-argument-hint: [arg] | --flag
-allowed-tools: Read, Write, Edit, Bash
----
+# Linting
+black src tests                         # Format code
+mypy src                                # Type checking
 ```
 
-## Adding New Agents
+## Architecture
 
-Create a markdown file in `.claude/agents/` with frontmatter:
+### Core Data Flow
 
-```yaml
----
-name: agent-name
-description: When to use this agent
-tools: Read, Write, Edit, Bash
-model: sonnet
----
 ```
+URL Discovery (sitemap/categories) → HTTP Client (rate-limited) → recipe-scrapers library
+    → Data Normalizer → Validator → SQLAlchemy ORM → SQLite/PostgreSQL
+```
+
+### Key Components
+
+- **`src/cli.py`**: Click-based CLI interface with commands: `discover`, `scrape`, `export`, `stats`, `init-db`, `meal-plan`
+- **`src/scrapers/gousto_scraper.py`**: Main orchestrator coordinating discovery, scraping, and persistence
+- **`src/scrapers/recipe_discoverer.py`**: URL discovery from sitemaps and category pages
+- **`src/scrapers/data_normalizer.py`**: Converts raw recipe-scrapers output to normalized format
+- **`src/validators/data_validator.py`**: Schema validation against Recipe specification
+- **`src/utils/http_client.py`**: Rate-limited HTTP client with retry logic and exponential backoff
+- **`src/utils/checkpoint.py`**: Resume functionality for long-running scrapes
+- **`src/database/models.py`**: 15-table SQLAlchemy ORM model (3NF+ normalized)
+- **`src/config.py`**: Pydantic-based configuration with environment variable support
+
+### Database Schema
+
+15 normalized tables organized as:
+- **Core entities**: `recipes`, `ingredients`, `categories`, `dietary_tags`, `allergens`, `units`
+- **Junction tables**: `recipe_ingredients`, `recipe_categories`, `recipe_allergens`, `recipe_dietary_tags`
+- **Details**: `cooking_instructions`, `nutritional_info`, `images`
+- **Metadata**: `scraping_history`, `schema_version`
+
+Recipe is the central entity with relationships to all other tables via SQLAlchemy ORM.
+
+### Configuration
+
+All settings in `src/config.py` via Pydantic, loaded from `.env`:
+- `DATABASE_URL`: SQLite (dev) or PostgreSQL (prod)
+- `SCRAPER_DELAY_SECONDS`: Rate limiting (default 3s)
+- `CHECKPOINT_ENABLED`: Resume support for interrupted scrapes
+
+## Testing Conventions
+
+- Tests in `tests/unit/` and `tests/integration/`
+- pytest markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`, `@pytest.mark.requires_network`
+- Fixtures in `tests/conftest.py` - uses in-memory SQLite
+- Coverage threshold: 80% (enforced via pytest.ini)
+- Mock HTTP responses with `responses` library, time with `freezegun`
+
+## File Organization
+
+- `.claude_plans/`: Project planning documents and completion reports
+- `.claude_research/`: Technical research artifacts
+- `docs/`: Schema documentation, sample queries, index strategies
+- `meal_plans/`: Generated meal plan outputs
+- `data/`: Database files (SQLite)
+- `logs/`: Application logs
