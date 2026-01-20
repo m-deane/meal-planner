@@ -535,5 +535,65 @@ def meal_plan(
         sys.exit(1)
 
 
+@cli.command()
+@click.option(
+    '--host',
+    type=str,
+    default='0.0.0.0',
+    help='Host to bind the server to'
+)
+@click.option(
+    '--port',
+    type=int,
+    default=8000,
+    help='Port to bind the server to'
+)
+@click.option(
+    '--reload',
+    is_flag=True,
+    help='Enable auto-reload for development'
+)
+@click.option(
+    '--workers',
+    type=int,
+    default=1,
+    help='Number of worker processes'
+)
+def serve(host: str, port: int, reload: bool, workers: int):
+    """Run the FastAPI server."""
+    logger.info(f"Starting API server on {host}:{port}")
+
+    try:
+        import uvicorn
+
+        click.echo(f"\n{'='*50}")
+        click.echo("Starting Meal Planner API Server")
+        click.echo(f"{'='*50}")
+        click.echo(f"  Host:    {host}")
+        click.echo(f"  Port:    {port}")
+        click.echo(f"  Reload:  {reload}")
+        click.echo(f"  Workers: {workers}")
+        click.echo(f"\n  API Docs: http://{host if host != '0.0.0.0' else 'localhost'}:{port}/docs")
+        click.echo(f"  ReDoc:    http://{host if host != '0.0.0.0' else 'localhost'}:{port}/redoc")
+        click.echo(f"{'='*50}\n")
+
+        uvicorn.run(
+            "src.api.main:app",
+            host=host,
+            port=port,
+            reload=reload,
+            workers=workers if not reload else 1,
+            log_level="info"
+        )
+
+    except ImportError:
+        click.echo("\n✗ Error: uvicorn not installed. Run: pip install uvicorn[standard]", err=True)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Server failed: {e}", exc_info=True)
+        click.echo(f"\n✗ Error: {e}", err=True)
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()

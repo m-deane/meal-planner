@@ -1,0 +1,14 @@
+# Utility Functions
+
+This directory contains utility functions and helpers.
+
+## Structure
+
+```
+utils/
+├── formatters.ts       # Date, number, string formatters
+├── validators.ts       # Input validation functions
+├── constants.ts        # Application constants
+├── cn.ts               # Class name utility (clsx wrapper)
+└── nutrition.ts        # Nutrition calculation helpers
+```

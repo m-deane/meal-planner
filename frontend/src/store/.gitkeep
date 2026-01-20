@@ -1,0 +1,13 @@
+# Zustand State Stores
+
+This directory contains Zustand state management stores.
+
+## Structure
+
+```
+store/
+├── useAuthStore.ts         # Authentication state
+├── useMealPlanStore.ts     # Meal plan editing state
+├── useFilterStore.ts       # Recipe filter state
+└── useShoppingListStore.ts # Shopping list state
+```

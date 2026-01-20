@@ -1,0 +1,26 @@
+# Reusable Components
+
+This directory contains reusable UI components.
+
+## Structure
+
+```
+components/
+├── common/             # Common UI components
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   ├── Input.tsx
+│   └── Modal.tsx
+├── layout/             # Layout components
+│   ├── Header.tsx
+│   ├── Sidebar.tsx
+│   └── Footer.tsx
+├── recipe/             # Recipe-specific components
+│   ├── RecipeCard.tsx
+│   ├── RecipeList.tsx
+│   └── RecipeFilter.tsx
+└── meal-plan/          # Meal plan components
+    ├── MealPlanCalendar.tsx
+    ├── MealPlanCard.tsx
+    └── DragDropRecipe.tsx
+```

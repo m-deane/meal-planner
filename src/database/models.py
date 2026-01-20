@@ -97,6 +97,12 @@ class Recipe(Base):
         cascade='all, delete-orphan',
         lazy='dynamic'
     )
+    favorited_by = relationship(
+        'FavoriteRecipe',
+        back_populates='recipe',
+        cascade='all, delete-orphan',
+        lazy='dynamic'
+    )
 
     # Indexes
     __table_args__ = (
@@ -459,6 +465,205 @@ class SchemaVersion(Base):
 
     def __repr__(self) -> str:
         return f"<SchemaVersion(version='{self.version}', applied={self.applied_at})>"
+
+
+# ============================================================================
+# USER ENTITIES (Phase 3 Advanced Features)
+# ============================================================================
+
+class User(Base):
+    """User accounts for personalized meal planning."""
+
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(200))
+    is_active = Column(Boolean, default=True, index=True)
+    is_verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    last_login = Column(DateTime)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    preferences = relationship(
+        'UserPreference',
+        back_populates='user',
+        uselist=False,
+        cascade='all, delete-orphan',
+        lazy='selectin'
+    )
+    favorites = relationship(
+        'FavoriteRecipe',
+        back_populates='user',
+        cascade='all, delete-orphan',
+        lazy='dynamic'
+    )
+    saved_meal_plans = relationship(
+        'SavedMealPlan',
+        back_populates='user',
+        cascade='all, delete-orphan',
+        lazy='dynamic'
+    )
+    allergen_profile = relationship(
+        'UserAllergen',
+        back_populates='user',
+        cascade='all, delete-orphan',
+        lazy='selectin'
+    )
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_users_active', 'is_active', 'is_verified'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
+
+
+class UserPreference(Base):
+    """User dietary preferences and nutritional targets."""
+
+    __tablename__ = 'user_preferences'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    default_servings = Column(Integer, CheckConstraint('default_servings > 0'), default=2)
+    calorie_target = Column(Integer, CheckConstraint('calorie_target IS NULL OR calorie_target > 0'))
+    protein_target_g = Column(Numeric(10, 2), CheckConstraint('protein_target_g IS NULL OR protein_target_g >= 0'))
+    carb_limit_g = Column(Numeric(10, 2), CheckConstraint('carb_limit_g IS NULL OR carb_limit_g >= 0'))
+    fat_limit_g = Column(Numeric(10, 2), CheckConstraint('fat_limit_g IS NULL OR fat_limit_g >= 0'))
+    preferred_cuisines = Column(Text)  # JSON array of cuisine types
+    excluded_ingredients = Column(Text)  # JSON array of ingredient IDs or names
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', back_populates='preferences')
+    dietary_tags = relationship(
+        'DietaryTag',
+        secondary='user_dietary_preferences',
+        lazy='selectin'
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserPreference(user_id={self.user_id}, servings={self.default_servings})>"
+
+
+class FavoriteRecipe(Base):
+    """User's favorite recipes with optional notes."""
+
+    __tablename__ = 'favorite_recipes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    recipe_id = Column(Integer, ForeignKey('recipes.id', ondelete='CASCADE'), nullable=False, index=True)
+    notes = Column(Text)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', back_populates='favorites')
+    recipe = relationship('Recipe', back_populates='favorited_by')
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('user_id', 'recipe_id', name='uq_user_favorite_recipe'),
+        Index('idx_favorites_user_created', 'user_id', 'created_at'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<FavoriteRecipe(user_id={self.user_id}, recipe_id={self.recipe_id})>"
+
+
+class SavedMealPlan(Base):
+    """User's saved meal plans with metadata."""
+
+    __tablename__ = 'saved_meal_plans'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+    plan_data = Column(Text, nullable=False)  # JSON structure containing meal plan details
+    is_template = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', back_populates='saved_meal_plans')
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_meal_plans_user_dates', 'user_id', 'start_date', 'end_date'),
+        Index('idx_meal_plans_templates', 'is_template', 'user_id'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<SavedMealPlan(id={self.id}, user_id={self.user_id}, name='{self.name}')>"
+
+
+class UserDietaryPreference(Base):
+    """Junction table for user's dietary tag preferences."""
+
+    __tablename__ = 'user_dietary_preferences'
+
+    user_preference_id = Column(Integer, ForeignKey('user_preferences.id', ondelete='CASCADE'), primary_key=True)
+    dietary_tag_id = Column(Integer, ForeignKey('dietary_tags.id', ondelete='CASCADE'), primary_key=True, index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class UserAllergen(Base):
+    """User's allergen profile with severity levels."""
+
+    __tablename__ = 'user_allergens'
+
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    allergen_id = Column(Integer, ForeignKey('allergens.id', ondelete='CASCADE'), primary_key=True)
+    severity = Column(
+        String(50),
+        CheckConstraint("severity IN ('avoid', 'severe', 'trace_ok')"),
+        default='avoid',
+        nullable=False
+    )
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship('User', back_populates='allergen_profile')
+    allergen = relationship('Allergen')
+
+    def __repr__(self) -> str:
+        return f"<UserAllergen(user_id={self.user_id}, allergen_id={self.allergen_id}, severity='{self.severity}')>"
+
+
+class IngredientPrice(Base):
+    """Ingredient pricing data for cost estimation."""
+
+    __tablename__ = 'ingredient_prices'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ingredient_id = Column(Integer, ForeignKey('ingredients.id', ondelete='CASCADE'), nullable=False, index=True)
+    price_per_unit = Column(Numeric(10, 2), CheckConstraint('price_per_unit >= 0'), nullable=False)
+    unit_id = Column(Integer, ForeignKey('units.id', ondelete='RESTRICT'))
+    store = Column(String(100), default='average')
+    currency = Column(String(3), default='GBP')
+    last_updated = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    ingredient = relationship('Ingredient')
+    unit = relationship('Unit')
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_prices_ingredient_store', 'ingredient_id', 'store', 'last_updated'),
+        Index('idx_prices_updated', 'last_updated'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<IngredientPrice(ingredient_id={self.ingredient_id}, price={self.price_per_unit} {self.currency})>"
 
 
 # ============================================================================

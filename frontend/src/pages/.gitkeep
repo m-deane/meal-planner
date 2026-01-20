@@ -1,0 +1,19 @@
+# Page Components
+
+This directory contains page-level components for routes.
+
+## Structure
+
+```
+pages/
+├── Dashboard.tsx
+├── Recipes/
+│   ├── RecipeList.tsx
+│   └── RecipeDetail.tsx
+├── MealPlans/
+│   ├── MealPlanList.tsx
+│   ├── MealPlanDetail.tsx
+│   └── MealPlanCreate.tsx
+└── ShoppingList/
+    └── ShoppingList.tsx
+```

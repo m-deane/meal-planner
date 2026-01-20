@@ -1,0 +1,15 @@
+# API Client Files
+
+This directory contains API client configuration and hooks for interacting with the backend.
+
+## Structure
+
+```
+api/
+├── client.ts           # Axios client configuration
+├── hooks/              # React Query hooks
+│   ├── useRecipes.ts
+│   ├── useMealPlans.ts
+│   └── useIngredients.ts
+└── types.ts            # API response types
+```

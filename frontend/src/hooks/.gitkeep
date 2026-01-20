@@ -1,0 +1,13 @@
+# Custom React Hooks
+
+This directory contains custom React hooks.
+
+## Structure
+
+```
+hooks/
+├── useDebounce.ts      # Debounce hook
+├── useLocalStorage.ts  # LocalStorage persistence
+├── useMediaQuery.ts    # Responsive breakpoints
+└── useToast.ts         # Toast notifications
+```
