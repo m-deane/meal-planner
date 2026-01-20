@@ -1,0 +1,14 @@
+# TypeScript Type Definitions
+
+This directory contains TypeScript type definitions and interfaces.
+
+## Structure
+
+```
+types/
+├── recipe.ts           # Recipe-related types
+├── mealPlan.ts         # Meal plan types
+├── ingredient.ts       # Ingredient types
+├── nutrition.ts        # Nutrition types
+└── api.ts              # API response types
+```

@@ -15,7 +15,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.config import config
-from src.database.models import Base, Recipe, Ingredient, Unit, Category
+from src.database.models import (
+    Base, Recipe, Ingredient, Unit, Category, User, UserPreference,
+    Allergen, DietaryTag
+)
 from src.utils.checkpoint import CheckpointManager
 from src.utils.http_client import RateLimitedHTTPClient
 
