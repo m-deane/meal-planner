@@ -27,11 +27,9 @@ export const MultiWeekPlannerPage: React.FC = () => {
 
   // Get all recipe IDs from the selected plan
   const recipeIds = selectedPlan?.weeks.flatMap(week =>
-    week.days.flatMap(day => [
-      day.breakfast?.recipe_id,
-      day.lunch?.recipe_id,
-      day.dinner?.recipe_id,
-    ].filter((id): id is number => id !== undefined))
+    week.days.flatMap(day =>
+      day.meals.map(meal => meal.recipe.id)
+    )
   ) || [];
 
   // Fetch variety analysis and cost for selected plan
@@ -43,8 +41,8 @@ export const MultiWeekPlannerPage: React.FC = () => {
   const { data: costData, isLoading: isLoadingCost } = useMealPlanCost(
     {
       recipe_ids: recipeIds,
-      start_date: selectedPlan?.start_date,
-      end_date: selectedPlan?.end_date,
+      ...(selectedPlan?.start_date && { start_date: selectedPlan.start_date }),
+      ...(selectedPlan?.end_date && { end_date: selectedPlan.end_date }),
     },
     !!selectedPlan
   );
@@ -111,7 +109,7 @@ export const MultiWeekPlannerPage: React.FC = () => {
               </svg>
             }
             title="No multi-week plans yet"
-            message="Create your first multi-week meal plan to get started"
+            description="Create your first multi-week meal plan to get started"
           >
             <Button variant="primary" onClick={() => setShowGenerateModal(true)}>
               Generate Plan
@@ -141,13 +139,13 @@ export const MultiWeekPlannerPage: React.FC = () => {
               </div>
             )}
 
-            {!selectedPlan && plansData.items.length === 1 && (
+            {!selectedPlan && plansData.items.length === 1 && plansData.items[0] && (
               <div className="mb-6">
                 <Button
                   variant="primary"
-                  onClick={() => setSelectedPlanId(plansData.items[0].id)}
+                  onClick={() => setSelectedPlanId(plansData.items[0]!.id)}
                 >
-                  View {plansData.items[0].name}
+                  View {plansData.items[0]!.name}
                 </Button>
               </div>
             )}

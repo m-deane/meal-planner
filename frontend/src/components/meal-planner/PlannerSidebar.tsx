@@ -5,7 +5,8 @@
 import React, { useState } from 'react';
 import { useInfiniteRecipes } from '../../hooks/useRecipes';
 import { DraggableRecipe } from './DraggableRecipe';
-import type { RecipeFilters, DifficultyLevel } from '../../types';
+import type { RecipeFilters, DifficultyLevel, PaginatedResponse, RecipeListItem } from '../../types';
+import type { InfiniteData } from '@tanstack/react-query';
 import {
   Search,
   Filter,
@@ -40,22 +41,17 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
   });
 
   // Fetch recipes with infinite scroll
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useInfiniteRecipes(
+  const infiniteQuery = useInfiniteRecipes(
     {
       ...filters,
-      search_query: searchQuery.length > 0 ? searchQuery : undefined,
+      ...(searchQuery.length > 0 ? { search_query: searchQuery } : {}),
     },
     undefined,
     20
   );
 
-  const recipes = data?.pages?.flatMap((page: any) => page.items) ?? [];
+  const infiniteData = infiniteQuery.data as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined;
+  const recipes = infiniteData?.pages.flatMap((page) => page.items) ?? [];
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -197,7 +193,7 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
 
       {/* Recipe List */}
       <div className="flex-1 overflow-y-auto p-4">
-        {isLoading ? (
+        {infiniteQuery.isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
           </div>
@@ -219,13 +215,13 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
             ))}
 
             {/* Load More Button */}
-            {hasNextPage && (
+            {infiniteQuery.hasNextPage && (
               <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
+                onClick={() => infiniteQuery.fetchNextPage()}
+                disabled={infiniteQuery.isFetchingNextPage}
                 className="w-full py-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
               >
-                {isFetchingNextPage ? (
+                {infiniteQuery.isFetchingNextPage ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Loading...

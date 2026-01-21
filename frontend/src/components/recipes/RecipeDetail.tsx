@@ -209,7 +209,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               <Button
                 variant="primary"
                 onClick={() => onAddToMealPlan(recipe)}
-                icon={<PlusCircleIcon className="h-5 w-5" />}
+                iconLeft={<PlusCircleIcon className="h-5 w-5" />}
               >
                 Add to Meal Plan
               </Button>
@@ -218,7 +218,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               <Button
                 variant="secondary"
                 onClick={onPrint}
-                icon={<PrinterIcon className="h-5 w-5" />}
+                iconLeft={<PrinterIcon className="h-5 w-5" />}
               >
                 Print
               </Button>
@@ -227,7 +227,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               <Button
                 variant="secondary"
                 onClick={onShare}
-                icon={<ShareIcon className="h-5 w-5" />}
+                iconLeft={<ShareIcon className="h-5 w-5" />}
               >
                 Share
               </Button>

@@ -22,10 +22,10 @@ import type {
   FavoritesResponse,
   AddFavoriteRequest,
   UpdateFavoriteRequest,
-  FavoritesSortBy,
   PaginationParams,
   APIError,
 } from '../types';
+import { FavoritesSortBy } from '../types';
 
 /**
  * Query keys for favorites.
@@ -158,7 +158,11 @@ export const useToggleFavorite = (): {
     if (isFavorite) {
       await removeMutation.mutateAsync(recipeId);
     } else {
-      await addMutation.mutateAsync({ recipe_id: recipeId, notes });
+      const request: AddFavoriteRequest = { recipe_id: recipeId };
+      if (notes !== undefined) {
+        request.notes = notes;
+      }
+      await addMutation.mutateAsync(request);
     }
   };
 

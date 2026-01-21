@@ -22,34 +22,34 @@ export const RegisterForm = (): JSX.Element => {
 
     // Email validation
     if (!email.trim()) {
-      errors.email = 'Email is required';
+      errors['email'] = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors['email'] = 'Please enter a valid email address';
     }
 
     // Username validation
     if (!username.trim()) {
-      errors.username = 'Username is required';
+      errors['username'] = 'Username is required';
     } else if (username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
+      errors['username'] = 'Username must be at least 3 characters';
     } else if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      errors.username = 'Username can only contain letters, numbers, hyphens, and underscores';
+      errors['username'] = 'Username can only contain letters, numbers, hyphens, and underscores';
     }
 
     // Password validation
     if (!password) {
-      errors.password = 'Password is required';
+      errors['password'] = 'Password is required';
     } else if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+      errors['password'] = 'Password must be at least 8 characters';
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and number';
+      errors['password'] = 'Password must contain uppercase, lowercase, and number';
     }
 
     // Confirm password validation
     if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
+      errors['confirmPassword'] = 'Please confirm your password';
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors['confirmPassword'] = 'Passwords do not match';
     }
 
     setValidationErrors(errors);
@@ -126,16 +126,16 @@ export const RegisterForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.email
+                    validationErrors['email']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="you@example.com"
               />
-              {validationErrors.email && (
+              {validationErrors['email'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.email}
+                  {validationErrors['email']}
                 </p>
               )}
             </div>
@@ -162,16 +162,16 @@ export const RegisterForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.username
+                    validationErrors['username']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="johndoe"
               />
-              {validationErrors.username && (
+              {validationErrors['username'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.username}
+                  {validationErrors['username']}
                 </p>
               )}
             </div>
@@ -198,16 +198,16 @@ export const RegisterForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.password
+                    validationErrors['password']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="••••••••"
               />
-              {validationErrors.password && (
+              {validationErrors['password'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.password}
+                  {validationErrors['password']}
                 </p>
               )}
               <p className="mt-2 text-sm text-gray-500">
@@ -237,16 +237,16 @@ export const RegisterForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.confirmPassword
+                    validationErrors['confirmPassword']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="••••••••"
               />
-              {validationErrors.confirmPassword && (
+              {validationErrors['confirmPassword'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.confirmPassword}
+                  {validationErrors['confirmPassword']}
                 </p>
               )}
             </div>

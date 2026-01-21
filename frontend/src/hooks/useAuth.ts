@@ -104,10 +104,10 @@ export const useLogout = (): UseMutationResult<void, APIError, void> => {
 /**
  * Hook to get current authenticated user.
  */
-export const useCurrentUser = (): UseQueryResult<User> => {
+export const useCurrentUser = (): UseQueryResult<User | undefined> => {
   const { isAuthenticated, user, setUser, clearAuth } = useAuthStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: authKeys.me(),
     queryFn: getMe,
     enabled: isAuthenticated,
@@ -115,14 +115,19 @@ export const useCurrentUser = (): UseQueryResult<User> => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: false,
-    onSuccess: (data) => {
-      setUser(data);
-    },
-    onError: () => {
-      // Clear auth if user fetch fails
-      clearAuth();
-    },
   });
+
+  // Handle successful fetch
+  if (query.data && query.isSuccess) {
+    setUser(query.data);
+  }
+
+  // Handle error
+  if (query.isError) {
+    clearAuth();
+  }
+
+  return query;
 };
 
 /**
@@ -172,16 +177,18 @@ export const useChangePassword = (): UseMutationResult<
 export const useVerifyToken = (): UseQueryResult<boolean> => {
   const { isAuthenticated, clearAuth } = useAuthStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: authKeys.verify(),
     queryFn: verifyToken,
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000, // 2 minutes
     retry: false,
-    onSuccess: (isValid) => {
-      if (!isValid) {
-        clearAuth();
-      }
-    },
   });
+
+  // Handle successful verification
+  if (query.data !== undefined && query.isSuccess && !query.data) {
+    clearAuth();
+  }
+
+  return query;
 };

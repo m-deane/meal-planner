@@ -10,9 +10,15 @@ afterEach(() => {
 // Extend Vitest's expect with jest-dom matchers
 expect.extend({});
 
+// Type declaration for global
+declare global {
+  // eslint-disable-next-line no-var
+  var ResizeObserver: typeof ResizeObserver;
+}
+
 // Mock ResizeObserver for Recharts
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-}));
+})) as unknown as typeof ResizeObserver;

@@ -20,7 +20,6 @@ import {
   Users,
   ChefHat,
 } from 'lucide-react';
-import { ImageType } from '../types';
 
 type TabId = 'profile' | 'preferences' | 'allergens' | 'favorites';
 
@@ -57,7 +56,7 @@ export const ProfilePage = (): JSX.Element => {
   }
 
   const allFavorites =
-    favoritesData?.pages.flatMap((page) => page.items) ?? [];
+    favoritesData?.items ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -175,12 +175,12 @@ export const VarietyIndicator: React.FC<VarietyIndicatorProps> = ({
               </div>
               <div className="flex flex-wrap gap-1">
                 {metrics.unique_proteins.slice(0, 5).map((protein, index) => (
-                  <Badge key={index} variant="secondary" size="sm">
+                  <Badge key={index} color="default" size="sm">
                     {protein}
                   </Badge>
                 ))}
                 {metrics.unique_proteins.length > 5 && (
-                  <Badge variant="secondary" size="sm">
+                  <Badge color="default" size="sm">
                     +{metrics.unique_proteins.length - 5}
                   </Badge>
                 )}
@@ -202,12 +202,12 @@ export const VarietyIndicator: React.FC<VarietyIndicatorProps> = ({
               </div>
               <div className="flex flex-wrap gap-1">
                 {metrics.unique_cuisines.slice(0, 5).map((cuisine, index) => (
-                  <Badge key={index} variant="secondary" size="sm">
+                  <Badge key={index} color="default" size="sm">
                     {cuisine}
                   </Badge>
                 ))}
                 {metrics.unique_cuisines.length > 5 && (
-                  <Badge variant="secondary" size="sm">
+                  <Badge color="default" size="sm">
                     +{metrics.unique_cuisines.length - 5}
                   </Badge>
                 )}
@@ -229,7 +229,7 @@ export const VarietyIndicator: React.FC<VarietyIndicatorProps> = ({
               </div>
               <div className="flex flex-wrap gap-1">
                 {metrics.unique_cooking_methods.slice(0, 5).map((method, index) => (
-                  <Badge key={index} variant="secondary" size="sm">
+                  <Badge key={index} color="default" size="sm">
                     {method}
                   </Badge>
                 ))}

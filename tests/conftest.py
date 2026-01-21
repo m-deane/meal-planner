@@ -399,3 +399,48 @@ def create_ingredient_in_db(session: Session, name: str) -> Ingredient:
     session.refresh(ingredient)
 
     return ingredient
+
+
+def create_test_recipe(session: Session, **kwargs) -> Recipe:
+    """Helper to create a test recipe in the database."""
+    import uuid
+    unique_id = str(uuid.uuid4())[:8]
+    defaults = {
+        'gousto_id': f'gousto_{unique_id}',
+        'slug': f'test-recipe-{unique_id}',
+        'name': f'Test Recipe {unique_id}',
+        'source_url': f'https://www.gousto.co.uk/cookbook/recipes/test-{unique_id}',
+        'is_active': True,
+        'cooking_time_minutes': 30,
+        'servings': 2,
+    }
+    defaults.update(kwargs)
+
+    recipe = Recipe(**defaults)
+    session.add(recipe)
+    session.commit()
+    session.refresh(recipe)
+
+    return recipe
+
+
+def create_test_user(session: Session, **kwargs) -> User:
+    """Helper to create a test user in the database."""
+    from passlib.hash import bcrypt
+    import uuid
+    unique_id = str(uuid.uuid4())[:8]
+    defaults = {
+        'email': f'test_{unique_id}@example.com',
+        'username': f'testuser_{unique_id}',
+        'password_hash': bcrypt.hash('testpassword123'),
+        'is_active': True,
+        'is_verified': True,
+    }
+    defaults.update(kwargs)
+
+    user = User(**defaults)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    return user

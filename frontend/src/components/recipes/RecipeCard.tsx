@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ClockIcon,
-  FireIcon,
   PlusCircleIcon,
   SignalIcon,
 } from '@heroicons/react/24/outline';

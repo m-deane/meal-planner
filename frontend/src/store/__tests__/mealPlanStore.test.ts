@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useMealPlanStore, type DayOfWeek } from '../mealPlanStore';
 import type { RecipeListItem, MealType } from '../../types';
+import { DifficultyLevel } from '../../types';
 
 // ============================================================================
 // TEST DATA
@@ -18,7 +19,7 @@ const mockRecipe1: RecipeListItem = {
   cooking_time_minutes: 30,
   prep_time_minutes: 10,
   total_time_minutes: 40,
-  difficulty: 'easy' as const,
+  difficulty: DifficultyLevel.EASY,
   servings: 4,
   categories: [],
   dietary_tags: [],
@@ -41,7 +42,7 @@ const mockRecipe2: RecipeListItem = {
   cooking_time_minutes: 15,
   prep_time_minutes: 10,
   total_time_minutes: 25,
-  difficulty: 'easy' as const,
+  difficulty: DifficultyLevel.EASY,
   servings: 2,
   categories: [],
   dietary_tags: [],
@@ -75,7 +76,7 @@ describe('mealPlanStore', () => {
       const { plan } = useMealPlanStore.getState();
       const mondayBreakfast = plan.days.monday.breakfast;
       expect(mondayBreakfast).toBeDefined();
-      expect(mondayBreakfast?.recipe.id).toBe(1);
+      expect(mondayBreakfast?.recipe?.id).toBe(1);
       expect(mondayBreakfast?.servings).toBe(4);
     });
 
@@ -97,7 +98,7 @@ describe('mealPlanStore', () => {
 
       const { plan } = useMealPlanStore.getState();
       const wednesdayDinner = plan.days.wednesday.dinner;
-      expect(wednesdayDinner?.recipe.id).toBe(2);
+      expect(wednesdayDinner?.recipe?.id).toBe(2);
     });
   });
 
@@ -133,7 +134,7 @@ describe('mealPlanStore', () => {
 
       const { plan } = useMealPlanStore.getState();
       expect(plan.days.monday.breakfast).toBeNull();
-      expect(plan.days.tuesday.lunch?.recipe.id).toBe(1);
+      expect(plan.days.tuesday.lunch?.recipe?.id).toBe(1);
     });
 
     it('should not move if source slot is empty', () => {
@@ -162,8 +163,8 @@ describe('mealPlanStore', () => {
       );
 
       const { plan } = useMealPlanStore.getState();
-      expect(plan.days.monday.breakfast?.recipe.id).toBe(2);
-      expect(plan.days.tuesday.lunch?.recipe.id).toBe(1);
+      expect(plan.days.monday.breakfast?.recipe?.id).toBe(2);
+      expect(plan.days.tuesday.lunch?.recipe?.id).toBe(1);
     });
 
     it('should handle swap when one slot is empty', () => {
@@ -180,7 +181,7 @@ describe('mealPlanStore', () => {
 
       const { plan } = useMealPlanStore.getState();
       expect(plan.days.monday.breakfast).toBeNull();
-      expect(plan.days.tuesday.lunch?.recipe.id).toBe(1);
+      expect(plan.days.tuesday.lunch?.recipe?.id).toBe(1);
     });
   });
 
@@ -235,7 +236,7 @@ describe('mealPlanStore', () => {
       const { plan } = useMealPlanStore.getState();
       expect(plan.days.monday.breakfast).toBeNull();
       expect(plan.days.tuesday.breakfast).toBeNull();
-      expect(plan.days.monday.lunch?.recipe.id).toBe(1); // Lunch should remain
+      expect(plan.days.monday.lunch?.recipe?.id).toBe(1); // Lunch should remain
     });
   });
 

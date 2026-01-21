@@ -86,13 +86,11 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
         <EmptyState
           title="Error loading recipe"
           description={error.message || 'The recipe could not be loaded. Please try again.'}
-          icon="error"
-          action={
-            <Button variant="primary" onClick={() => navigate('/recipes')}>
-              Browse All Recipes
-            </Button>
-          }
-        />
+        >
+          <Button variant="primary" onClick={() => navigate('/recipes')}>
+            Browse All Recipes
+          </Button>
+        </EmptyState>
       </div>
     );
   }
@@ -104,13 +102,11 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
         <EmptyState
           title="Recipe not found"
           description="The recipe you're looking for doesn't exist or has been removed."
-          icon="search"
-          action={
-            <Button variant="primary" onClick={() => navigate('/recipes')}>
-              Browse All Recipes
-            </Button>
-          }
-        />
+        >
+          <Button variant="primary" onClick={() => navigate('/recipes')}>
+            Browse All Recipes
+          </Button>
+        </EmptyState>
       </div>
     );
   }
@@ -162,7 +158,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
       {/* Recipe detail */}
       <RecipeDetail
         recipe={recipe}
-        onAddToMealPlan={onAddToMealPlan}
+        {...(onAddToMealPlan && { onAddToMealPlan })}
         onPrint={handlePrint}
         onShare={handleShare}
       />

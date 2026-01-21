@@ -20,13 +20,13 @@ export const LoginForm = (): JSX.Element => {
     const errors: Record<string, string> = {};
 
     if (!username.trim()) {
-      errors.username = 'Username or email is required';
+      errors['username'] = 'Username or email is required';
     }
 
     if (!password) {
-      errors.password = 'Password is required';
+      errors['password'] = 'Password is required';
     } else if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors['password'] = 'Password must be at least 6 characters';
     }
 
     setValidationErrors(errors);
@@ -98,16 +98,16 @@ export const LoginForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.username
+                    validationErrors['username']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="Enter your username or email"
               />
-              {validationErrors.username && (
+              {validationErrors['username'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.username}
+                  {validationErrors['username']}
                 </p>
               )}
             </div>
@@ -134,16 +134,16 @@ export const LoginForm = (): JSX.Element => {
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
-                    validationErrors.password
+                    validationErrors['password']
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }
                 `}
                 placeholder="Enter your password"
               />
-              {validationErrors.password && (
+              {validationErrors['password'] && (
                 <p className="mt-2 text-sm text-red-600">
-                  {validationErrors.password}
+                  {validationErrors['password']}
                 </p>
               )}
             </div>

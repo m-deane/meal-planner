@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FilterPanel, FilterSection, FilterOption, RangeFilter } from '../common';
-import type { RecipeFilters as RecipeFiltersType, DifficultyLevel } from '../../types';
+import type { RecipeFilters as RecipeFiltersType } from '../../types';
+import { DifficultyLevel } from '../../types';
 
 /**
  * RecipeFilters component props
@@ -251,19 +252,19 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
     type: 'checkbox',
     options: [
       {
-        id: 'easy',
+        id: DifficultyLevel.EASY,
         label: 'Easy',
-        selected: localFilters.difficulty?.includes('easy') ?? false,
+        selected: localFilters.difficulty?.includes(DifficultyLevel.EASY) ?? false,
       },
       {
-        id: 'medium',
+        id: DifficultyLevel.MEDIUM,
         label: 'Medium',
-        selected: localFilters.difficulty?.includes('medium') ?? false,
+        selected: localFilters.difficulty?.includes(DifficultyLevel.MEDIUM) ?? false,
       },
       {
-        id: 'hard',
+        id: DifficultyLevel.HARD,
         label: 'Hard',
-        selected: localFilters.difficulty?.includes('hard') ?? false,
+        selected: localFilters.difficulty?.includes(DifficultyLevel.HARD) ?? false,
       },
     ],
   });
@@ -356,7 +357,7 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
       onCheckboxChange={handleCheckboxChange}
       onRangeChange={handleRangeChange}
       onClearAll={handleClearAll}
-      onApply={showApplyButton ? handleApply : undefined}
+      {...(showApplyButton ? { onApply: handleApply } : {})}
       showApplyButton={showApplyButton}
       showClearButton
       className={className}

@@ -20,8 +20,8 @@ export const MultiWeekGenerateModal: React.FC<MultiWeekGenerateModalProps> = ({
   onSuccess,
 }) => {
   const [weeksCount, setWeeksCount] = useState(4);
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split('T')[0]
+  const [startDate, setStartDate] = useState<string>(
+    new Date().toISOString().split('T')[0] || ''
   );
   const [planName, setPlanName] = useState('');
   const [budgetPerWeek, setBudgetPerWeek] = useState<number | ''>('');
@@ -38,9 +38,9 @@ export const MultiWeekGenerateModal: React.FC<MultiWeekGenerateModalProps> = ({
     const request: MultiWeekGenerateRequest = {
       weeks_count: weeksCount,
       start_date: startDate,
-      name: planName.trim() || undefined,
-      budget_per_week: budgetPerWeek ? Number(budgetPerWeek) : undefined,
       variety_preferences: varietyPreferences,
+      ...(planName.trim() ? { name: planName.trim() } : {}),
+      ...(budgetPerWeek ? { budget_per_week: Number(budgetPerWeek) } : {}),
     };
 
     try {
@@ -56,7 +56,7 @@ export const MultiWeekGenerateModal: React.FC<MultiWeekGenerateModalProps> = ({
 
   const resetForm = (): void => {
     setWeeksCount(4);
-    setStartDate(new Date().toISOString().split('T')[0]);
+    setStartDate(new Date().toISOString().split('T')[0] || '');
     setPlanName('');
     setBudgetPerWeek('');
     setVarietyPreferences({
@@ -77,7 +77,7 @@ export const MultiWeekGenerateModal: React.FC<MultiWeekGenerateModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Generate Multi-Week Meal Plan"
-      size="xl"
+      size="lg"
     >
       <div className="space-y-6">
         {/* Basic Settings */}
@@ -263,7 +263,7 @@ export const MultiWeekGenerateModal: React.FC<MultiWeekGenerateModalProps> = ({
             variant="primary"
             onClick={handleGenerate}
             disabled={generateMutation.isPending || !startDate}
-            isLoading={generateMutation.isPending}
+            loading={generateMutation.isPending}
           >
             Generate Plan
           </Button>

@@ -2,7 +2,7 @@
  * FavoritesPage - Display and manage user's favorite recipes.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FavoritesList } from '../components/favorites/FavoritesList';
 import { Button } from '../components/common/Button';
