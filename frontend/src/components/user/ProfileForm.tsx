@@ -41,15 +41,15 @@ export const ProfileForm = (): JSX.Element => {
     const errors: Record<string, string> = {};
 
     if (!email.trim()) {
-      errors.email = 'Email is required';
+      errors['email'] = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors['email'] = 'Please enter a valid email address';
     }
 
     if (!username.trim()) {
-      errors.username = 'Username is required';
+      errors['username'] = 'Username is required';
     } else if (username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
+      errors['username'] = 'Username must be at least 3 characters';
     }
 
     setProfileValidationErrors(errors);
@@ -60,21 +60,21 @@ export const ProfileForm = (): JSX.Element => {
     const errors: Record<string, string> = {};
 
     if (!currentPassword) {
-      errors.currentPassword = 'Current password is required';
+      errors['currentPassword'] = 'Current password is required';
     }
 
     if (!newPassword) {
-      errors.newPassword = 'New password is required';
+      errors['newPassword'] = 'New password is required';
     } else if (newPassword.length < 8) {
-      errors.newPassword = 'Password must be at least 8 characters';
+      errors['newPassword'] = 'Password must be at least 8 characters';
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-      errors.newPassword = 'Password must contain uppercase, lowercase, and number';
+      errors['newPassword'] = 'Password must contain uppercase, lowercase, and number';
     }
 
     if (!confirmNewPassword) {
-      errors.confirmNewPassword = 'Please confirm your new password';
+      errors['confirmNewPassword'] = 'Please confirm your new password';
     } else if (newPassword !== confirmNewPassword) {
-      errors.confirmNewPassword = 'Passwords do not match';
+      errors['confirmNewPassword'] = 'Passwords do not match';
     }
 
     setPasswordValidationErrors(errors);
@@ -207,15 +207,15 @@ export const ProfileForm = (): JSX.Element => {
                     appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                     ${
-                      profileValidationErrors.email
+                      profileValidationErrors['email']
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }
                   `}
                 />
-                {profileValidationErrors.email && (
+                {profileValidationErrors['email'] && (
                   <p className="mt-2 text-sm text-red-600">
-                    {profileValidationErrors.email}
+                    {profileValidationErrors['email']}
                   </p>
                 )}
               </div>
@@ -241,15 +241,15 @@ export const ProfileForm = (): JSX.Element => {
                     appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                     ${
-                      profileValidationErrors.username
+                      profileValidationErrors['username']
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }
                   `}
                 />
-                {profileValidationErrors.username && (
+                {profileValidationErrors['username'] && (
                   <p className="mt-2 text-sm text-red-600">
-                    {profileValidationErrors.username}
+                    {profileValidationErrors['username']}
                   </p>
                 )}
               </div>
@@ -350,15 +350,15 @@ export const ProfileForm = (): JSX.Element => {
                     appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                     ${
-                      passwordValidationErrors.currentPassword
+                      passwordValidationErrors['currentPassword']
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }
                   `}
                 />
-                {passwordValidationErrors.currentPassword && (
+                {passwordValidationErrors['currentPassword'] && (
                   <p className="mt-2 text-sm text-red-600">
-                    {passwordValidationErrors.currentPassword}
+                    {passwordValidationErrors['currentPassword']}
                   </p>
                 )}
               </div>
@@ -385,15 +385,15 @@ export const ProfileForm = (): JSX.Element => {
                     appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                     ${
-                      passwordValidationErrors.newPassword
+                      passwordValidationErrors['newPassword']
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }
                   `}
                 />
-                {passwordValidationErrors.newPassword && (
+                {passwordValidationErrors['newPassword'] && (
                   <p className="mt-2 text-sm text-red-600">
-                    {passwordValidationErrors.newPassword}
+                    {passwordValidationErrors['newPassword']}
                   </p>
                 )}
               </div>
@@ -420,15 +420,15 @@ export const ProfileForm = (): JSX.Element => {
                     appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                     placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
                     ${
-                      passwordValidationErrors.confirmNewPassword
+                      passwordValidationErrors['confirmNewPassword']
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }
                   `}
                 />
-                {passwordValidationErrors.confirmNewPassword && (
+                {passwordValidationErrors['confirmNewPassword'] && (
                   <p className="mt-2 text-sm text-red-600">
-                    {passwordValidationErrors.confirmNewPassword}
+                    {passwordValidationErrors['confirmNewPassword']}
                   </p>
                 )}
               </div>

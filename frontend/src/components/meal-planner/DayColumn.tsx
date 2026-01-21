@@ -34,7 +34,7 @@ const getDayIndex = (day: DayOfWeek): number => {
   return days.indexOf(day);
 };
 
-const getFormattedDate = (startDate: string | null, day: DayOfWeek): string | null => {
+const getFormattedDate = (startDate: string | null | undefined, day: DayOfWeek): string | null => {
   if (!startDate) return null;
 
   try {

@@ -8,6 +8,7 @@ import { userEvent } from '@testing-library/user-event';
 import { DndContext } from '@dnd-kit/core';
 import { DraggableRecipe } from '../DraggableRecipe';
 import type { RecipeListItem } from '../../../types';
+import { DifficultyLevel, ImageType } from '../../../types';
 
 // ============================================================================
 // TEST DATA
@@ -21,7 +22,7 @@ const mockRecipe: RecipeListItem = {
   cooking_time_minutes: 30,
   prep_time_minutes: 10,
   total_time_minutes: 40,
-  difficulty: 'easy' as const,
+  difficulty: DifficultyLevel.EASY,
   servings: 4,
   categories: [],
   dietary_tags: [
@@ -32,7 +33,7 @@ const mockRecipe: RecipeListItem = {
   main_image: {
     id: 1,
     url: 'https://example.com/image.jpg',
-    image_type: 'main' as const,
+    image_type: ImageType.MAIN,
     display_order: 1,
     alt_text: 'Chicken Pasta',
     width: 800,

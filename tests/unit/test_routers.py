@@ -19,18 +19,20 @@ class TestRecipesRouter:
     @pytest.fixture
     def client(self, db_session):
         """Create test client with mocked database."""
-        app = create_app()
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        def override_get_db():
-            try:
-                yield db_session
-            finally:
-                pass
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
 
-        from src.api.dependencies import get_db
-        app.dependency_overrides[get_db] = override_get_db
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
 
-        return TestClient(app)
+            with TestClient(app) as test_client:
+                yield test_client
 
     def test_list_recipes_default(self, client):
         """Test listing recipes with default pagination."""
@@ -183,18 +185,20 @@ class TestCategoriesRouter:
     @pytest.fixture
     def client(self, db_session):
         """Create test client with database."""
-        app = create_app()
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        def override_get_db():
-            try:
-                yield db_session
-            finally:
-                pass
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
 
-        from src.api.dependencies import get_db
-        app.dependency_overrides[get_db] = override_get_db
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
 
-        return TestClient(app)
+            with TestClient(app) as test_client:
+                yield test_client
 
     def test_list_categories(self, client, db_session):
         """Test listing all categories."""
@@ -254,18 +258,20 @@ class TestMealPlansRouter:
     @pytest.fixture
     def client(self, db_session):
         """Create test client."""
-        app = create_app()
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        def override_get_db():
-            try:
-                yield db_session
-            finally:
-                pass
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
 
-        from src.api.dependencies import get_db
-        app.dependency_overrides[get_db] = override_get_db
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
 
-        return TestClient(app)
+            with TestClient(app) as test_client:
+                yield test_client
 
     def test_generate_meal_plan(self, client):
         """Test basic meal plan generation."""
@@ -320,18 +326,20 @@ class TestShoppingListsRouter:
     @pytest.fixture
     def client(self, db_session):
         """Create test client."""
-        app = create_app()
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        def override_get_db():
-            try:
-                yield db_session
-            finally:
-                pass
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
 
-        from src.api.dependencies import get_db
-        app.dependency_overrides[get_db] = override_get_db
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
 
-        return TestClient(app)
+            with TestClient(app) as test_client:
+                yield test_client
 
     def test_generate_shopping_list(self, client):
         """Test shopping list generation from recipe IDs."""

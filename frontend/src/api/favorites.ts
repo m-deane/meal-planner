@@ -8,9 +8,9 @@ import type {
   FavoritesResponse,
   AddFavoriteRequest,
   UpdateFavoriteRequest,
-  FavoritesSortBy,
   PaginationParams,
 } from '../types';
+import { FavoritesSortBy } from '../types';
 
 /**
  * Get user's favorite recipes with pagination.

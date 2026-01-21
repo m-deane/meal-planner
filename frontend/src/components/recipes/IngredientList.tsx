@@ -70,10 +70,6 @@ const IngredientItem: React.FC<IngredientItemProps> = ({
     ? (ingredient.quantity * servingsMultiplier).toFixed(1).replace(/\.0$/, '')
     : null;
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onToggle(e.target.checked);
-  };
-
   return (
     <li
       className={`

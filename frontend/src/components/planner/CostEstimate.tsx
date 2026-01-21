@@ -166,7 +166,7 @@ export const CostEstimate: React.FC<CostEstimateProps> = ({
                 </span>
                 {costData.budget_comparison.under_over_budget !== 0 && (
                   <Badge
-                    variant={costData.budget_comparison.under_over_budget < 0 ? 'success' : 'error'}
+                    color={costData.budget_comparison.under_over_budget < 0 ? 'success' : 'error'}
                     size="sm"
                   >
                     {costData.budget_comparison.under_over_budget > 0 ? '+' : ''}

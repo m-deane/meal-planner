@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
-import type { MultiWeekPlan, WeekPlanSummary } from '../../types';
+import type { MultiWeekPlan } from '../../types';
 
 interface MultiWeekViewProps {
   multiWeekPlan: MultiWeekPlan;
@@ -137,7 +137,7 @@ export const MultiWeekView: React.FC<MultiWeekViewProps> = ({
                       <div>
                         <span className="text-gray-600">Variety:</span>{' '}
                         <Badge
-                          variant={
+                          color={
                             weekSummary.variety_score >= 75
                               ? 'success'
                               : weekSummary.variety_score >= 50
@@ -174,60 +174,50 @@ export const MultiWeekView: React.FC<MultiWeekViewProps> = ({
               {isExpanded && weekPlan && (
                 <div className="p-6 border-t border-gray-200">
                   <div className="space-y-4">
-                    {weekPlan.days.map((day) => (
-                      <div key={day.date} className="pb-4 border-b border-gray-100 last:border-0">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900">
-                            {new Date(day.date).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </h4>
-                          <span className="text-sm text-gray-500">
-                            {day.total_calories} cal
-                          </span>
+                    {weekPlan.days.map((day) => {
+                      const dayDate = day.date ? new Date(day.date) : null;
+                      const totalCalories = day.daily_nutrition?.calories ?? 0;
+
+                      return (
+                        <div key={day.date || day.day} className="pb-4 border-b border-gray-100 last:border-0">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-900">
+                              {dayDate
+                                ? dayDate.toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })
+                                : `Day ${day.day}`}
+                            </h4>
+                            <span className="text-sm text-gray-500">
+                              {totalCalories.toFixed(0)} cal
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {day.meals.map((meal, index) => (
+                              <div key={`${day.day}-${meal.meal_type}-${index}`} className="bg-gray-50 rounded-lg p-3">
+                                <div className="text-xs text-gray-500 mb-1 capitalize">
+                                  {meal.meal_type}
+                                </div>
+                                <Link
+                                  to={`/recipes/${meal.recipe.id}`}
+                                  className="text-sm font-medium text-gray-900 hover:text-primary-600"
+                                >
+                                  {meal.recipe.name}
+                                </Link>
+                                {meal.servings > 1 && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {meal.servings} servings
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {day.breakfast && (
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="text-xs text-gray-500 mb-1">Breakfast</div>
-                              <Link
-                                to={`/recipes/${day.breakfast.recipe_id}`}
-                                className="text-sm font-medium text-gray-900 hover:text-primary-600"
-                              >
-                                {day.breakfast.recipe_name}
-                              </Link>
-                            </div>
-                          )}
-
-                          {day.lunch && (
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="text-xs text-gray-500 mb-1">Lunch</div>
-                              <Link
-                                to={`/recipes/${day.lunch.recipe_id}`}
-                                className="text-sm font-medium text-gray-900 hover:text-primary-600"
-                              >
-                                {day.lunch.recipe_name}
-                              </Link>
-                            </div>
-                          )}
-
-                          {day.dinner && (
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="text-xs text-gray-500 mb-1">Dinner</div>
-                              <Link
-                                to={`/recipes/${day.dinner.recipe_id}`}
-                                className="text-sm font-medium text-gray-900 hover:text-primary-600"
-                              >
-                                {day.dinner.recipe_name}
-                              </Link>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Week Actions */}

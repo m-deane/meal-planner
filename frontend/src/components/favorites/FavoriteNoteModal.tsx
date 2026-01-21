@@ -19,7 +19,7 @@ export const FavoriteNoteModal: React.FC<FavoriteNoteModalProps> = ({
   onClose,
   favorite,
 }) => {
-  const [notes, setNotes] = useState(favorite.notes || '');
+  const [notes, setNotes] = useState(favorite.notes ?? '');
   const [hasChanges, setHasChanges] = useState(false);
 
   const updateMutation = useUpdateFavorite();
@@ -41,9 +41,10 @@ export const FavoriteNoteModal: React.FC<FavoriteNoteModalProps> = ({
     }
 
     try {
+      const trimmedNotes = notes.trim();
       await updateMutation.mutateAsync({
         recipeId: favorite.recipe_id,
-        data: { notes: notes.trim() || null },
+        data: trimmedNotes ? { notes: trimmedNotes } : {},
       });
       onClose();
     } catch (error) {
@@ -109,7 +110,7 @@ export const FavoriteNoteModal: React.FC<FavoriteNoteModalProps> = ({
             variant="primary"
             onClick={handleSave}
             disabled={!hasChanges || updateMutation.isPending}
-            isLoading={updateMutation.isPending}
+            loading={updateMutation.isPending}
           >
             Save Notes
           </Button>

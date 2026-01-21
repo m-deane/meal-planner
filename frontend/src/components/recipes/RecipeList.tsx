@@ -190,7 +190,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
         <RecipeCard
           key={recipe.id}
           recipe={recipe}
-          onAddToMealPlan={onAddToMealPlan}
+          {...(onAddToMealPlan ? { onAddToMealPlan } : {})}
           showNutrition={showNutrition}
           showCategories={showCategories}
         />

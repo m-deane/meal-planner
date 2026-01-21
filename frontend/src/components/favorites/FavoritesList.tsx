@@ -22,7 +22,6 @@ interface FavoritesListProps {
 
 export const FavoritesList: React.FC<FavoritesListProps> = ({
   sortBy,
-  onSortChange,
   showAddAllToMealPlan = false,
   onAddAllToMealPlan,
 }) => {
@@ -81,7 +80,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
           </svg>
         }
         title="No favorites yet"
-        message="Start adding recipes to your favorites to see them here"
+        description="Start adding recipes to your favorites to see them here"
       />
     );
   }
@@ -130,7 +129,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
               {favorite.recipe.categories && favorite.recipe.categories.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {favorite.recipe.categories.slice(0, 3).map((category) => (
-                    <Badge key={category.id} variant="secondary" size="sm">
+                    <Badge key={category.id} color="default" size="sm">
                       {category.name}
                     </Badge>
                   ))}

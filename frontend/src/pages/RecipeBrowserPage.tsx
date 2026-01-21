@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SearchBar, Pagination } from '../components/common';
+import type { InfiniteData } from '@tanstack/react-query';
+import { SearchBar } from '../components/common';
 import { RecipeList, RecipeFilters } from '../components/recipes';
 import { useInfiniteRecipes } from '../hooks/useRecipes';
 import { useCategories, useDietaryTags, useAllergens } from '../hooks/useCategories';
-import type { RecipeFilters as RecipeFiltersType, RecipeListItem } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import type { RecipeFilters as RecipeFiltersType, RecipeListItem, PaginatedResponse } from '../types';
+import { ChevronRightIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 
 /**
  * RecipeBrowserPage component props
@@ -152,7 +153,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
 
   // Fetch recipes with infinite scroll
   const {
-    data,
+    data: infiniteData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -160,15 +161,20 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
     error,
   } = useInfiniteRecipes(filters, undefined, 20);
 
-  // Flatten paginated results
-  const recipes = data?.pages.flatMap((page) => page.items) ?? [];
+  // Flatten paginated results from infinite query
+  const recipes = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages?.flatMap((page) => page.items) ?? [];
 
   // Update filters when search query changes
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      search_query: searchQuery || undefined,
-    }));
+    setFilters((prev) => {
+      const newFilters = { ...prev };
+      if (searchQuery) {
+        newFilters.search_query = searchQuery;
+      } else {
+        delete newFilters.search_query;
+      }
+      return newFilters;
+    });
   }, [searchQuery]);
 
   // Sync URL with filters
@@ -190,7 +196,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const totalResults = data?.pages[0]?.total ?? 0;
+  const totalResults = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages?.[0]?.total ?? 0;
 
   return (
     <div className={`min-h-screen bg-gray-50 ${className}`}>
@@ -249,8 +255,8 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
             <RecipeList
               recipes={recipes}
               loading={isLoading}
-              error={error?.message}
-              onAddToMealPlan={onAddToMealPlan}
+              {...(error?.message && { error: error.message })}
+              {...(onAddToMealPlan && { onAddToMealPlan })}
               columns={{ sm: 1, md: 2, lg: 2, xl: 3 }}
             />
 

@@ -5,7 +5,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { APIError } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env['VITE_API_BASE_URL'] || 'http://localhost:8000/api/v1';
 
 /**
  * Create configured axios instance.
@@ -41,8 +41,11 @@ const createAPIClient = (): AxiosInstance => {
     (error: AxiosError): Promise<APIError> => {
       const apiError: APIError = {
         message: 'An unexpected error occurred',
-        status: error.response?.status,
       };
+
+      if (error.response?.status !== undefined) {
+        apiError.status = error.response.status;
+      }
 
       if (error.response) {
         // Server responded with error status
@@ -51,17 +54,25 @@ const createAPIClient = (): AxiosInstance => {
         if (typeof data === 'object' && data !== null) {
           // FastAPI validation error format
           if ('detail' in data) {
-            if (Array.isArray(data.detail)) {
+            if (Array.isArray(data['detail'])) {
               apiError.message = 'Validation error';
-              apiError.errors = data.detail.map((err: Record<string, unknown>) => ({
-                field: Array.isArray(err.loc) ? err.loc.join('.') : undefined,
-                message: String(err.msg || 'Invalid value'),
-              }));
-            } else if (typeof data.detail === 'string') {
-              apiError.message = data.detail;
+              apiError.errors = data['detail'].map((err: Record<string, unknown>) => {
+                const loc = err['loc'];
+                const field = Array.isArray(loc) ? loc.join('.') : undefined;
+                const msg = err['msg'];
+                const errorItem: { message: string; field?: string } = {
+                  message: String(msg || 'Invalid value'),
+                };
+                if (field !== undefined) {
+                  errorItem.field = field;
+                }
+                return errorItem;
+              });
+            } else if (typeof data['detail'] === 'string') {
+              apiError.message = data['detail'];
             }
-          } else if ('message' in data && typeof data.message === 'string') {
-            apiError.message = data.message;
+          } else if ('message' in data && typeof data['message'] === 'string') {
+            apiError.message = data['message'];
           }
         }
 

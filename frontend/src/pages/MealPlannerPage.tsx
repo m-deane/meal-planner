@@ -14,7 +14,7 @@ import {
   useGenerateMealPlan,
   useSaveMealPlan,
 } from '../hooks/useMealPlan';
-import type { MealPlanGenerateRequest, MealPlanResponse } from '../types';
+import type { MealPlanGenerateRequest } from '../types';
 import {
   Save,
   Trash2,
