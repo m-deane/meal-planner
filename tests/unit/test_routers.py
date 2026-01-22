@@ -184,7 +184,7 @@ class TestCategoriesRouter:
 
     @pytest.fixture
     def client(self, db_session):
-        """Create test client with database."""
+        """Create test client with mocked database."""
         with patch("src.api.main.check_connection", return_value=True):
             app = create_app()
 
@@ -200,56 +200,69 @@ class TestCategoriesRouter:
             with TestClient(app) as test_client:
                 yield test_client
 
-    def test_list_categories(self, client, db_session):
+    def test_list_categories(self, client):
         """Test listing all categories."""
-        # Add test category
-        category = Category(
-            name="Italian",
-            slug="italian",
-            category_type="cuisine",
-            description="Italian cuisine"
-        )
-        db_session.add(category)
-        db_session.commit()
+        mock_category = MagicMock()
+        mock_category.id = 1
+        mock_category.name = "Italian"
+        mock_category.slug = "italian"
+        mock_category.category_type = "cuisine"
+        mock_category.description = "Italian cuisine"
 
-        response = client.get("/categories")
+        with patch("sqlalchemy.orm.Session.query") as mock_db_query:
+            mock_query_result = MagicMock()
+            mock_query_result.filter.return_value = mock_query_result
+            mock_query_result.order_by.return_value.all.return_value = [mock_category]
+            mock_db_query.return_value = mock_query_result
 
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+            response = client.get("/categories")
 
-    def test_list_dietary_tags(self, client, db_session):
+            assert response.status_code == 200
+            data = response.json()
+            assert isinstance(data, list)
+            assert len(data) >= 1
+            assert data[0]["name"] == "Italian"
+
+    def test_list_dietary_tags(self, client):
         """Test listing dietary tags."""
-        # Add test dietary tag
-        tag = DietaryTag(
-            name="Vegan",
-            slug="vegan",
-            description="Contains no animal products"
-        )
-        db_session.add(tag)
-        db_session.commit()
+        mock_tag = MagicMock()
+        mock_tag.id = 1
+        mock_tag.name = "Vegan"
+        mock_tag.slug = "vegan"
+        mock_tag.description = "Contains no animal products"
 
-        response = client.get("/dietary-tags")
+        with patch("sqlalchemy.orm.Session.query") as mock_db_query:
+            mock_query_result = MagicMock()
+            mock_query_result.order_by.return_value.all.return_value = [mock_tag]
+            mock_db_query.return_value = mock_query_result
 
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+            response = client.get("/dietary-tags")
 
-    def test_list_allergens(self, client, db_session):
+            assert response.status_code == 200
+            data = response.json()
+            assert isinstance(data, list)
+            assert len(data) >= 1
+            assert data[0]["name"] == "Vegan"
+
+    def test_list_allergens(self, client):
         """Test listing allergens."""
-        # Add test allergen
-        allergen = Allergen(
-            name="Dairy",
-            description="Contains milk products"
-        )
-        db_session.add(allergen)
-        db_session.commit()
+        mock_allergen = MagicMock()
+        mock_allergen.id = 1
+        mock_allergen.name = "Dairy"
+        mock_allergen.description = "Contains milk products"
 
-        response = client.get("/allergens")
+        with patch("sqlalchemy.orm.Session.query") as mock_db_query:
+            mock_query_result = MagicMock()
+            mock_query_result.order_by.return_value.all.return_value = [mock_allergen]
+            mock_db_query.return_value = mock_query_result
 
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+            response = client.get("/allergens")
+
+            assert response.status_code == 200
+            data = response.json()
+            assert isinstance(data, list)
+            assert len(data) >= 1
+            assert data[0]["name"] == "Dairy"
 
 
 class TestMealPlansRouter:
@@ -391,9 +404,10 @@ class TestShoppingListsRouter:
                 }
             }
 
+            # recipe_ids is a direct Body parameter, not wrapped in an object
             response = client.post(
                 "/shopping-lists/generate-compact",
-                json={"recipe_ids": [1, 2]}
+                json=[1, 2]
             )
 
             assert response.status_code == 201
