@@ -155,13 +155,17 @@ def register_routers(app: FastAPI) -> None:
         users_router,
         cost_router,
         multi_week_router,
+        safe_recipes_router,
+        favorites_router,
     )
 
     # Register authentication and user routers first
     app.include_router(auth_router)
     app.include_router(users_router)
+    app.include_router(favorites_router)
 
-    # Register other routers (no prefix - routers define their own)
+    # Register safe_recipes BEFORE recipes (route priority - /recipes/safe before /recipes/{id})
+    app.include_router(safe_recipes_router)
     app.include_router(recipes_router)
     app.include_router(categories_router)
     app.include_router(dietary_tags_router)

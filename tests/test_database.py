@@ -29,8 +29,13 @@ def db_engine():
 @pytest.fixture
 def db_session(db_engine):
     """Provide a session for database operations."""
-    with session_scope(db_engine) as session:
-        yield session
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=db_engine)
+    session = Session()
+    yield session
+    # Always rollback to ensure clean state for next test
+    session.rollback()
+    session.close()
 
 
 @pytest.fixture

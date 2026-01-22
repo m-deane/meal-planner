@@ -14,6 +14,8 @@ from .auth import auth_router
 from .users import users_router
 from .cost import router as cost_router
 from .multi_week import router as multi_week_router
+from .safe_recipes import router as safe_recipes_router
+from .favorites import router as favorites_router
 
 __all__ = [
     "recipes_router",
@@ -26,4 +28,6 @@ __all__ = [
     "users_router",
     "cost_router",
     "multi_week_router",
+    "safe_recipes_router",
+    "favorites_router",
 ]

@@ -10,6 +10,8 @@ import pytest
 from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 from jose import jwt
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from src.api.config import APIConfig, api_config
 from src.api.dependencies import (
@@ -22,6 +24,19 @@ from src.api.dependencies import (
     verify_admin_role,
 )
 from src.api.main import create_app
+from src.database.models import Base
+
+
+@pytest.fixture
+def test_session():
+    """Create a test database session."""
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    yield session
+    session.close()
+    engine.dispose()
 
 
 class TestAPIConfig:
@@ -370,19 +385,20 @@ class TestAPIIntegration:
     @pytest.fixture
     def client(self, test_session):
         """Create test client with real database session."""
-        app = create_app()
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        # Override get_db dependency
-        def override_get_db():
-            try:
-                yield test_session
-            finally:
-                pass
+            # Override get_db dependency
+            def override_get_db():
+                try:
+                    yield test_session
+                finally:
+                    pass
 
-        from src.api.dependencies import get_db
-        app.dependency_overrides[get_db] = override_get_db
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
 
-        return TestClient(app)
+            return TestClient(app)
 
     def test_api_with_database(self, client):
         """Test API endpoints work with database."""
