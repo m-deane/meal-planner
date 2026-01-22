@@ -80,9 +80,18 @@ def client(integration_db) -> TestClient:
             yield test_client
 
 
+class TestUser:
+    """Simple wrapper for test user data."""
+    def __init__(self, user_id: int, username: str, email: str, password: str):
+        self.id = user_id
+        self.username = username
+        self.email = email
+        self.password = password
+
+
 @pytest.fixture
-def test_user(integration_db) -> dict:
-    """Create a test user and return credentials."""
+def test_user(integration_db) -> TestUser:
+    """Create a test user and return a TestUser object with credentials."""
     engine, SessionLocal = integration_db
     session = SessionLocal()
 
@@ -96,24 +105,27 @@ def test_user(integration_db) -> dict:
         )
         session.commit()
 
-        return {
-            "user": user,
-            "user_id": user.id,
-            "username": "testuser",
-            "password": "TestPass123"
-        }
+        # Store the ID before closing session
+        user_id = user.id
+
+        return TestUser(
+            user_id=user_id,
+            username="testuser",
+            email="testuser@example.com",
+            password="TestPass123"
+        )
     finally:
         session.close()
 
 
 @pytest.fixture
-def auth_headers(client: TestClient, test_user: dict) -> dict:
+def auth_headers(client: TestClient, test_user: TestUser) -> dict:
     """Get authentication headers with valid token."""
     response = client.post(
         "/auth/login",
         json={
-            "username": test_user["username"],
-            "password": test_user["password"]
+            "username": test_user.username,
+            "password": test_user.password
         }
     )
 

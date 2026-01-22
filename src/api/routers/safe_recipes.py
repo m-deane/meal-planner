@@ -232,7 +232,7 @@ def get_allergen_substitutions(
 
 def _serialize_recipe_summary(recipe: Recipe) -> dict:
     """
-    Serialize recipe to summary format.
+    Serialize recipe to summary format matching RecipeListItem schema.
 
     Args:
         recipe: Recipe model
@@ -255,6 +255,18 @@ def _serialize_recipe_summary(recipe: Recipe) -> dict:
             'fat_g': float(nutrition.fat_g) if nutrition.fat_g else None,
         }
 
+    main_image_data = None
+    if main_image:
+        main_image_data = {
+            'id': main_image.id,
+            'url': main_image.url,
+            'image_type': main_image.image_type or 'main',
+            'display_order': main_image.display_order or 0,
+            'alt_text': main_image.alt_text,
+            'width': main_image.width,
+            'height': main_image.height,
+        }
+
     return {
         'id': recipe.id,
         'slug': recipe.slug,
@@ -266,16 +278,18 @@ def _serialize_recipe_summary(recipe: Recipe) -> dict:
         'difficulty': recipe.difficulty,
         'servings': recipe.servings,
         'categories': [
-            {'name': cat.name, 'slug': cat.slug, 'type': cat.category_type}
+            {'id': cat.id, 'name': cat.name, 'slug': cat.slug, 'category_type': cat.category_type}
             for cat in recipe.categories
         ],
         'dietary_tags': [
-            {'name': tag.name, 'slug': tag.slug}
+            {'id': tag.id, 'name': tag.name, 'slug': tag.slug}
             for tag in recipe.dietary_tags
         ],
-        'image': {
-            'url': main_image.url,
-            'alt_text': main_image.alt_text
-        } if main_image else None,
-        'nutrition_summary': nutrition_summary
+        'allergens': [
+            {'id': allergen.id, 'name': allergen.name, 'description': allergen.description}
+            for allergen in recipe.allergens
+        ],
+        'main_image': main_image_data,
+        'nutrition_summary': nutrition_summary,
+        'is_active': recipe.is_active,
     }

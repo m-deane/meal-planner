@@ -60,7 +60,7 @@ class TestSafeRecipesAPI:
     def test_get_safe_recipes_unauthenticated(self, client):
         """Test getting safe recipes without authentication."""
         # Execute
-        response = client.get("/api/v1/recipes/safe")
+        response = client.get("/recipes/safe")
 
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -68,7 +68,7 @@ class TestSafeRecipesAPI:
     def test_get_safe_recipes_no_allergens(self, client, auth_headers, db_session, safe_recipe):
         """Test getting safe recipes when user has no allergen profile."""
         # Execute
-        response = client.get("/api/v1/recipes/safe", headers=auth_headers)
+        response = client.get("/recipes/safe", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -86,7 +86,7 @@ class TestSafeRecipesAPI:
     ):
         """Test that safe recipes excludes recipes with user's allergens."""
         # Execute
-        response = client.get("/api/v1/recipes/safe", headers=auth_headers)
+        response = client.get("/recipes/safe", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -108,7 +108,7 @@ class TestSafeRecipesAPI:
         """Test safe recipes with additional filters."""
         # Execute
         response = client.get(
-            "/api/v1/recipes/safe?max_cooking_time=30&difficulty=easy",
+            "/recipes/safe?max_cooking_time=30&difficulty=easy",
             headers=auth_headers
         )
 
@@ -131,7 +131,7 @@ class TestSafeRecipesAPI:
 
         # Execute
         response = client.get(
-            "/api/v1/recipes/safe?page=1&page_size=2",
+            "/recipes/safe?page=1&page_size=2",
             headers=auth_headers
         )
 
@@ -151,7 +151,7 @@ class TestSafeRecipesAPI:
         """Test allergen warnings for recipe without allergens."""
         # Execute
         response = client.get(
-            f"/api/v1/recipes/{safe_recipe.id}/allergen-warnings",
+            f"/recipes/{safe_recipe.id}/allergen-warnings",
             headers=auth_headers
         )
 
@@ -173,7 +173,7 @@ class TestSafeRecipesAPI:
         """Test allergen warnings for recipe with user's severe allergen."""
         # Execute
         response = client.get(
-            f"/api/v1/recipes/{recipe_with_peanuts.id}/allergen-warnings",
+            f"/recipes/{recipe_with_peanuts.id}/allergen-warnings",
             headers=auth_headers
         )
 
@@ -194,7 +194,7 @@ class TestSafeRecipesAPI:
         """Test allergen warnings for non-existent recipe."""
         # Execute
         response = client.get(
-            "/api/v1/recipes/99999/allergen-warnings",
+            "/recipes/99999/allergen-warnings",
             headers=auth_headers
         )
 
@@ -204,7 +204,7 @@ class TestSafeRecipesAPI:
     def test_get_allergen_warnings_unauthenticated(self, client, db_session, safe_recipe):
         """Test allergen warnings without authentication."""
         # Execute
-        response = client.get(f"/api/v1/recipes/{safe_recipe.id}/allergen-warnings")
+        response = client.get(f"/recipes/{safe_recipe.id}/allergen-warnings")
 
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -220,7 +220,7 @@ class TestSafeRecipesAPI:
         """Test getting allergen substitutions for a recipe."""
         # Execute
         response = client.get(
-            f"/api/v1/recipes/{recipe_with_peanuts.id}/allergen-substitutions",
+            f"/recipes/{recipe_with_peanuts.id}/allergen-substitutions",
             headers=auth_headers
         )
 
@@ -248,7 +248,7 @@ class TestSafeRecipesAPI:
         """Test getting substitutions for recipe without user's allergens."""
         # Execute
         response = client.get(
-            f"/api/v1/recipes/{safe_recipe.id}/allergen-substitutions",
+            f"/recipes/{safe_recipe.id}/allergen-substitutions",
             headers=auth_headers
         )
 
@@ -263,7 +263,7 @@ class TestSafeRecipesAPI:
         """Test substitutions for non-existent recipe."""
         # Execute
         response = client.get(
-            "/api/v1/recipes/99999/allergen-substitutions",
+            "/recipes/99999/allergen-substitutions",
             headers=auth_headers
         )
 
@@ -295,7 +295,7 @@ class TestSafeRecipesAPI:
         db_session.commit()
 
         # Execute
-        response = client.get("/api/v1/recipes/safe", headers=auth_headers)
+        response = client.get("/recipes/safe", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -332,7 +332,7 @@ class TestSafeRecipesAPI:
         db_session.commit()
 
         # Execute
-        response = client.get("/api/v1/recipes/safe", headers=auth_headers)
+        response = client.get("/recipes/safe", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK

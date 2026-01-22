@@ -19,7 +19,7 @@ class TestFavoritesAPI:
     def test_list_favorites_empty(self, client, auth_headers, db_session):
         """Test listing favorites when user has none."""
         # Execute
-        response = client.get("/api/v1/favorites", headers=auth_headers)
+        response = client.get("/favorites", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -34,7 +34,7 @@ class TestFavoritesAPI:
 
         # Execute
         response = client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "Love this recipe!"}
         )
@@ -52,7 +52,7 @@ class TestFavoritesAPI:
 
         # Execute
         response = client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={}
         )
@@ -66,7 +66,7 @@ class TestFavoritesAPI:
         """Test adding non-existent recipe to favorites."""
         # Execute
         response = client.post(
-            "/api/v1/favorites/99999",
+            "/favorites/99999",
             headers=auth_headers,
             json={"notes": "Test"}
         )
@@ -82,14 +82,14 @@ class TestFavoritesAPI:
 
         # Add favorite first time
         client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "First time"}
         )
 
         # Execute - try to add again
         response = client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "Second time"}
         )
@@ -105,7 +105,7 @@ class TestFavoritesAPI:
 
         # Execute
         response = client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             json={"notes": "Test"}
         )
 
@@ -118,11 +118,11 @@ class TestFavoritesAPI:
         recipe1 = create_test_recipe(db_session, name="Recipe 1")
         recipe2 = create_test_recipe(db_session, name="Recipe 2", slug="recipe-2")
 
-        client.post(f"/api/v1/favorites/{recipe1.id}", headers=auth_headers, json={"notes": "Note 1"})
-        client.post(f"/api/v1/favorites/{recipe2.id}", headers=auth_headers, json={"notes": "Note 2"})
+        client.post(f"/favorites/{recipe1.id}", headers=auth_headers, json={"notes": "Note 1"})
+        client.post(f"/favorites/{recipe2.id}", headers=auth_headers, json={"notes": "Note 2"})
 
         # Execute
-        response = client.get("/api/v1/favorites", headers=auth_headers)
+        response = client.get("/favorites", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -135,11 +135,11 @@ class TestFavoritesAPI:
         # Setup - create multiple favorites
         for i in range(5):
             recipe = create_test_recipe(db_session, name=f"Recipe {i}", slug=f"recipe-{i}")
-            client.post(f"/api/v1/favorites/{recipe.id}", headers=auth_headers, json={})
+            client.post(f"/favorites/{recipe.id}", headers=auth_headers, json={})
 
         # Execute - get page 1 with 2 items
         response = client.get(
-            "/api/v1/favorites?page=1&page_size=2",
+            "/favorites?page=1&page_size=2",
             headers=auth_headers
         )
 
@@ -155,17 +155,17 @@ class TestFavoritesAPI:
         """Test removing a favorite."""
         # Setup
         recipe = create_test_recipe(db_session, name="Test Recipe")
-        client.post(f"/api/v1/favorites/{recipe.id}", headers=auth_headers, json={})
+        client.post(f"/favorites/{recipe.id}", headers=auth_headers, json={})
 
         # Execute
-        response = client.delete(f"/api/v1/favorites/{recipe.id}", headers=auth_headers)
+        response = client.delete(f"/favorites/{recipe.id}", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
         assert "removed" in response.json()['message'].lower()
 
         # Verify it's gone
-        list_response = client.get("/api/v1/favorites", headers=auth_headers)
+        list_response = client.get("/favorites", headers=auth_headers)
         assert len(list_response.json()['items']) == 0
 
     def test_remove_favorite_not_found(self, client, auth_headers, db_session):
@@ -174,7 +174,7 @@ class TestFavoritesAPI:
         recipe = create_test_recipe(db_session, name="Test Recipe")
 
         # Execute - try to remove without adding first
-        response = client.delete(f"/api/v1/favorites/{recipe.id}", headers=auth_headers)
+        response = client.delete(f"/favorites/{recipe.id}", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -184,14 +184,14 @@ class TestFavoritesAPI:
         # Setup
         recipe = create_test_recipe(db_session, name="Test Recipe")
         client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "Original notes"}
         )
 
         # Execute
         response = client.put(
-            f"/api/v1/favorites/{recipe.id}/notes",
+            f"/favorites/{recipe.id}/notes",
             headers=auth_headers,
             json={"notes": "Updated notes"}
         )
@@ -206,14 +206,14 @@ class TestFavoritesAPI:
         # Setup
         recipe = create_test_recipe(db_session, name="Test Recipe")
         client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "Original notes"}
         )
 
         # Execute
         response = client.put(
-            f"/api/v1/favorites/{recipe.id}/notes",
+            f"/favorites/{recipe.id}/notes",
             headers=auth_headers,
             json={"notes": None}
         )
@@ -228,13 +228,13 @@ class TestFavoritesAPI:
         # Setup
         recipe = create_test_recipe(db_session, name="Test Recipe")
         client.post(
-            f"/api/v1/favorites/{recipe.id}",
+            f"/favorites/{recipe.id}",
             headers=auth_headers,
             json={"notes": "Test notes"}
         )
 
         # Execute
-        response = client.get(f"/api/v1/favorites/{recipe.id}/status", headers=auth_headers)
+        response = client.get(f"/favorites/{recipe.id}/status", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -249,7 +249,7 @@ class TestFavoritesAPI:
         recipe = create_test_recipe(db_session, name="Test Recipe")
 
         # Execute
-        response = client.get(f"/api/v1/favorites/{recipe.id}/status", headers=auth_headers)
+        response = client.get(f"/favorites/{recipe.id}/status", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -263,10 +263,10 @@ class TestFavoritesAPI:
         # Setup - add some favorites
         for i in range(3):
             recipe = create_test_recipe(db_session, name=f"Recipe {i}", slug=f"recipe-{i}")
-            client.post(f"/api/v1/favorites/{recipe.id}", headers=auth_headers, json={})
+            client.post(f"/favorites/{recipe.id}", headers=auth_headers, json={})
 
         # Execute
-        response = client.get("/api/v1/favorites/count", headers=auth_headers)
+        response = client.get("/favorites/count", headers=auth_headers)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -286,5 +286,5 @@ class TestFavoritesAPI:
         # In real scenario, you'd create actual users and get their tokens
 
         # For this test, we verify the API requires authentication
-        response = client.post(f"/api/v1/favorites/{recipe.id}", json={})
+        response = client.post(f"/favorites/{recipe.id}", json={})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

@@ -44,6 +44,9 @@ class TestCLI:
     def test_export_command_json(self, mock_export_json, mock_get_session, runner, tmp_path):
         """Test export command with JSON format."""
         mock_session = Mock()
+        # Mock for path without limit
+        mock_session.query.return_value.filter.return_value.all.return_value = []
+        # Mock for path with limit
         mock_session.query.return_value.filter.return_value.limit.return_value.all.return_value = []
         mock_get_session.return_value = iter([mock_session])
 
@@ -62,6 +65,9 @@ class TestCLI:
     def test_export_command_csv(self, mock_export_csv, mock_get_session, runner, tmp_path):
         """Test export command with CSV format."""
         mock_session = Mock()
+        # Mock for path without limit
+        mock_session.query.return_value.filter.return_value.all.return_value = []
+        # Mock for path with limit
         mock_session.query.return_value.filter.return_value.limit.return_value.all.return_value = []
         mock_get_session.return_value = iter([mock_session])
 
@@ -92,12 +98,16 @@ class TestCLI:
     def test_stats_command_detailed(self, mock_get_session, runner):
         """Test stats command with detailed flag."""
         mock_session = Mock()
+        # Basic counts
         mock_session.query.return_value.scalar.return_value = 10
         mock_session.query.return_value.filter.return_value.scalar.return_value = 8
+        # Categories breakdown
         mock_session.query.return_value.join.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
             ('Italian', 5),
             ('Indian', 3)
         ]
+        # Nutrition join - returns integer for recipes_with_nutrition
+        mock_session.query.return_value.join.return_value.scalar.return_value = 5
         mock_get_session.return_value = iter([mock_session])
 
         result = runner.invoke(stats, ['--detailed'])

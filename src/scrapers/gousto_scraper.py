@@ -504,7 +504,8 @@ class GoustoScraper:
             time_minutes=time_minutes
         )
 
-        self.session.add(instruction)
+        # Use relationship to ensure proper ORM behavior
+        recipe.cooking_instructions.append(instruction)
 
     def _add_nutrition_to_recipe(
         self,
