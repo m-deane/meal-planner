@@ -4,10 +4,11 @@ Tests user registration, login, profile management, and password changes.
 """
 
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from src.api.main import app
+from src.api.main import create_app
 from src.api.dependencies import get_db
 from src.api.services.user_service import UserService
 
@@ -18,16 +19,19 @@ class TestAuthRouter:
     @pytest.fixture
     def client(self, db_session: Session) -> TestClient:
         """Create test client with database override."""
-        def override_get_db():
-            try:
-                yield db_session
-            finally:
-                pass
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
 
-        app.dependency_overrides[get_db] = override_get_db
-        client = TestClient(app)
-        yield client
-        app.dependency_overrides.clear()
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
+
+            app.dependency_overrides[get_db] = override_get_db
+
+            with TestClient(app) as client:
+                yield client
 
     @pytest.fixture
     def test_user(self, db_session: Session) -> dict:

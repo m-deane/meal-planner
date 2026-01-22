@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { DndContext } from '@dnd-kit/core';
 import { DraggableRecipe } from '../DraggableRecipe';
@@ -123,7 +123,7 @@ describe('DraggableRecipe', () => {
 
     // Nutrition should not be visible in compact mode
     const calories = screen.queryByText('600');
-    expect(calories).toBeInTheDocument(); // Still in the document but may be in compact view
+    expect(calories).not.toBeInTheDocument();
   });
 
   it('should display difficulty badge when not compact', () => {
@@ -195,8 +195,7 @@ describe('DraggableRecipe', () => {
     expect(removeButton).not.toBeInTheDocument();
   });
 
-  it('should call onRemove when remove button is clicked', async () => {
-    const user = userEvent.setup();
+  it('should call onRemove when remove button is clicked', () => {
     const onRemove = vi.fn();
 
     render(
@@ -211,7 +210,8 @@ describe('DraggableRecipe', () => {
     );
 
     const removeButton = screen.getByLabelText('Remove recipe');
-    await user.click(removeButton);
+    // Use fireEvent instead of userEvent to avoid drag context interference
+    fireEvent.click(removeButton);
 
     expect(onRemove).toHaveBeenCalledTimes(1);
   });

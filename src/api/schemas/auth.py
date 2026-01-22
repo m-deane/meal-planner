@@ -228,6 +228,34 @@ class UserResponse(UserBase):
     # User preferences
     preferences: Optional[dict] = Field(None, description="User preferences and settings")
 
+    @field_validator('preferences', mode='before')
+    @classmethod
+    def convert_preferences(cls, v):
+        """Convert UserPreference object to dict if necessary."""
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            return v
+        # Convert SQLAlchemy UserPreference object to dict
+        if hasattr(v, '__dict__'):
+            prefs = {}
+            if hasattr(v, 'default_servings') and v.default_servings:
+                prefs['default_servings'] = v.default_servings
+            if hasattr(v, 'calorie_target') and v.calorie_target:
+                prefs['calorie_target'] = v.calorie_target
+            if hasattr(v, 'protein_target_g') and v.protein_target_g:
+                prefs['protein_target_g'] = float(v.protein_target_g)
+            if hasattr(v, 'carb_limit_g') and v.carb_limit_g:
+                prefs['carb_limit_g'] = float(v.carb_limit_g)
+            if hasattr(v, 'fat_limit_g') and v.fat_limit_g:
+                prefs['fat_limit_g'] = float(v.fat_limit_g)
+            if hasattr(v, 'preferred_cuisines') and v.preferred_cuisines:
+                prefs['preferred_cuisines'] = v.preferred_cuisines
+            if hasattr(v, 'excluded_ingredients') and v.excluded_ingredients:
+                prefs['excluded_ingredients'] = v.excluded_ingredients
+            return prefs if prefs else None
+        return None
+
     model_config = ConfigDict(
         from_attributes=True,
         json_schema_extra={
