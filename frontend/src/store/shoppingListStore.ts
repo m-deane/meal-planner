@@ -67,17 +67,24 @@ const sortItems = (
   sortBy: 'category' | 'alphabetical'
 ): ShoppingListItem[] => {
   if (sortBy === 'alphabetical') {
-    return [...items].sort((a, b) =>
-      a.ingredient_name.localeCompare(b.ingredient_name)
-    );
+    return [...items].sort((a, b) => {
+      const nameA = a.ingredient_name ?? '';
+      const nameB = b.ingredient_name ?? '';
+      return nameA.localeCompare(nameB);
+    });
   }
 
   // Sort by category
   return [...items].sort((a, b) => {
-    if (a.category === b.category) {
-      return a.ingredient_name.localeCompare(b.ingredient_name);
+    const catA = a.category ?? 'other';
+    const catB = b.category ?? 'other';
+    const nameA = a.ingredient_name ?? '';
+    const nameB = b.ingredient_name ?? '';
+
+    if (catA === catB) {
+      return nameA.localeCompare(nameB);
     }
-    return a.category.localeCompare(b.category);
+    return catA.localeCompare(catB);
   });
 };
 
@@ -247,9 +254,10 @@ export const useShoppingListStore = create<ShoppingListStore>()(
         const grouped = new Map<IngredientCategory, ShoppingListItem[]>();
 
         sorted.forEach((item) => {
-          const categoryItems = grouped.get(item.category) || [];
+          const category = (item.category ?? 'other') as IngredientCategory;
+          const categoryItems = grouped.get(category) || [];
           categoryItems.push(item);
-          grouped.set(item.category, categoryItems);
+          grouped.set(category, categoryItems);
         });
 
         return grouped;

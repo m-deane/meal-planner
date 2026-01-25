@@ -56,7 +56,7 @@ export const ShoppingItem: React.FC<ShoppingItemProps> = ({
         checked={item.checked}
         onChange={() => onToggle(item.id)}
         className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-        aria-label={`Mark ${item.ingredient_name} as ${item.checked ? 'unchecked' : 'checked'}`}
+        aria-label={`Mark ${item.ingredient_name ?? 'item'} as ${item.checked ? 'unchecked' : 'checked'}`}
       />
 
       {/* Content */}
@@ -112,7 +112,7 @@ export const ShoppingItem: React.FC<ShoppingItemProps> = ({
         )}
 
         {/* Recipe names */}
-        {item.recipe_names.length > 0 && (
+        {item.recipe_names && item.recipe_names.length > 0 && (
           <div className="mt-1 text-xs text-gray-500">
             Used in: {item.recipe_names.join(', ')}
           </div>

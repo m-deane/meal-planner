@@ -2,7 +2,8 @@
  * Login form component with validation and error handling.
  */
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../../hooks/useAuth';
 import { formatAPIError } from '../../api/client';
@@ -93,7 +94,7 @@ export const LoginForm = (): JSX.Element => {
                 autoComplete="username"
                 required
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
@@ -129,7 +130,7 @@ export const LoginForm = (): JSX.Element => {
                 autoComplete="current-password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
@@ -157,7 +158,7 @@ export const LoginForm = (): JSX.Element => {
                 name="remember-me"
                 type="checkbox"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={(e) => { setRememberMe(e.target.checked); }}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label

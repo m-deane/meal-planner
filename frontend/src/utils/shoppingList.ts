@@ -50,10 +50,10 @@ export const getCategoryIcon = (category: IngredientCategory): string => {
 // ============================================================================
 
 export const formatQuantity = (
-  quantity: number | null,
-  unit: string | null
+  quantity: number | null | undefined,
+  unit: string | null | undefined
 ): string => {
-  if (quantity === null) {
+  if (quantity == null) {
     return unit || '';
   }
 
@@ -68,7 +68,7 @@ export const formatQuantity = (
 
 export const formatItemForDisplay = (item: ShoppingListItem): string => {
   const quantity = formatQuantity(item.quantity, item.unit);
-  const name = item.ingredient_name;
+  const name = item.ingredient_name ?? 'Unknown Item';
 
   if (quantity) {
     return `${name} - ${quantity}`;
@@ -180,7 +180,8 @@ export const aggregateItems = (items: ShoppingListItem[]): ShoppingListItem[] =>
   const aggregated = new Map<string, ShoppingListItem>();
 
   items.forEach((item) => {
-    const key = `${item.ingredient_name.toLowerCase()}-${item.unit || 'none'}`;
+    const ingredientName = item.ingredient_name ?? 'unknown';
+    const key = `${ingredientName.toLowerCase()}-${item.unit || 'none'}`;
     const existing = aggregated.get(key);
 
     if (existing) {
@@ -216,17 +217,24 @@ export const aggregateItems = (items: ShoppingListItem[]): ShoppingListItem[] =>
 
 export const sortByCategory = (items: ShoppingListItem[]): ShoppingListItem[] => {
   return [...items].sort((a, b) => {
-    if (a.category === b.category) {
-      return a.ingredient_name.localeCompare(b.ingredient_name);
+    const catA = a.category ?? 'other';
+    const catB = b.category ?? 'other';
+    const nameA = a.ingredient_name ?? '';
+    const nameB = b.ingredient_name ?? '';
+
+    if (catA === catB) {
+      return nameA.localeCompare(nameB);
     }
-    return a.category.localeCompare(b.category);
+    return catA.localeCompare(catB);
   });
 };
 
 export const sortAlphabetically = (items: ShoppingListItem[]): ShoppingListItem[] => {
-  return [...items].sort((a, b) =>
-    a.ingredient_name.localeCompare(b.ingredient_name)
-  );
+  return [...items].sort((a, b) => {
+    const nameA = a.ingredient_name ?? '';
+    const nameB = b.ingredient_name ?? '';
+    return nameA.localeCompare(nameB);
+  });
 };
 
 export const groupItemsByCategory = (
@@ -235,9 +243,10 @@ export const groupItemsByCategory = (
   const grouped = new Map<IngredientCategory, ShoppingListItem[]>();
 
   items.forEach((item) => {
-    const categoryItems = grouped.get(item.category) || [];
+    const category = (item.category ?? 'other') as IngredientCategory;
+    const categoryItems = grouped.get(category) || [];
     categoryItems.push(item);
-    grouped.set(item.category, categoryItems);
+    grouped.set(category, categoryItems);
   });
 
   return grouped;

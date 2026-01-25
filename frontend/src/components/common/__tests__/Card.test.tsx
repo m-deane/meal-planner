@@ -67,7 +67,7 @@ describe('Card', () => {
   });
 
   it('has role="button" when onClick is provided', () => {
-    render(<Card onClick={() => {}}>Content</Card>);
+    render(<Card onClick={vi.fn()}>Content</Card>);
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
@@ -84,26 +84,26 @@ describe('Card', () => {
   });
 
   it('applies selected state correctly', () => {
-    const { container } = render(<Card selected onClick={() => {}}>Content</Card>);
+    const { container } = render(<Card selected onClick={vi.fn()}>Content</Card>);
     const card = container.firstChild as HTMLElement;
     expect(card).toHaveClass('ring-2', 'ring-blue-500');
   });
 
   it('applies correct padding classes', () => {
     const { rerender } = render(<Card padding="none"><div data-testid="card-content">Content</div></Card>);
-    let body = screen.getByTestId('card-content').parentElement as HTMLElement;
+    let body = screen.getByTestId('card-content').parentElement!;
     expect(body).toHaveClass('p-0');
 
     rerender(<Card padding="sm"><div data-testid="card-content">Content</div></Card>);
-    body = screen.getByTestId('card-content').parentElement as HTMLElement;
+    body = screen.getByTestId('card-content').parentElement!;
     expect(body).toHaveClass('p-3');
 
     rerender(<Card padding="md"><div data-testid="card-content">Content</div></Card>);
-    body = screen.getByTestId('card-content').parentElement as HTMLElement;
+    body = screen.getByTestId('card-content').parentElement!;
     expect(body).toHaveClass('p-4');
 
     rerender(<Card padding="lg"><div data-testid="card-content">Content</div></Card>);
-    body = screen.getByTestId('card-content').parentElement as HTMLElement;
+    body = screen.getByTestId('card-content').parentElement!;
     expect(body).toHaveClass('p-6');
   });
 

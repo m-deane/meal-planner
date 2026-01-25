@@ -2,10 +2,10 @@
  * Protected route wrapper that redirects to login if not authenticated.
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useIsAuthenticated, useCurrentUser } from '../../hooks/useAuth';
-import { UserRole } from '../../types/user';
+import type { UserRole } from '../../types/user';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -65,11 +65,11 @@ export const ProtectedRoute = ({
           </h3>
           <p className="mt-2 text-sm text-gray-500">
             You do not have permission to access this page.
-            {requiredRole && ` ${requiredRole} role is required.`}
+            {` ${requiredRole} role is required.`}
           </p>
           <div className="mt-6">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => { window.history.back(); }}
               className="
                 inline-flex justify-center px-4 py-2 border border-transparent
                 text-sm font-medium rounded-md text-white bg-blue-600

@@ -1,123 +1,58 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+// Layout
+import { Layout } from './components/layout';
+
+// Pages
+import { DashboardPage } from './pages/DashboardPage';
+import { RecipeBrowserPage } from './pages/RecipeBrowserPage';
+import { RecipeDetailPage } from './pages/RecipeDetailPage';
+import { MealPlannerPage } from './pages/MealPlannerPage';
+import { MealPlanDetailPage } from './pages/MealPlanDetailPage';
+import { MultiWeekPlannerPage } from './pages/MultiWeekPlannerPage';
+import { NutritionDashboardPage } from './pages/NutritionDashboardPage';
+import { ShoppingListPage } from './pages/ShoppingListPage';
+import { FavoritesPage } from './pages/FavoritesPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Routes>
+    <Routes>
+      {/* Auth routes (no layout) */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Main app routes (with layout) */}
+      <Route element={<Layout />}>
         {/* Dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route
-          path="/dashboard"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Meal Planner
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Dashboard page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/dashboard" element={<DashboardPage />} />
 
         {/* Recipes */}
-        <Route
-          path="/recipes"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Recipes
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Recipe browsing page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
-        <Route
-          path="/recipes/:id"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Recipe Details
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Recipe detail page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/recipes" element={<RecipeBrowserPage />} />
+        <Route path="/recipes/:slug" element={<RecipeDetailPage />} />
 
         {/* Meal Planning */}
-        <Route
-          path="/meal-plans"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Meal Plans
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Meal planning page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
-        <Route
-          path="/meal-plans/new"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Create Meal Plan
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Meal plan creation page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
-        <Route
-          path="/meal-plans/:id"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Meal Plan Details
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Meal plan detail page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/meal-planner" element={<MealPlannerPage />} />
+        <Route path="/meal-plans" element={<Navigate to="/meal-planner" replace />} />
+        <Route path="/meal-plans/new" element={<MealPlannerPage />} />
+        <Route path="/meal-plans/:id" element={<MealPlanDetailPage />} />
+        <Route path="/multi-week-planner" element={<MultiWeekPlannerPage />} />
+
+        {/* Nutrition */}
+        <Route path="/nutrition" element={<NutritionDashboardPage />} />
 
         {/* Shopping List */}
-        <Route
-          path="/shopping-list"
-          element={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Shopping List
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Shopping list page - Coming soon
-                </p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/shopping-list" element={<ShoppingListPage />} />
+
+        {/* Favorites */}
+        <Route path="/favorites" element={<FavoritesPage />} />
+
+        {/* Profile */}
+        <Route path="/profile" element={<ProfilePage />} />
 
         {/* 404 Not Found */}
         <Route
@@ -129,7 +64,7 @@ const App: React.FC = () => {
                 <p className="text-xl text-gray-600 mb-8">Page not found</p>
                 <a
                   href="/dashboard"
-                  className="text-primary-600 hover:text-primary-700 underline"
+                  className="text-green-600 hover:text-green-700 underline font-medium"
                 >
                   Go back to dashboard
                 </a>
@@ -137,8 +72,8 @@ const App: React.FC = () => {
             </div>
           }
         />
-      </Routes>
-    </div>
+      </Route>
+    </Routes>
   );
 };
 

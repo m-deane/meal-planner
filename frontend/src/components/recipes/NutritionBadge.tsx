@@ -136,10 +136,14 @@ export const NutritionBadge: React.FC<NutritionBadgeProps> = ({
   className = '',
 }) => {
   const displayUnit = unit ?? defaultUnits[type];
-  const badgeColor = color ?? getColorForNutrition(type, value);
+  // Handle null, undefined, or non-numeric values for color calculation
+  const safeValue = typeof value === 'number' ? value : Number(value) || 0;
+  const badgeColor = color ?? getColorForNutrition(type, safeValue);
   const icon = showIcon ? nutritionIcons[type] : undefined;
 
-  const formattedValue = Number.isInteger(value) ? value : value.toFixed(1);
+  // Handle null, undefined, or non-numeric values
+  const numericValue = typeof value === 'number' ? value : Number(value) || 0;
+  const formattedValue = Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1);
 
   return (
     <Badge

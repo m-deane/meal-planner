@@ -12,12 +12,12 @@ describe('SearchBar', () => {
   });
 
   it('renders with placeholder', () => {
-    render(<SearchBar value="" onChange={() => {}} placeholder="Search recipes..." />);
+    render(<SearchBar value="" onChange={vi.fn()} placeholder="Search recipes..." />);
     expect(screen.getByPlaceholderText('Search recipes...')).toBeInTheDocument();
   });
 
   it('displays current value', () => {
-    render(<SearchBar value="test query" onChange={() => {}} />);
+    render(<SearchBar value="test query" onChange={vi.fn()} />);
     expect(screen.getByRole('searchbox')).toHaveValue('test query');
   });
 
@@ -40,7 +40,7 @@ describe('SearchBar', () => {
     render(
       <SearchBar
         value=""
-        onChange={() => {}}
+        onChange={vi.fn()}
         onChangeImmediate={handleChangeImmediate}
       />
     );
@@ -52,12 +52,12 @@ describe('SearchBar', () => {
   });
 
   it('shows clear button when there is a value', () => {
-    render(<SearchBar value="test" onChange={() => {}} />);
+    render(<SearchBar value="test" onChange={vi.fn()} />);
     expect(screen.getByLabelText('Clear search')).toBeInTheDocument();
   });
 
   it('does not show clear button when value is empty', () => {
-    render(<SearchBar value="" onChange={() => {}} />);
+    render(<SearchBar value="" onChange={vi.fn()} />);
     expect(screen.queryByLabelText('Clear search')).not.toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe('SearchBar', () => {
 
   it('calls onClear when clear button is clicked', () => {
     const handleClear = vi.fn();
-    render(<SearchBar value="test" onChange={() => {}} onClear={handleClear} />);
+    render(<SearchBar value="test" onChange={vi.fn()} onClear={handleClear} />);
 
     fireEvent.click(screen.getByLabelText('Clear search'));
 
@@ -90,38 +90,38 @@ describe('SearchBar', () => {
   });
 
   it('shows loading spinner when loading prop is true', () => {
-    render(<SearchBar value="" onChange={() => {}} loading />);
+    render(<SearchBar value="" onChange={vi.fn()} loading />);
     expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
   });
 
   it('hides clear button when loading', () => {
-    render(<SearchBar value="test" onChange={() => {}} loading />);
+    render(<SearchBar value="test" onChange={vi.fn()} loading />);
     expect(screen.queryByLabelText('Clear search')).not.toBeInTheDocument();
   });
 
   it('applies different sizes correctly', () => {
-    const { rerender } = render(<SearchBar value="" onChange={() => {}} size="sm" />);
+    const { rerender } = render(<SearchBar value="" onChange={vi.fn()} size="sm" />);
     expect(screen.getByRole('searchbox')).toHaveClass('h-9', 'text-sm');
 
-    rerender(<SearchBar value="" onChange={() => {}} size="md" />);
+    rerender(<SearchBar value="" onChange={vi.fn()} size="md" />);
     expect(screen.getByRole('searchbox')).toHaveClass('h-10', 'text-base');
 
-    rerender(<SearchBar value="" onChange={() => {}} size="lg" />);
+    rerender(<SearchBar value="" onChange={vi.fn()} size="lg" />);
     expect(screen.getByRole('searchbox')).toHaveClass('h-12', 'text-lg');
   });
 
   it('applies fullWidth class when fullWidth prop is true', () => {
-    const { container } = render(<SearchBar value="" onChange={() => {}} fullWidth />);
+    const { container } = render(<SearchBar value="" onChange={vi.fn()} fullWidth />);
     expect(container.firstChild).toHaveClass('w-full');
   });
 
   it('auto-focuses when autoFocus prop is true', () => {
-    render(<SearchBar value="" onChange={() => {}} autoFocus />);
+    render(<SearchBar value="" onChange={vi.fn()} autoFocus />);
     expect(screen.getByRole('searchbox')).toHaveFocus();
   });
 
   it('applies custom aria-label', () => {
-    render(<SearchBar value="" onChange={() => {}} aria-label="Search for recipes" />);
+    render(<SearchBar value="" onChange={vi.fn()} aria-label="Search for recipes" />);
     expect(screen.getByLabelText('Search for recipes')).toBeInTheDocument();
   });
 

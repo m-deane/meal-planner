@@ -27,8 +27,11 @@ class RecipeService:
 
     def get_recipes(
         self,
+        category_ids: Optional[List[int]] = None,
         categories: Optional[List[str]] = None,
+        dietary_tag_ids: Optional[List[int]] = None,
         dietary_tags: Optional[List[str]] = None,
+        exclude_allergen_ids: Optional[List[int]] = None,
         exclude_allergens: Optional[List[str]] = None,
         max_cooking_time: Optional[int] = None,
         difficulty: Optional[str] = None,
@@ -61,8 +64,11 @@ class RecipeService:
             Dictionary with recipes list and pagination info
         """
         recipes = self.query.filter_recipes(
+            category_ids=category_ids,
             categories=categories,
+            dietary_tag_ids=dietary_tag_ids,
             dietary_tags=dietary_tags,
+            exclude_allergen_ids=exclude_allergen_ids,
             exclude_allergens=exclude_allergens,
             max_cooking_time=max_cooking_time,
             difficulty=difficulty,
@@ -280,7 +286,7 @@ class RecipeService:
                 {'name': tag.name, 'slug': tag.slug}
                 for tag in recipe.dietary_tags
             ],
-            'image': {
+            'main_image': {
                 'url': main_image.url,
                 'alt_text': main_image.alt_text
             } if main_image else None,
@@ -341,11 +347,11 @@ class RecipeService:
                 }
                 for inst in recipe.cooking_instructions
             ],
-            'nutrition': self._serialize_nutrition(recipe.nutritional_info) if recipe.nutritional_info else None,
+            'nutritional_info': self._serialize_nutrition(recipe.nutritional_info) if recipe.nutritional_info else None,
             'images': [
                 {
                     'url': img.url,
-                    'type': img.image_type,
+                    'image_type': img.image_type,
                     'alt_text': img.alt_text,
                     'width': img.width,
                     'height': img.height

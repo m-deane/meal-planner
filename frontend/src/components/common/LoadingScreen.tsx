@@ -116,7 +116,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         <Spinner
           size={spinnerSize}
           color={overlay ? 'white' : 'primary'}
-          label={message || 'Loading...'}
+          label={message ?? 'Loading...'}
         />
 
         {/* Message */}
@@ -198,7 +198,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
         startTimeRef.current = null;
       }, remaining);
 
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
 
     setShouldShow(false);
