@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
 import { DndContext } from '@dnd-kit/core';
 import { DraggableRecipe } from '../DraggableRecipe';
 import type { RecipeListItem } from '../../../types';

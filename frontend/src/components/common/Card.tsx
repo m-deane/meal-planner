@@ -140,7 +140,7 @@ export const Card: React.FC<CardProps> = ({
       aria-pressed={isClickable && selected ? selected : undefined}
     >
       {image && (
-        <div className={`w-full overflow-hidden ${aspectRatioClasses[image.aspectRatio || 'video']}`}>
+        <div className={`w-full overflow-hidden ${aspectRatioClasses[image.aspectRatio ?? 'video']}`}>
           <img
             src={image.src}
             alt={image.alt}

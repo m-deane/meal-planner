@@ -66,8 +66,33 @@ export const ShoppingListGenerator: React.FC<ShoppingListGeneratorProps> = ({
     try {
       const result = await generateMutation.mutateAsync({ recipeIds, options });
 
-      // Extract all items from categories
-      const allItems = result.categories.flatMap((category) => category.items);
+      // Extract all items from categories and transform to frontend format
+      const allItems = result.categories.flatMap((category) =>
+        category.items.map((item: Record<string, unknown>) => {
+          // Get quantity and unit from the quantities array if available
+          let quantity: number | null = null;
+          let unit: string | null = null;
+
+          const quantities = item.quantities as Array<{ unit?: string; total?: number }> | undefined;
+          if (quantities && quantities.length > 0) {
+            const firstQuantity = quantities[0];
+            quantity = firstQuantity.total ?? null;
+            unit = firstQuantity.unit ?? null;
+          }
+
+          // Transform backend format to frontend format
+          return {
+            ingredient_name: (item.name as string) ?? (item.ingredient_name as string) ?? 'Unknown',
+            quantity,
+            unit,
+            category: (category.name?.toLowerCase().replace(/[^a-z]/g, '') ?? 'other') as import('../../types').IngredientCategory,
+            is_optional: (item.is_optional as boolean) ?? false,
+            notes: (item.notes as string) ?? null,
+            recipe_count: (item.times_needed as number) ?? (item.recipe_count as number) ?? 1,
+            recipe_names: (item.recipe_names as string[]) ?? [],
+          };
+        })
+      );
 
       // Load into shopping list store
       shoppingListStore.loadFromResponse(allItems);

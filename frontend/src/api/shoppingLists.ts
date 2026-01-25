@@ -20,16 +20,12 @@ export const generateShoppingList = async (
 ): Promise<ShoppingListResponse> => {
   const request: ShoppingListGenerateRequest = {
     recipe_ids: recipeIds,
-    servings_multiplier: options?.servings_multiplier || 1.0,
-    group_by_category: options?.group_by_category !== undefined ? options.group_by_category : true,
-    combine_similar_ingredients: options?.combine_similar_ingredients !== undefined
-      ? options.combine_similar_ingredients
-      : true,
-    exclude_pantry_staples: options?.exclude_pantry_staples || false,
-    include_optional_ingredients: options?.include_optional_ingredients !== undefined
-      ? options.include_optional_ingredients
-      : true,
-    round_quantities: options?.round_quantities !== undefined ? options.round_quantities : true,
+    servings_multiplier: options?.servings_multiplier ?? 1.0,
+    group_by_category: options?.group_by_category ?? true,
+    combine_similar_ingredients: options?.combine_similar_ingredients ?? true,
+    exclude_pantry_staples: options?.exclude_pantry_staples ?? false,
+    include_optional_ingredients: options?.include_optional_ingredients ?? true,
+    round_quantities: options?.round_quantities ?? true,
     ...options,
   };
 
@@ -46,16 +42,12 @@ export const generateShoppingListFromMealPlan = async (
 ): Promise<ShoppingListResponse> => {
   const request: ShoppingListGenerateRequest = {
     meal_plan_id: mealPlanId,
-    servings_multiplier: options?.servings_multiplier || 1.0,
-    group_by_category: options?.group_by_category !== undefined ? options.group_by_category : true,
-    combine_similar_ingredients: options?.combine_similar_ingredients !== undefined
-      ? options.combine_similar_ingredients
-      : true,
-    exclude_pantry_staples: options?.exclude_pantry_staples || false,
-    include_optional_ingredients: options?.include_optional_ingredients !== undefined
-      ? options.include_optional_ingredients
-      : true,
-    round_quantities: options?.round_quantities !== undefined ? options.round_quantities : true,
+    servings_multiplier: options?.servings_multiplier ?? 1.0,
+    group_by_category: options?.group_by_category ?? true,
+    combine_similar_ingredients: options?.combine_similar_ingredients ?? true,
+    exclude_pantry_staples: options?.exclude_pantry_staples ?? false,
+    include_optional_ingredients: options?.include_optional_ingredients ?? true,
+    round_quantities: options?.round_quantities ?? true,
     ...options,
   };
 
@@ -119,16 +111,12 @@ export const exportShoppingListMarkdown = async (
   const response = await exportShoppingList({
     shopping_list_id: shoppingListId,
     format: ShoppingListFormat.MARKDOWN,
-    include_recipe_names: options?.include_recipe_names !== undefined
-      ? options.include_recipe_names
-      : true,
-    include_checkboxes: options?.include_checkboxes !== undefined
-      ? options.include_checkboxes
-      : true,
-    group_by_store_section: options?.group_by_store_section || false,
+    include_recipe_names: options?.include_recipe_names ?? true,
+    include_checkboxes: options?.include_checkboxes ?? true,
+    group_by_store_section: options?.group_by_store_section ?? false,
   });
 
-  return response.content || '';
+  return response.content ?? '';
 };
 
 /**
@@ -141,14 +129,10 @@ export const exportShoppingListPDF = async (
   const response = await exportShoppingList({
     shopping_list_id: shoppingListId,
     format: ShoppingListFormat.PDF,
-    include_recipe_names: options?.include_recipe_names !== undefined
-      ? options.include_recipe_names
-      : true,
-    include_checkboxes: options?.include_checkboxes !== undefined
-      ? options.include_checkboxes
-      : true,
-    group_by_store_section: options?.group_by_store_section || false,
+    include_recipe_names: options?.include_recipe_names ?? true,
+    include_checkboxes: options?.include_checkboxes ?? true,
+    group_by_store_section: options?.group_by_store_section ?? false,
   });
 
-  return response.download_url || '';
+  return response.download_url ?? '';
 };

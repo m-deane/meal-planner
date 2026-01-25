@@ -70,7 +70,7 @@ export interface PaginationProps {
 const generatePageNumbers = (
   currentPage: number,
   totalPages: number,
-  siblingCount: number = 1
+  siblingCount = 1
 ): (number | 'ellipsis')[] => {
   const totalPageNumbers = siblingCount + 5; // siblings + first + last + current + 2 ellipsis
 
@@ -244,7 +244,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             <button
               key={pageNumber}
               type="button"
-              onClick={() => handlePageClick(pageNumber)}
+              onClick={() => { handlePageClick(pageNumber); }}
               className={`
                 inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium
                 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500

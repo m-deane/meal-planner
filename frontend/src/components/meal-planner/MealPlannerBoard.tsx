@@ -45,7 +45,7 @@ const DAYS_OF_WEEK: DayOfWeek[] = [
   'sunday',
 ];
 
-const parseDragId = (
+export const parseDragId = (
   id: string
 ): { day: DayOfWeek; mealType: MealType } | null => {
   // Format: "day-mealType-recipe" or "sidebar-recipe-id"
@@ -63,7 +63,7 @@ const parseDragId = (
   return null;
 };
 
-const parseDropId = (
+export const parseDropId = (
   id: string
 ): { day: DayOfWeek; mealType: MealType } | null => {
   // Format: "day-mealType"
@@ -78,7 +78,38 @@ const parseDropId = (
 };
 
 // ============================================================================
-// COMPONENT
+// BOARD CONTENT COMPONENT (no DndContext - expects parent to provide it)
+// ============================================================================
+
+export interface BoardContentProps {
+  className?: string;
+}
+
+export const BoardContent: React.FC<BoardContentProps> = ({
+  className = '',
+}) => {
+  const { plan } = useMealPlanStore();
+
+  return (
+    <div className={`${className}`}>
+      {/* Days Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+        {DAYS_OF_WEEK.map((day) => (
+          <DayColumn
+            key={day}
+            day={day}
+            dayData={plan.days[day]}
+            startDate={plan.startDate}
+            showNutrition
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MAIN COMPONENT (wraps content with DndContext for standalone use)
 // ============================================================================
 
 export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
@@ -167,20 +198,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className={`${className}`}>
-        {/* Days Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
-          {DAYS_OF_WEEK.map((day) => (
-            <DayColumn
-              key={day}
-              day={day}
-              dayData={plan.days[day]}
-              startDate={plan.startDate}
-              showNutrition
-            />
-          ))}
-        </div>
-      </div>
+      <BoardContent className={className} />
 
       {/* Drag Overlay */}
       <DragOverlay>

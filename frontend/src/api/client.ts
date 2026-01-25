@@ -2,16 +2,17 @@
  * Axios HTTP client configuration with interceptors for error handling and authentication.
  */
 
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { APIError } from '../types';
 
-const API_BASE_URL = import.meta.env['VITE_API_BASE_URL'] || 'http://localhost:8000/api/v1';
+const API_BASE_URL = (import.meta.env['VITE_API_BASE_URL'] as string | undefined) ?? 'http://localhost:8000';
 
 /**
  * Create configured axios instance.
  */
 const createAPIClient = (): AxiosInstance => {
-  const client = axios.create({
+  const client: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000,
     headers: {
@@ -24,7 +25,7 @@ const createAPIClient = (): AxiosInstance => {
     (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
       const token = localStorage.getItem('auth_token');
 
-      if (token && config.headers) {
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
@@ -51,7 +52,7 @@ const createAPIClient = (): AxiosInstance => {
         // Server responded with error status
         const data = error.response.data as Record<string, unknown>;
 
-        if (typeof data === 'object' && data !== null) {
+        if (typeof data === 'object') {
           // FastAPI validation error format
           if ('detail' in data) {
             if (Array.isArray(data['detail'])) {
@@ -112,7 +113,7 @@ const createAPIClient = (): AxiosInstance => {
         apiError.message = error.message || 'Failed to make request';
       }
 
-      return Promise.reject(apiError);
+      return Promise.reject(new Error(apiError.message));
     }
   );
 

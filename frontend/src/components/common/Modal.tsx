@@ -177,7 +177,7 @@ export const Modal: React.FC<ModalProps> = ({
                 )}
 
                 {/* Header */}
-                {(title || description) && (
+                {(title ?? description) && (
                   <div className="border-b border-gray-200 px-6 py-4 pr-12">
                     {title && (
                       <Dialog.Title

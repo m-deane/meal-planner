@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Button } from './Button';
 
@@ -95,7 +96,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
 
             <Button
               variant="ghost"
-              onClick={() => setShowDetails(!showDetails)}
+              onClick={() => { setShowDetails(!showDetails); }}
               size="sm"
               fullWidth
             >

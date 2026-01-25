@@ -3,18 +3,31 @@
  */
 
 import React, { useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core';
 import { useMealPlanStore } from '../store/mealPlanStore';
 import {
-  MealPlannerBoard,
+  BoardContent,
+  parseDragId,
+  parseDropId,
   PlannerSidebar,
   NutritionSummary,
   GeneratePlanModal,
+  DraggableRecipe,
 } from '../components/meal-planner';
 import {
   useGenerateMealPlan,
   useSaveMealPlan,
 } from '../hooks/useMealPlan';
-import type { MealPlanGenerateRequest } from '../types';
+import type { MealPlanGenerateRequest, RecipeListItem } from '../types';
 import {
   Save,
   Trash2,
@@ -27,6 +40,15 @@ import {
 import { format } from 'date-fns';
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+interface DragData {
+  recipe: RecipeListItem;
+  servings: number;
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -34,6 +56,8 @@ export const MealPlannerPage: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
 
   const {
     plan,
@@ -42,6 +66,8 @@ export const MealPlannerPage: React.FC = () => {
     setNutritionGoals,
     getTotalRecipes,
     addRecipe,
+    moveRecipe,
+    swapRecipes,
   } = useMealPlanStore();
 
   const generateMutation = useGenerateMealPlan();
@@ -49,44 +75,178 @@ export const MealPlannerPage: React.FC = () => {
 
   const totalRecipes = getTotalRecipes();
 
+  // Configure drag sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required to start drag
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
+
+    // Store the drag data for the overlay
+    if (active.data.current) {
+      setActiveDragData(active.data.current as DragData);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    setActiveId(null);
+    setActiveDragData(null);
+
+    if (!over) {
+      return;
+    }
+
+    const dragActiveId = active.id as string;
+    const overId = over.id as string;
+
+    // Parse source (where drag started)
+    const source = parseDragId(dragActiveId);
+    const target = parseDropId(overId);
+
+    if (!target) {
+      return;
+    }
+
+    // Get the recipe data
+    const dragData = active.data.current as DragData;
+
+    if (!dragData?.recipe) {
+      return;
+    }
+
+    if (!source) {
+      // Dragging from sidebar to board
+      addRecipe(target.day, target.mealType, dragData.recipe, dragData.servings);
+    } else {
+      // Moving within board
+      const targetDayState = plan.days[target.day];
+      const targetMealKey = target.mealType === 'breakfast' ? 'breakfast' : target.mealType === 'lunch' ? 'lunch' : 'dinner';
+      const targetSlot = targetDayState[targetMealKey];
+
+      if (targetSlot) {
+        // Target slot has a recipe - swap
+        swapRecipes(source.day, source.mealType, target.day, target.mealType);
+      } else {
+        // Target slot is empty - move
+        moveRecipe(source.day, source.mealType, target.day, target.mealType);
+      }
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setActiveDragData(null);
+  };
+
   const handleGeneratePlan = async (request: MealPlanGenerateRequest) => {
     try {
       const result = await generateMutation.mutateAsync(request);
 
-      // Populate the plan from API response
-      if (result.days) {
-        // Clear existing plan first
-        clearAll();
+      // Clear existing plan first
+      clearAll();
 
-        // Set start date
-        if (result.start_date) {
-          setStartDate(result.start_date);
-        }
-
-        // Map API response to store
-        const dayMap: Record<number, string> = {
-          1: 'monday',
-          2: 'tuesday',
-          3: 'wednesday',
-          4: 'thursday',
-          5: 'friday',
-          6: 'saturday',
-          7: 'sunday',
+      // Handle actual API response format: { plan: { Monday: { meals: { breakfast: {...}, ... } }, ... } }
+      const planData = (result as any).plan;
+      if (planData) {
+        // Map day names to lowercase
+        const dayNameMap: Record<string, string> = {
+          'Monday': 'monday',
+          'Tuesday': 'tuesday',
+          'Wednesday': 'wednesday',
+          'Thursday': 'thursday',
+          'Friday': 'friday',
+          'Saturday': 'saturday',
+          'Sunday': 'sunday',
         };
 
-        result.days.forEach((dayPlan) => {
-          const dayOfWeek = dayMap[dayPlan.day];
-          if (!dayOfWeek) return;
+        // Check for custom meal counts
+        const mealCounts = (request as any).mealCounts;
+        const usesCustomCounts = mealCounts !== undefined;
 
-          dayPlan.meals.forEach((meal) => {
-            addRecipe(
-              dayOfWeek as any,
-              meal.meal_type,
-              meal.recipe,
-              meal.servings
-            );
+        // Track how many of each meal type we've added
+        let breakfastCount = 0;
+        let lunchCount = 0;
+        let dinnerCount = 0;
+
+        Object.entries(planData).forEach(([dayName, dayData]: [string, any]) => {
+          const dayOfWeek = dayNameMap[dayName];
+          if (!dayOfWeek || !dayData.meals) return;
+
+          const meals = dayData.meals;
+
+          // Process each meal type
+          (['breakfast', 'lunch', 'dinner'] as const).forEach((mealType) => {
+            const mealData = meals[mealType];
+            if (mealData) {
+              // Check if we should skip this meal based on custom counts
+              if (usesCustomCounts) {
+                if (mealType === 'breakfast' && breakfastCount >= mealCounts.breakfasts) return;
+                if (mealType === 'lunch' && lunchCount >= mealCounts.lunches) return;
+                if (mealType === 'dinner' && dinnerCount >= mealCounts.dinners) return;
+              }
+
+              // Convert API recipe format to frontend RecipeListItem format
+              // Include nutrition data if available
+              const nutritionData = mealData.nutrition;
+              const recipe = {
+                id: mealData.id,
+                slug: mealData.slug,
+                name: mealData.name,
+                description: null,
+                cooking_time_minutes: mealData.cooking_time_minutes,
+                prep_time_minutes: null,
+                total_time_minutes: mealData.cooking_time_minutes,
+                difficulty: mealData.difficulty,
+                servings: mealData.servings,
+                categories: [],
+                dietary_tags: [],
+                allergens: [],
+                main_image: mealData.image_url ? {
+                  url: mealData.image_url,
+                  alt_text: mealData.name,
+                } : null,
+                // Include nutrition summary from API response
+                nutrition_summary: nutritionData ? {
+                  calories: nutritionData.calories || 0,
+                  protein_g: nutritionData.protein_g || 0,
+                  carbohydrates_g: nutritionData.carbohydrates_g || 0,
+                  fat_g: nutritionData.fat_g || 0,
+                  fiber_g: nutritionData.fiber_g || 0,
+                  sugar_g: nutritionData.sugar_g || 0,
+                  sodium_mg: nutritionData.sodium_mg || 0,
+                } : null,
+                is_active: true,
+                is_favorite: null,
+              };
+
+              addRecipe(
+                dayOfWeek as any,
+                mealType,
+                recipe as any,
+                mealData.servings || 2
+              );
+
+              // Track meal counts
+              if (mealType === 'breakfast') breakfastCount++;
+              if (mealType === 'lunch') lunchCount++;
+              if (mealType === 'dinner') dinnerCount++;
+            }
           });
         });
+      }
+
+      // Set nutrition goals from request if provided
+      const nutritionGoals = (request as any).nutrition_goals;
+      if (nutritionGoals) {
+        setNutritionGoals(nutritionGoals);
       }
 
       setShowGenerateModal(false);
@@ -210,41 +370,64 @@ export const MealPlannerPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Meal Planner Board */}
-        <div className="flex-1 overflow-auto p-6">
-          <MealPlannerBoard />
-        </div>
+      {/* Main Content with DndContext wrapping both board and sidebar */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="flex-1 flex overflow-hidden">
+          {/* Meal Planner Board */}
+          <div className="flex-1 overflow-auto p-6">
+            <BoardContent />
+          </div>
 
-        {/* Sidebar */}
-        <div
-          className={`
-            relative transition-all duration-300 bg-white border-l border-gray-200
-            ${showSidebar ? 'w-96' : 'w-0'}
-          `}
-        >
-          {showSidebar && (
-            <PlannerSidebar
-              onGeneratePlan={() => setShowGenerateModal(true)}
-              isGenerating={generateMutation.isPending}
-            />
-          )}
-
-          {/* Sidebar Toggle */}
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="absolute -left-4 top-6 w-8 h-8 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
-            aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
+          {/* Sidebar */}
+          <div
+            className={`
+              relative transition-all duration-300 bg-white border-l border-gray-200
+              ${showSidebar ? 'w-96' : 'w-0'}
+            `}
           >
-            {showSidebar ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
+            {showSidebar && (
+              <PlannerSidebar
+                onGeneratePlan={() => setShowGenerateModal(true)}
+                isGenerating={generateMutation.isPending}
+              />
             )}
-          </button>
+
+            {/* Sidebar Toggle */}
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="absolute -left-4 top-6 w-8 h-8 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
+              aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
+            >
+              {showSidebar ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeId && activeDragData ? (
+            <div className="rotate-3 scale-105">
+              <DraggableRecipe
+                recipe={activeDragData.recipe}
+                servings={activeDragData.servings}
+                dragId="overlay"
+                compact
+                showRemoveButton={false}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Nutrition Summary Footer */}
       <div className="border-t border-gray-200 bg-white">

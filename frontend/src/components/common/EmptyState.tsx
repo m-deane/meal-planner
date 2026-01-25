@@ -153,7 +153,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {children && <div className="mt-4">{children}</div>}
 
       {/* Actions */}
-      {(action || secondaryAction) && (
+      {(action ?? secondaryAction) && (
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row">
           {action && (
             <Button

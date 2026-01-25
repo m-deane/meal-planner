@@ -1,0 +1,504 @@
+{
+  "plan": {
+    "days": {
+      "monday": {
+        "breakfast": null,
+        "lunch": {
+          "recipe": {
+            "id": 461,
+            "slug": "fresh-chicken-vermicelli",
+            "name": "Fresh Chicken Vermicelli",
+            "description": null,
+            "cooking_time_minutes": 25,
+            "prep_time_minutes": null,
+            "total_time_minutes": 25,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/308.FreshChickenVermicelli.jpg",
+              "alt_text": "Fresh Chicken Vermicelli"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 829,
+            "slug": "pork-mushroom-stroganoff",
+            "name": "Pork Mushroom Stroganoff",
+            "description": null,
+            "cooking_time_minutes": 40,
+            "prep_time_minutes": null,
+            "total_time_minutes": 40,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/229.PorkMushroomStroganoff.jpg",
+              "alt_text": "Pork Mushroom Stroganoff"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "tuesday": {
+        "breakfast": {
+          "recipe": {
+            "id": 1027,
+            "slug": "se-asia-chicken-pad-thai",
+            "name": "Chicken Thigh Pad Thai",
+            "description": null,
+            "cooking_time_minutes": 20,
+            "prep_time_minutes": null,
+            "total_time_minutes": 20,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/7253---Chicken--Egg-Pad-Thai0620-12.06.35-1725008911209.jpg",
+              "alt_text": "Chicken Thigh Pad Thai"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 1902,
+            "slug": "fragrant-thai-green-beef-curry",
+            "name": "Fragrant Thai Green Beef Curry",
+            "description": null,
+            "cooking_time_minutes": 25,
+            "prep_time_minutes": null,
+            "total_time_minutes": 25,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://s3-eu-west-1.amazonaws.com/s3-gousto-production-media/cms/mood-image/2818---Fragrant-Thai-Green-Beef-Curry0363-1592820277102.jpg",
+              "alt_text": "Fragrant Thai Green Beef Curry"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 4192,
+            "slug": "garlicky-ready-to-eat-chicken-wholewheat-tortiglioni",
+            "name": "Garlicky Ready To Eat Chicken Wholewheat Tortiglioni",
+            "description": null,
+            "cooking_time_minutes": 30,
+            "prep_time_minutes": null,
+            "total_time_minutes": 30,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/R-5218-2-Garlicky-Pulled-Chicken-Breast-Wholewheat-Tortiglioni_0-1741339908377-1756908728919.jpg",
+              "alt_text": "Garlicky Ready To Eat Chicken Wholewheat Tortiglioni"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "wednesday": {
+        "breakfast": {
+          "recipe": {
+            "id": 2636,
+            "slug": "ultimate-slow-cooked-beef-brisket-red-wine-cottage-pie-with-dessert",
+            "name": "Ultimate Slow Cooked Beef Brisket & Red Wine Cottage Pie With Dessert",
+            "description": null,
+            "cooking_time_minutes": 35,
+            "prep_time_minutes": null,
+            "total_time_minutes": 35,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/R-8576-The-Ultimate-Slow-Cooked-Beef--Red-Wine-Cottage-Pie3705-1758191957233-1762181238782.jpg",
+              "alt_text": "Ultimate Slow Cooked Beef Brisket & Red Wine Cottage Pie With Dessert"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 1199,
+            "slug": "lasagne-style-pork-beef-burger-with-garlic-sweet-potato-fries",
+            "name": "Lasagne-Style Pork & Beef Burger With Garlic Sweet Potato Fries",
+            "description": null,
+            "cooking_time_minutes": 30,
+            "prep_time_minutes": null,
+            "total_time_minutes": 30,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/6967_Lasagne-Inspired-Pork--Beef-Burger-With-Garlic-Fries_001_0-1712832788857-1756200469476.jpg",
+              "alt_text": "Lasagne-Style Pork & Beef Burger With Garlic Sweet Potato Fries"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 4500,
+            "slug": "fragrant-double-chicken-breast-massaman-with-peanuts-rice",
+            "name": "Fragrant Double Chicken Breast Massaman With Peanuts & Rice",
+            "description": null,
+            "cooking_time_minutes": 10,
+            "prep_time_minutes": null,
+            "total_time_minutes": 10,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/7486_Fragrant-Chicken-Massaman-With-Peanuts--Rice_001_0-1738933585083-1740404313320-1756370513825.jpg",
+              "alt_text": "Fragrant Double Chicken Breast Massaman With Peanuts & Rice"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "thursday": {
+        "breakfast": {
+          "recipe": {
+            "id": 1242,
+            "slug": "chicken-breast-pad-thai",
+            "name": "Chicken Breast Pad Thai",
+            "description": null,
+            "cooking_time_minutes": 20,
+            "prep_time_minutes": null,
+            "total_time_minutes": 20,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/range-main-image/7253-Chicken-Pad-Thai_IMAGE_01-1725375691092.jpg",
+              "alt_text": "Chicken Breast Pad Thai"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 4059,
+            "slug": "salmon-saffron-pie-with-lemony-greens",
+            "name": "Salmon & Saffron Pie With Lemony Greens",
+            "description": null,
+            "cooking_time_minutes": 45,
+            "prep_time_minutes": null,
+            "total_time_minutes": 45,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/1857_Salmon--Saffron-Pie-With-Lemony-Greens_003_0-1757687195940.jpg",
+              "alt_text": "Salmon & Saffron Pie With Lemony Greens"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 2529,
+            "slug": "chicken-thigh-tinga-burrito-bowl-with-ready-to-heat-rice",
+            "name": "Chicken Thigh Tinga Burrito Bowl With Ready-To-Heat Rice",
+            "description": null,
+            "cooking_time_minutes": 20,
+            "prep_time_minutes": null,
+            "total_time_minutes": 20,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/5741_Chicken-Thigh-Tinga-Burrito-Bowl_001_0-1728985984361-1752054301599.jpg",
+              "alt_text": "Chicken Thigh Tinga Burrito Bowl With Ready-To-Heat Rice"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "friday": {
+        "breakfast": {
+          "recipe": {
+            "id": 1845,
+            "slug": "ultimate-chicken-pad-thai",
+            "name": "Ultimate Chicken Pad Thai",
+            "description": null,
+            "cooking_time_minutes": 30,
+            "prep_time_minutes": null,
+            "total_time_minutes": 30,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/R-7083-2-Ultimate-Chicken-Pad-Thai-1_0-1716887606073.jpg",
+              "alt_text": "Ultimate Chicken Pad Thai"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 1899,
+            "slug": "sun-dried-tomato-sauce-with-orecchiette-extra-chicken",
+            "name": "Sun-Dried Tomato Sauce With Orecchiette & Extra Chicken",
+            "description": null,
+            "cooking_time_minutes": 10,
+            "prep_time_minutes": null,
+            "total_time_minutes": 10,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/6738_Creamy-Goats-Cheese-7-Sun-Dried-Tomato-Sauce-With-Fresh-Orecchiette_003_0-1719483684348-1729162769740.jpg",
+              "alt_text": "Sun-Dried Tomato Sauce With Orecchiette & Extra Chicken"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 3849,
+            "slug": "spicy-peanut-double-chicken-breast-wholewheat-noodles",
+            "name": "Spicy Peanut Double Chicken Breast Wholewheat Noodles",
+            "description": null,
+            "cooking_time_minutes": 10,
+            "prep_time_minutes": null,
+            "total_time_minutes": 10,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/2945_Spicy-Peanut-Chicken-Thigh-Wholewheat-Noodles_001-1681395098152-1682350185828-1756373433166.jpg",
+              "alt_text": "Spicy Peanut Double Chicken Breast Wholewheat Noodles"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "saturday": {
+        "breakfast": {
+          "recipe": {
+            "id": 1382,
+            "slug": "spicy-peanut-double-chicken-breast-noodles",
+            "name": "Spicy Peanut Double Chicken Breast Noodles",
+            "description": null,
+            "cooking_time_minutes": 10,
+            "prep_time_minutes": null,
+            "total_time_minutes": 10,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/2047---Spicy-Peanut-Chicken-Noodles0227-1616494881154-1756373926213.jpg",
+              "alt_text": "Spicy Peanut Double Chicken Breast Noodles"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 253,
+            "slug": "toad-in-the-hole-with-mash-onion-gravy",
+            "name": "Toad In The Hole With Mash And Onion Gravy",
+            "description": null,
+            "cooking_time_minutes": 45,
+            "prep_time_minutes": null,
+            "total_time_minutes": 45,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/7062-Toad-In-The-Hole-With-Mash-And-Onion-Gravy-copy-1740580696756.jpg",
+              "alt_text": "Toad In The Hole With Mash And Onion Gravy"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 2643,
+            "slug": "lime-double-baked-cod-with-spinach-mornay",
+            "name": "Lemon Double Baked Cod With Spinach Mornay",
+            "description": null,
+            "cooking_time_minutes": 40,
+            "prep_time_minutes": null,
+            "total_time_minutes": 40,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/330---Lemon-Baked-Fish-With-Spinach-Mornay4204-1602145989484-1765882770568.jpg",
+              "alt_text": "Lemon Double Baked Cod With Spinach Mornay"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      },
+      "sunday": {
+        "breakfast": {
+          "recipe": {
+            "id": 1382,
+            "slug": "spicy-peanut-double-chicken-breast-noodles",
+            "name": "Spicy Peanut Double Chicken Breast Noodles",
+            "description": null,
+            "cooking_time_minutes": 10,
+            "prep_time_minutes": null,
+            "total_time_minutes": 10,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/2047---Spicy-Peanut-Chicken-Noodles0227-1616494881154-1756373926213.jpg",
+              "alt_text": "Spicy Peanut Double Chicken Breast Noodles"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "lunch": {
+          "recipe": {
+            "id": 2048,
+            "slug": "lime-baked-salmon-with-spinach-mornay",
+            "name": "Lemon Baked Salmon With Spinach Mornay",
+            "description": null,
+            "cooking_time_minutes": 40,
+            "prep_time_minutes": null,
+            "total_time_minutes": 40,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/330---Lemon-Baked-Fish-With-Spinach-Mornay4204-1602145989484-1-1753809156036.jpg",
+              "alt_text": "Lemon Baked Salmon With Spinach Mornay"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        },
+        "dinner": {
+          "recipe": {
+            "id": 665,
+            "slug": "chicken-pad-thai",
+            "name": "Chicken Pad Thai",
+            "description": null,
+            "cooking_time_minutes": 25,
+            "prep_time_minutes": null,
+            "total_time_minutes": 25,
+            "difficulty": null,
+            "servings": 2,
+            "categories": [],
+            "dietary_tags": [],
+            "allergens": [],
+            "main_image": {
+              "url": "https://production-media.gousto.co.uk/cms/mood-image/2097---Chicken-Pad-Thai.2.jpg",
+              "alt_text": "Chicken Pad Thai"
+            },
+            "nutrition_summary": null,
+            "is_active": true,
+            "is_favorite": null
+          },
+          "servings": 2
+        }
+      }
+    },
+    "startDate": null,
+    "nutritionGoals": {}
+  },
+  "exportedAt": "2026-01-24T16:49:48.007Z"
+}

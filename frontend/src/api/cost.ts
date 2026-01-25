@@ -78,10 +78,10 @@ export const getCheaperAlternatives = async (
  * Get average recipe costs by category.
  */
 export const getAverageCostsByCategory = async (): Promise<
-  Array<{ category: string; average_cost: number; recipe_count: number }>
+  { category: string; average_cost: number; recipe_count: number }[]
 > => {
   const response = await apiClient.get<
-    Array<{ category: string; average_cost: number; recipe_count: number }>
+    { category: string; average_cost: number; recipe_count: number }[]
   >('/recipes/cost/averages');
 
   return response.data;

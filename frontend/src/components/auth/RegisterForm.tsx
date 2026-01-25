@@ -2,7 +2,8 @@
  * Registration form component with validation and error handling.
  */
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useRegister } from '../../hooks/useAuth';
 import { formatAPIError } from '../../api/client';
@@ -121,7 +122,7 @@ export const RegisterForm = (): JSX.Element => {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
@@ -157,7 +158,7 @@ export const RegisterForm = (): JSX.Element => {
                 autoComplete="username"
                 required
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => { setUsername(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
@@ -193,7 +194,7 @@ export const RegisterForm = (): JSX.Element => {
                 autoComplete="new-password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2
@@ -232,7 +233,7 @@ export const RegisterForm = (): JSX.Element => {
                 autoComplete="new-password"
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); }}
                 className={`
                   appearance-none block w-full px-3 py-2 border rounded-md shadow-sm
                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2

@@ -49,6 +49,9 @@ cd frontend && npm run type-check               # TypeScript checking
 # Linting
 black src tests                                 # Format Python code
 mypy src                                        # Type checking
+
+# Debug Mode
+LOG_LEVEL=DEBUG python -m src.cli scrape --limit 5
 ```
 
 ## Architecture
@@ -144,19 +147,23 @@ Frontend settings in `frontend/.env`:
 - Vitest + Testing Library
 - Test utilities in `src/test/`
 
-## File Organization
-
-- `.claude_plans/`: Project planning documents and completion reports
-- `.claude_research/`: Technical research artifacts
-- `docs/`: Schema documentation, sample queries, index strategies
-- `meal_plans/`: Generated meal plan outputs
-- `data/`: Database files (SQLite)
-- `logs/`: Application logs
-- `frontend/`: React application (separate npm project)
-
 ## Workflow Guidelines
 
+- Never use mock data, results, or workarounds - implement complete working code
 - Implement tests after code changes and verify all tests pass
 - Write all tests to `tests/` (backend) or colocate with components (frontend)
-- Keep files organized - don't leave orphaned files in root
+- Only create progress files and project plans in `.claude_plans/`
 - Update `.claude_plans/projectplan.md` after completing stages
+- Keep files organized - regularly clean up orphan or unneeded files
+
+## File Boundaries
+
+**Safe to modify**: `src/`, `frontend/src/`, `tests/`, `frontend/src/components/`
+
+**Never modify**: `node_modules/`, `.git/`, `dist/`, `build/`, `venv/`, `.env` files
+
+## Code Style
+
+**Python**: snake_case variables/functions, PascalCase classes, SCREAMING_SNAKE_CASE constants
+
+**TypeScript**: camelCase variables/functions, PascalCase classes/components, SCREAMING_SNAKE_CASE constants

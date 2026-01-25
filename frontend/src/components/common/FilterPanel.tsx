@@ -232,7 +232,7 @@ const FilterSectionComponent: React.FC<FilterSectionComponentProps> = ({
                 max={section.range.max}
                 step={section.range.step ?? 1}
                 value={section.range.value}
-                onChange={(e) => onRangeChange?.(section.range!.id, Number(e.target.value))}
+                onChange={(e) => { if (section.range) onRangeChange?.(section.range.id, Number(e.target.value)); }}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 aria-label={section.range.label}
               />
@@ -336,10 +336,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           <FilterSectionComponent
             key={section.id}
             section={section}
-            onCheckboxChange={(optionId, checked) =>
-              handleCheckboxChange(section.id, optionId, checked)
-            }
-            onRangeChange={(rangeId, value) => handleRangeChange(section.id, rangeId, value)}
+            onCheckboxChange={(optionId, checked) => {
+              handleCheckboxChange(section.id, optionId, checked);
+            }}
+            onRangeChange={(rangeId, value) => { handleRangeChange(section.id, rangeId, value); }}
           />
         ))}
       </div>

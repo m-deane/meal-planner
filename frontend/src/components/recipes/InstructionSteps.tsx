@@ -70,11 +70,15 @@ const InstructionStep: React.FC<InstructionStepProps> = ({
     onToggle(!completed);
   };
 
+  // Handle both field name formats (step_number/instruction vs step/text)
+  const stepNumber = instruction.step_number ?? instruction.step ?? 0;
+  const instructionText = instruction.instruction ?? instruction.text ?? '';
+
   // Truncate instruction text for collapsed state
-  const shouldTruncate = expandable && !isExpanded && instruction.instruction.length > 150;
+  const shouldTruncate = expandable && !isExpanded && instructionText.length > 150;
   const displayText = shouldTruncate
-    ? `${instruction.instruction.substring(0, 150)}...`
-    : instruction.instruction;
+    ? `${instructionText.substring(0, 150)}...`
+    : instructionText;
 
   return (
     <li className="flex gap-4">
@@ -93,7 +97,7 @@ const InstructionStep: React.FC<InstructionStepProps> = ({
           {completed ? (
             <CheckCircleIcon className="h-5 w-5 text-green-600" aria-hidden="true" />
           ) : (
-            instruction.step_number
+            stepNumber
           )}
         </div>
       </div>
@@ -118,7 +122,7 @@ const InstructionStep: React.FC<InstructionStepProps> = ({
             )}
 
             {/* Expand/collapse button */}
-            {expandable && instruction.instruction.length > 150 && (
+            {expandable && instructionText.length > 150 && (
               <button
                 type="button"
                 onClick={toggleExpanded}
@@ -153,7 +157,7 @@ const InstructionStep: React.FC<InstructionStepProps> = ({
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }
               `}
-              aria-label={`Mark step ${instruction.step_number} as ${
+              aria-label={`Mark step ${stepNumber} as ${
                 completed ? 'incomplete' : 'complete'
               }`}
             >
@@ -203,10 +207,11 @@ export const InstructionSteps: React.FC<InstructionStepsProps> = ({
     onStepToggle?.(stepNumber, completed);
   };
 
-  // Sort instructions by step_number
-  const sortedInstructions = [...instructions].sort(
-    (a, b) => a.step_number - b.step_number
-  );
+  // Sort instructions by step_number (handle undefined/empty arrays and aliased fields)
+  const getStepNum = (i: Instruction) => i.step_number ?? i.step ?? 0;
+  const sortedInstructions = (instructions ?? []).length > 0
+    ? [...instructions].sort((a, b) => getStepNum(a) - getStepNum(b))
+    : [];
 
   // Calculate total time
   const totalTime = sortedInstructions.reduce(
@@ -224,16 +229,19 @@ export const InstructionSteps: React.FC<InstructionStepsProps> = ({
       )}
 
       <ol className="relative border-l-2 border-gray-200 ml-4 space-y-0">
-        {sortedInstructions.map((instruction) => (
-          <InstructionStep
-            key={instruction.step_number}
-            instruction={instruction}
-            expandable={expandable}
-            showCheckbox={showCheckboxes}
-            completed={internalCompleted.has(instruction.step_number)}
-            onToggle={(completed) => handleToggle(instruction.step_number, completed)}
-          />
-        ))}
+        {sortedInstructions.map((instruction, index) => {
+          const stepNum = getStepNum(instruction);
+          return (
+            <InstructionStep
+              key={stepNum || index}
+              instruction={instruction}
+              expandable={expandable}
+              showCheckbox={showCheckboxes}
+              completed={internalCompleted.has(stepNum)}
+              onToggle={(completed) => { handleToggle(stepNum, completed); }}
+            />
+          );
+        })}
       </ol>
     </div>
   );
