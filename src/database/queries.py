@@ -86,8 +86,11 @@ class RecipeQuery:
 
     def filter_recipes(
         self,
+        category_ids: Optional[List[int]] = None,
         categories: Optional[List[str]] = None,
+        dietary_tag_ids: Optional[List[int]] = None,
         dietary_tags: Optional[List[str]] = None,
+        exclude_allergen_ids: Optional[List[int]] = None,
         exclude_allergens: Optional[List[str]] = None,
         max_cooking_time: Optional[int] = None,
         difficulty: Optional[str] = None,
@@ -103,8 +106,11 @@ class RecipeQuery:
         Advanced recipe filtering with multiple criteria.
 
         Args:
+            category_ids: Category IDs to filter by (OR logic)
             categories: Category slugs to filter by (OR logic)
+            dietary_tag_ids: Dietary tag IDs (AND logic)
             dietary_tags: Dietary tag slugs (AND logic)
+            exclude_allergen_ids: Allergen IDs to exclude
             exclude_allergens: Allergen names to exclude
             max_cooking_time: Maximum cooking time in minutes
             difficulty: Recipe difficulty level
@@ -114,28 +120,48 @@ class RecipeQuery:
             max_carbs: Maximum carbs in grams
             limit: Maximum results
             offset: Pagination offset
-            order_by: Sort field (name, cooking_time, calories)
+            order_by: Sort field (name, cooking_time, calories, protein). Prefix with '-' for descending.
 
         Returns:
             List of filtered recipes
         """
         query = self.session.query(Recipe).filter(Recipe.is_active == True)
 
-        # Category filter (OR - match any category)
-        if categories:
+        # Category filter by ID (OR - match any category)
+        if category_ids:
+            query = query.join(Recipe.categories).filter(
+                Category.id.in_(category_ids)
+            )
+        # Category filter by slug (OR - match any category)
+        elif categories:
             query = query.join(Recipe.categories).filter(
                 Category.slug.in_(categories)
             )
 
-        # Dietary tags filter (AND - must have all tags)
-        if dietary_tags:
+        # Dietary tags filter by ID (AND - must have all tags)
+        if dietary_tag_ids:
+            for tag_id in dietary_tag_ids:
+                query = query.join(Recipe.dietary_tags).filter(
+                    DietaryTag.id == tag_id
+                )
+        # Dietary tags filter by slug (AND - must have all tags)
+        elif dietary_tags:
             for tag_slug in dietary_tags:
                 query = query.join(Recipe.dietary_tags).filter(
                     DietaryTag.slug == tag_slug
                 )
 
-        # Allergen exclusion (must NOT have any excluded allergens)
-        if exclude_allergens:
+        # Allergen exclusion by ID (must NOT have any excluded allergens)
+        if exclude_allergen_ids:
+            allergen_recipes = self.session.query(Recipe.id).join(
+                Recipe.allergens
+            ).filter(
+                Allergen.id.in_(exclude_allergen_ids)
+            ).subquery()
+
+            query = query.filter(~Recipe.id.in_(allergen_recipes))
+        # Allergen exclusion by name (must NOT have any excluded allergens)
+        elif exclude_allergens:
             allergen_recipes = self.session.query(Recipe.id).join(
                 Recipe.allergens
             ).filter(
@@ -165,15 +191,37 @@ class RecipeQuery:
             if max_carbs is not None:
                 query = query.filter(NutritionalInfo.carbohydrates_g <= max_carbs)
 
-        # Ordering
-        if order_by == 'cooking_time':
-            query = query.order_by(Recipe.cooking_time_minutes)
-        elif order_by == 'calories':
-            query = query.join(Recipe.nutritional_info).order_by(
-                NutritionalInfo.calories
-            )
+        # Ordering - supports descending with '-' prefix (e.g., '-calories')
+        descending = order_by.startswith('-') if order_by else False
+        sort_field = order_by.lstrip('-') if order_by else 'name'
+
+        if sort_field == 'cooking_time':
+            sort_col = Recipe.cooking_time_minutes
+            if descending:
+                query = query.order_by(sort_col.desc())
+            else:
+                query = query.order_by(sort_col)
+        elif sort_field == 'calories':
+            # Only join if not already joined for nutrition filters
+            if not any([min_calories, max_calories, min_protein, max_carbs]):
+                query = query.join(Recipe.nutritional_info)
+            if descending:
+                query = query.order_by(NutritionalInfo.calories.desc())
+            else:
+                query = query.order_by(NutritionalInfo.calories)
+        elif sort_field == 'protein':
+            # Only join if not already joined for nutrition filters
+            if not any([min_calories, max_calories, min_protein, max_carbs]):
+                query = query.join(Recipe.nutritional_info)
+            if descending:
+                query = query.order_by(NutritionalInfo.protein_g.desc())
+            else:
+                query = query.order_by(NutritionalInfo.protein_g)
         else:  # Default to name
-            query = query.order_by(Recipe.name)
+            if descending:
+                query = query.order_by(Recipe.name.desc())
+            else:
+                query = query.order_by(Recipe.name)
 
         return query.limit(limit).offset(offset).all()
 

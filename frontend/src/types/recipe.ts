@@ -48,8 +48,11 @@ export interface Ingredient {
 }
 
 export interface Instruction {
-  step_number: number;
-  instruction: string;
+  // API may return these as either step_number/instruction or step/text
+  step_number?: number | null;
+  step?: number | null;  // Alias from API
+  instruction?: string | null;
+  text?: string | null;  // Alias from API
   time_minutes: number | null;
 }
 

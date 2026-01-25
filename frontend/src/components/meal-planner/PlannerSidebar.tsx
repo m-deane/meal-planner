@@ -1,10 +1,12 @@
 /**
- * Meal planner sidebar with recipe search and filters.
+ * Meal planner sidebar with recipe search, filters, and shortlist.
  */
 
 import React, { useState } from 'react';
 import { useInfiniteRecipes } from '../../hooks/useRecipes';
 import { DraggableRecipe } from './DraggableRecipe';
+import { ShortlistPanel } from './ShortlistPanel';
+import { useShortlistStore } from '../../store/shortlistStore';
 import type { RecipeFilters, DifficultyLevel, PaginatedResponse, RecipeListItem } from '../../types';
 import type { InfiniteData } from '@tanstack/react-query';
 import {
@@ -14,7 +16,11 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Library,
+  Bookmark,
 } from 'lucide-react';
+
+type SidebarTab = 'library' | 'shortlist';
 
 // ============================================================================
 // TYPES
@@ -33,12 +39,13 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
   onGeneratePlan,
   isGenerating = false,
 }) => {
+  const [activeTab, setActiveTab] = useState<SidebarTab>('library');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<RecipeFilters>({
-    search_query: '',
     only_active: true,
   });
+  const shortlistCount = useShortlistStore((state) => state.getCount());
 
   // Fetch recipes with infinite scroll
   const infiniteQuery = useInfiniteRecipes(
@@ -65,7 +72,7 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
   };
 
   const clearFilters = () => {
-    setFilters({ search_query: '', only_active: true });
+    setFilters({ only_active: true });
     setSearchQuery('');
   };
 
@@ -78,11 +85,51 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-white border-l border-gray-200">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Recipe Library</h2>
+      {/* Tab Headers */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('library')}
+          className={`
+            flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors
+            ${
+              activeTab === 'library'
+                ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }
+          `}
+        >
+          <Library className="w-4 h-4" />
+          Library
+        </button>
+        <button
+          onClick={() => setActiveTab('shortlist')}
+          className={`
+            flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative
+            ${
+              activeTab === 'shortlist'
+                ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }
+          `}
+        >
+          <Bookmark className="w-4 h-4" />
+          Shortlist
+          {shortlistCount > 0 && (
+            <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded-full min-w-[18px] text-center">
+              {shortlistCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-        {/* Search Bar */}
+      {/* Shortlist Tab Content */}
+      {activeTab === 'shortlist' ? (
+        <ShortlistPanel className="flex-1" />
+      ) : (
+        <>
+          {/* Library Tab Header */}
+          <div className="p-4 border-b border-gray-200">
+            {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -234,6 +281,8 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 };

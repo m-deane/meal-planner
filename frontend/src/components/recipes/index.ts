@@ -31,3 +31,7 @@ export type { RecipeFiltersProps } from './RecipeFilters';
 // RecipeDetail component
 export { RecipeDetail } from './RecipeDetail';
 export type { RecipeDetailProps } from './RecipeDetail';
+
+// ShortlistButton component
+export { ShortlistButton } from './ShortlistButton';
+export type { ShortlistButtonProps } from './ShortlistButton';

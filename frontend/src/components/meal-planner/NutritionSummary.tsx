@@ -38,23 +38,23 @@ const NutritionBar: React.FC<NutritionBarProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-900">
+      <div className="flex items-center justify-between mb-0.5">
+        <span className="text-xs font-medium text-gray-700">{label}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-bold text-gray-900">
             {Math.round(value)}{unit}
           </span>
           {goal && (
             <span className="text-xs text-gray-500">
-              / {Math.round(goal)}{unit}
+              /{Math.round(goal)}
             </span>
           )}
         </div>
       </div>
       {goal && (
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div
-            className={`h-2 rounded-full transition-all duration-300 ${
+            className={`h-1.5 rounded-full transition-all duration-300 ${
               isOverGoal ? 'bg-red-500' : color
             }`}
             style={{ width: `${percentage}%` }}
@@ -92,36 +92,35 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({ className = 
   );
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border border-gray-200 p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-indigo-600" />
-          Nutrition Summary
-        </h2>
+    <div className={`bg-white rounded-lg shadow-md border border-gray-200 p-4 ${className}`}>
+      {/* Compact header inline with first row */}
+      <div className="flex items-center gap-2 mb-3">
+        <Activity className="w-4 h-4 text-indigo-600" />
+        <h2 className="text-base font-bold text-gray-900">Nutrition Summary</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Weekly Totals */}
-        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-indigo-600" />
-            <h3 className="font-semibold text-gray-900">Weekly Totals</h3>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Weekly Totals - Compact */}
+        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+            <h3 className="text-sm font-semibold text-gray-900">Weekly</h3>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-600">Calories:</span>
+              <span className="text-gray-600">Cal:</span>
               <span className="font-bold text-gray-900">
                 {Math.round(weeklyNutrition.calories).toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Protein:</span>
+              <span className="text-gray-600">Pro:</span>
               <span className="font-bold text-gray-900">
                 {Math.round(weeklyNutrition.protein_g)}g
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Carbs:</span>
+              <span className="text-gray-600">Carb:</span>
               <span className="font-bold text-gray-900">
                 {Math.round(weeklyNutrition.carbohydrates_g)}g
               </span>
@@ -132,22 +131,16 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({ className = 
                 {Math.round(weeklyNutrition.fat_g)}g
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Fiber:</span>
-              <span className="font-bold text-gray-900">
-                {Math.round(weeklyNutrition.fiber_g)}g
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Daily Average */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="w-4 h-4 text-green-600" />
-            <h3 className="font-semibold text-gray-900">Daily Average</h3>
+        {/* Daily Average - Compact */}
+        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Target className="w-3.5 h-3.5 text-green-600" />
+            <h3 className="text-sm font-semibold text-gray-900">Daily Avg</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             <NutritionBar
               label="Calories"
               value={dailyAverage.calories}
@@ -162,79 +155,78 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({ className = 
               unit="g"
               color="bg-blue-500"
             />
-            <NutritionBar
-              label="Carbs"
-              value={dailyAverage.carbohydrates_g}
-              goal={goals.daily_carbs_g ?? undefined}
-              unit="g"
-              color="bg-yellow-500"
-            />
-            <NutritionBar
-              label="Fat"
-              value={dailyAverage.fat_g}
-              goal={goals.daily_fat_g ?? undefined}
-              unit="g"
-              color="bg-purple-500"
-            />
+            {hasGoals && (
+              <>
+                <NutritionBar
+                  label="Carbs"
+                  value={dailyAverage.carbohydrates_g}
+                  goal={goals.daily_carbs_g ?? undefined}
+                  unit="g"
+                  color="bg-yellow-500"
+                />
+                <NutritionBar
+                  label="Fat"
+                  value={dailyAverage.fat_g}
+                  goal={goals.daily_fat_g ?? undefined}
+                  unit="g"
+                  color="bg-purple-500"
+                />
+              </>
+            )}
           </div>
-
-          {!hasGoals && (
-            <p className="text-xs text-gray-500 mt-3 italic">
-              Set nutrition goals to track progress
-            </p>
-          )}
         </div>
 
-        {/* Recipe Stats */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">Plan Stats</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-              <span className="text-sm text-gray-600">Total Meals</span>
-              <span className="text-2xl font-bold text-purple-600">{totalRecipes}</span>
+        {/* Plan Stats - Compact inline */}
+        <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-3">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Plan Stats</h3>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between px-2 py-1.5 bg-white rounded">
+              <span className="text-xs text-gray-600">Meals</span>
+              <span className="text-lg font-bold text-purple-600">{totalRecipes}</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-              <span className="text-sm text-gray-600">Unique Recipes</span>
-              <span className="text-2xl font-bold text-purple-600">{uniqueRecipes}</span>
+            <div className="flex items-center justify-between px-2 py-1.5 bg-white rounded">
+              <span className="text-xs text-gray-600">Unique</span>
+              <span className="text-lg font-bold text-purple-600">{uniqueRecipes}</span>
             </div>
             {totalRecipes > 0 && (
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                <span className="text-sm text-gray-600">Variety</span>
-                <span className="text-lg font-bold text-purple-600">
+              <div className="flex items-center justify-between px-2 py-1.5 bg-white rounded">
+                <span className="text-xs text-gray-600">Variety</span>
+                <span className="text-sm font-bold text-purple-600">
                   {Math.round((uniqueRecipes / totalRecipes) * 100)}%
                 </span>
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Additional Metrics */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(weeklyNutrition.sugar_g)}g
+        {/* Additional Metrics - Compact grid */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">More</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-center px-2 py-1 bg-white rounded">
+              <div className="text-sm font-bold text-gray-900">
+                {Math.round(weeklyNutrition.sugar_g)}g
+              </div>
+              <div className="text-xs text-gray-500">Sugar/wk</div>
             </div>
-            <div className="text-xs text-gray-600">Sugar (weekly)</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(weeklyNutrition.sodium_mg).toLocaleString()}mg
+            <div className="text-center px-2 py-1 bg-white rounded">
+              <div className="text-sm font-bold text-gray-900">
+                {Math.round(weeklyNutrition.fiber_g)}g
+              </div>
+              <div className="text-xs text-gray-500">Fiber/wk</div>
             </div>
-            <div className="text-xs text-gray-600">Sodium (weekly)</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(dailyAverage.fiber_g)}g
+            <div className="text-center px-2 py-1 bg-white rounded">
+              <div className="text-sm font-bold text-gray-900">
+                {Math.round(dailyAverage.fiber_g)}g
+              </div>
+              <div className="text-xs text-gray-500">Fiber/day</div>
             </div>
-            <div className="text-xs text-gray-600">Fiber (daily avg)</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(dailyAverage.sugar_g)}g
+            <div className="text-center px-2 py-1 bg-white rounded">
+              <div className="text-sm font-bold text-gray-900">
+                {(weeklyNutrition.sodium_mg / 1000).toFixed(1)}k
+              </div>
+              <div className="text-xs text-gray-500">Na mg/wk</div>
             </div>
-            <div className="text-xs text-gray-600">Sugar (daily avg)</div>
           </div>
         </div>
       </div>
