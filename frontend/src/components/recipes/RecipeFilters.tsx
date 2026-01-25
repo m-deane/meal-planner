@@ -1,7 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { FilterPanel, FilterSection, FilterOption, RangeFilter } from '../common';
-import type { RecipeFilters as RecipeFiltersType } from '../../types';
-import { DifficultyLevel } from '../../types';
+import type { RecipeFilters as RecipeFiltersType, SortParams } from '../../types';
+import { DifficultyLevel, SortOrder } from '../../types';
+import { ArrowsUpDownIcon } from '@heroicons/react/24/outline';
+
+// Sort options for recipes
+const SORT_OPTIONS = [
+  { value: 'name', label: 'Name (A-Z)', order: SortOrder.ASC },
+  { value: 'name', label: 'Name (Z-A)', order: SortOrder.DESC },
+  { value: 'cooking_time', label: 'Quickest First', order: SortOrder.ASC },
+  { value: 'cooking_time', label: 'Longest First', order: SortOrder.DESC },
+  { value: 'calories', label: 'Lowest Calories', order: SortOrder.ASC },
+  { value: 'calories', label: 'Highest Calories', order: SortOrder.DESC },
+  { value: 'protein', label: 'Highest Protein', order: SortOrder.DESC },
+  { value: 'protein', label: 'Lowest Protein', order: SortOrder.ASC },
+];
 
 /**
  * RecipeFilters component props
@@ -44,6 +57,22 @@ export interface RecipeFiltersProps {
   onApply?: () => void;
 
   /**
+   * Current sort parameters
+   */
+  sortParams?: SortParams;
+
+  /**
+   * Callback when sort changes
+   */
+  onSortChange?: (params: SortParams) => void;
+
+  /**
+   * Whether to show sorting dropdown
+   * @default true
+   */
+  showSorting?: boolean;
+
+  /**
    * Additional CSS classes
    */
   className?: string;
@@ -77,9 +106,32 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   allergens = [],
   showApplyButton = true,
   onApply,
+  sortParams,
+  onSortChange,
+  showSorting = true,
   className = '',
 }) => {
   const [localFilters, setLocalFilters] = useState<RecipeFiltersType>(filters);
+
+  // Get current sort option key for dropdown
+  const getCurrentSortKey = () => {
+    if (!sortParams?.sort_by) return '0'; // Default to first option
+    const idx = SORT_OPTIONS.findIndex(
+      opt => opt.value === sortParams.sort_by && opt.order === sortParams.sort_order
+    );
+    return idx >= 0 ? idx.toString() : '0';
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const idx = parseInt(e.target.value, 10);
+    const option = SORT_OPTIONS[idx];
+    if (option) {
+      onSortChange?.({
+        sort_by: option.value,
+        sort_order: option.order,
+      });
+    }
+  };
 
   // Sync local filters with prop changes
   useEffect(() => {
@@ -92,25 +144,29 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
 
       switch (sectionId) {
         case 'categories':
-          const categoryIds = new Set(prev.category_ids || []);
-          const categoryId = parseInt(optionId, 10);
+          // Use slugs instead of IDs for API compatibility
+          const categorySlugs = new Set(prev.category_slugs || []);
           if (checked) {
-            categoryIds.add(categoryId);
+            categorySlugs.add(optionId);
           } else {
-            categoryIds.delete(categoryId);
+            categorySlugs.delete(optionId);
           }
-          updated.category_ids = Array.from(categoryIds);
+          updated.category_slugs = Array.from(categorySlugs);
+          // Clear category_ids to avoid conflicts
+          delete updated.category_ids;
           break;
 
         case 'dietary_tags':
-          const dietaryTagIds = new Set(prev.dietary_tag_ids || []);
-          const tagId = parseInt(optionId, 10);
+          // Use slugs instead of IDs for API compatibility
+          const dietaryTagSlugs = new Set(prev.dietary_tag_slugs || []);
           if (checked) {
-            dietaryTagIds.add(tagId);
+            dietaryTagSlugs.add(optionId);
           } else {
-            dietaryTagIds.delete(tagId);
+            dietaryTagSlugs.delete(optionId);
           }
-          updated.dietary_tag_ids = Array.from(dietaryTagIds);
+          updated.dietary_tag_slugs = Array.from(dietaryTagSlugs);
+          // Clear dietary_tag_ids to avoid conflicts
+          delete updated.dietary_tag_ids;
           break;
 
         case 'allergens':
@@ -152,7 +208,10 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
           updated.max_cooking_time = value;
           break;
 
-        case 'nutrition':
+        case 'nutrition_calories':
+        case 'nutrition_protein':
+        case 'nutrition_carbs':
+        case 'nutrition_fat':
           if (!updated.nutrition) {
             updated.nutrition = {};
           }
@@ -197,7 +256,7 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   // Build filter sections
   const sections: FilterSection[] = [];
 
-  // Categories section
+  // Categories section - use slugs for API compatibility
   if (categories.length > 0) {
     sections.push({
       id: 'categories',
@@ -205,15 +264,15 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
       type: 'checkbox',
       options: categories.map(
         (cat): FilterOption => ({
-          id: cat.id.toString(),
+          id: cat.slug,
           label: cat.name,
-          selected: localFilters.category_ids?.includes(cat.id) ?? false,
+          selected: localFilters.category_slugs?.includes(cat.slug) ?? false,
         })
       ),
     });
   }
 
-  // Dietary tags section
+  // Dietary tags section - use slugs for API compatibility
   if (dietaryTags.length > 0) {
     sections.push({
       id: 'dietary_tags',
@@ -221,9 +280,9 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
       type: 'checkbox',
       options: dietaryTags.map(
         (tag): FilterOption => ({
-          id: tag.id.toString(),
+          id: tag.slug,
           label: tag.name,
-          selected: localFilters.dietary_tag_ids?.includes(tag.id) ?? false,
+          selected: localFilters.dietary_tag_slugs?.includes(tag.slug) ?? false,
         })
       ),
     });
@@ -285,10 +344,10 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
     } as RangeFilter,
   });
 
-  // Nutrition section
+  // Nutrition sections - each with unique id to avoid duplicate key warnings
   sections.push({
-    id: 'nutrition',
-    title: 'Nutrition',
+    id: 'nutrition_calories',
+    title: 'Maximum Calories',
     type: 'range',
     defaultCollapsed: true,
     range: {
@@ -303,7 +362,7 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   });
 
   sections.push({
-    id: 'nutrition',
+    id: 'nutrition_protein',
     title: 'Minimum Protein',
     type: 'range',
     defaultCollapsed: true,
@@ -319,7 +378,7 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   });
 
   sections.push({
-    id: 'nutrition',
+    id: 'nutrition_carbs',
     title: 'Maximum Carbs',
     type: 'range',
     defaultCollapsed: true,
@@ -335,7 +394,7 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   });
 
   sections.push({
-    id: 'nutrition',
+    id: 'nutrition_fat',
     title: 'Maximum Fat',
     type: 'range',
     defaultCollapsed: true,
@@ -351,17 +410,40 @@ export const RecipeFilters: React.FC<RecipeFiltersProps> = ({
   });
 
   return (
-    <FilterPanel
-      title="Filter Recipes"
-      sections={sections}
-      onCheckboxChange={handleCheckboxChange}
-      onRangeChange={handleRangeChange}
-      onClearAll={handleClearAll}
-      {...(showApplyButton ? { onApply: handleApply } : {})}
-      showApplyButton={showApplyButton}
-      showClearButton
-      className={className}
-    />
+    <div className={`space-y-4 ${className}`}>
+      {/* Sort dropdown */}
+      {showSorting && onSortChange && (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <ArrowsUpDownIcon className="h-4 w-4" />
+            Sort By
+          </label>
+          <select
+            value={getCurrentSortKey()}
+            onChange={handleSortChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {SORT_OPTIONS.map((option, idx) => (
+              <option key={idx} value={idx}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Filters */}
+      <FilterPanel
+        title="Filter Recipes"
+        sections={sections}
+        onCheckboxChange={handleCheckboxChange}
+        onRangeChange={handleRangeChange}
+        onClearAll={handleClearAll}
+        {...(showApplyButton ? { onApply: handleApply } : {})}
+        showApplyButton={showApplyButton}
+        showClearButton
+      />
+    </div>
   );
 };
 

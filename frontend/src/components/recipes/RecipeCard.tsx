@@ -7,6 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Card, Badge, BadgeGroup } from '../common';
 import { NutritionBadge } from './NutritionBadge';
+import { ShortlistButton } from './ShortlistButton';
 import type { RecipeListItem, DifficultyLevel } from '../../types';
 
 /**
@@ -46,6 +47,12 @@ export interface RecipeCardProps {
    * @default 3
    */
   maxCategories?: number;
+
+  /**
+   * Whether to show the shortlist button
+   * @default true
+   */
+  showShortlist?: boolean;
 
   /**
    * Additional CSS classes
@@ -101,6 +108,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   showCategories = true,
   showDietaryTags = true,
   maxCategories = 3,
+  showShortlist = true,
   className = '',
 }) => {
   const navigate = useNavigate();
@@ -139,10 +147,15 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       padding="none"
     >
       <div className="p-4 space-y-3">
-        {/* Title */}
-        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 min-h-[3.5rem]">
-          {recipe.name}
-        </h3>
+        {/* Title row with shortlist button */}
+        <div className="flex items-start gap-2">
+          <h3 className="flex-1 text-lg font-semibold text-gray-900 line-clamp-2 min-h-[3.5rem]">
+            {recipe.name}
+          </h3>
+          {showShortlist && (
+            <ShortlistButton recipe={recipe} size="sm" />
+          )}
+        </div>
 
         {/* Description */}
         {recipe.description && (

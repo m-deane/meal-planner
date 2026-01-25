@@ -54,16 +54,17 @@ class IngredientResponse(BaseModel):
     """Ingredient with quantity information for a recipe."""
 
     name: str = Field(..., description="Ingredient name")
-    quantity: Optional[Decimal] = Field(None, description="Quantity amount")
+    quantity: Optional[float] = Field(None, description="Quantity amount")
     unit: Optional[str] = Field(None, description="Unit abbreviation (e.g., 'g', 'ml', 'cups')")
     unit_name: Optional[str] = Field(None, description="Full unit name")
-    preparation_note: Optional[str] = Field(None, description="Preparation instructions (e.g., 'chopped', 'diced')")
-    is_optional: bool = Field(False, description="Whether ingredient is optional")
+    preparation_note: Optional[str] = Field(None, description="Preparation instructions", alias="preparation")
+    is_optional: bool = Field(False, description="Whether ingredient is optional", alias="optional")
     category: Optional[str] = Field(None, description="Ingredient category")
     display_order: int = Field(0, description="Display order in ingredient list")
 
     model_config = ConfigDict(
         from_attributes=True,
+        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {
@@ -84,9 +85,11 @@ class IngredientResponse(BaseModel):
 class InstructionResponse(BaseModel):
     """Cooking instruction step."""
 
-    step_number: int = Field(..., ge=1, description="Step number in sequence")
-    instruction: str = Field(..., description="Step instruction text")
+    step_number: Optional[int] = Field(None, ge=1, description="Step number in sequence", alias="step")
+    instruction: Optional[str] = Field(None, description="Step instruction text", alias="text")
     time_minutes: Optional[int] = Field(None, ge=0, description="Time required for this step")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -105,13 +108,15 @@ class InstructionResponse(BaseModel):
 class ImageResponse(BaseModel):
     """Recipe image information."""
 
-    id: int
+    id: Optional[int] = Field(None, description="Image ID")
     url: str = Field(..., description="Image URL")
-    image_type: ImageType = Field(..., description="Image type classification")
+    image_type: Optional[str] = Field(None, description="Image type classification")
     display_order: int = Field(0, description="Display order")
     alt_text: Optional[str] = Field(None, description="Alternative text for accessibility")
     width: Optional[int] = Field(None, description="Image width in pixels")
     height: Optional[int] = Field(None, description="Image height in pixels")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -171,14 +176,15 @@ class NutritionResponse(BaseModel):
 class CategoryResponse(BaseModel):
     """Recipe category information."""
 
-    id: int
+    id: Optional[int] = Field(None, description="Category ID")
     name: str = Field(..., description="Category name")
-    slug: str = Field(..., description="URL-friendly slug")
-    category_type: CategoryType = Field(..., description="Category type")
+    slug: Optional[str] = Field(None, description="URL-friendly slug")
+    category_type: Optional[str] = Field(None, description="Category type", alias="type")
     description: Optional[str] = Field(None, description="Category description")
 
     model_config = ConfigDict(
         from_attributes=True,
+        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {
@@ -219,7 +225,7 @@ class DietaryTagResponse(BaseModel):
 class AllergenResponse(BaseModel):
     """Allergen information."""
 
-    id: int
+    id: Optional[int] = Field(None, description="Allergen ID")
     name: str = Field(..., description="Allergen name (e.g., 'Nuts', 'Dairy')")
     description: Optional[str] = Field(None, description="Allergen description")
 
@@ -305,12 +311,12 @@ class RecipeResponse(RecipeBase):
     """Complete recipe information with all details."""
 
     id: int
-    gousto_id: str = Field(..., description="Original Gousto recipe ID")
+    gousto_id: Optional[str] = Field(None, description="Original Gousto recipe ID")
     slug: str = Field(..., description="URL-friendly slug")
     total_time_minutes: Optional[int] = Field(None, description="Total time (prep + cooking)")
-    source_url: str = Field(..., description="Original recipe URL")
-    date_scraped: datetime = Field(..., description="When recipe was scraped")
-    last_updated: datetime = Field(..., description="Last update timestamp")
+    source_url: Optional[str] = Field(None, description="Original recipe URL")
+    date_scraped: Optional[datetime] = Field(None, description="When recipe was scraped")
+    last_updated: Optional[datetime] = Field(None, description="Last update timestamp")
     is_active: bool = Field(True, description="Whether recipe is active")
 
     # Related entities

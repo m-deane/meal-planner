@@ -40,8 +40,11 @@ def list_recipes(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     # Category and tag filters
+    category_ids: Optional[List[int]] = Query(None, alias="category_ids[]", description="Filter by category IDs"),
     category_slugs: Optional[List[str]] = Query(None, description="Filter by category slugs"),
+    dietary_tag_ids: Optional[List[int]] = Query(None, alias="dietary_tag_ids[]", description="Filter by dietary tag IDs"),
     dietary_tag_slugs: Optional[List[str]] = Query(None, description="Filter by dietary tag slugs"),
+    exclude_allergen_ids: Optional[List[int]] = Query(None, alias="exclude_allergen_ids[]", description="Exclude recipes with these allergen IDs"),
     exclude_allergen_names: Optional[List[str]] = Query(None, description="Exclude recipes with these allergens"),
     exclude_user_allergens: bool = Query(False, description="Exclude recipes based on user's allergen profile (requires authentication)"),
     # Time and difficulty filters
@@ -55,6 +58,9 @@ def list_recipes(
     max_carbs: Optional[float] = Query(None, ge=0, description="Maximum carbs in grams"),
     # Search
     search_query: Optional[str] = Query(None, min_length=1, description="Search in recipe name and description"),
+    # Sorting
+    sort_by: Optional[str] = Query(None, description="Sort field: name, cooking_time, calories, protein"),
+    sort_order: Optional[str] = Query("asc", description="Sort order: asc or desc"),
 ):
     """
     Get a paginated list of recipes with optional filtering.
@@ -115,10 +121,18 @@ def list_recipes(
             'offset': offset
         }
     else:
+        # Build order_by string with direction
+        order_field = sort_by if sort_by else 'name'
+        if sort_order == 'desc':
+            order_field = f"-{order_field}"
+
         # Standard filtering
         result = service.get_recipes(
+            category_ids=category_ids,
             categories=category_slugs,
+            dietary_tag_ids=dietary_tag_ids,
             dietary_tags=dietary_tag_slugs,
+            exclude_allergen_ids=exclude_allergen_ids,
             exclude_allergens=exclude_allergen_names,
             max_cooking_time=max_cooking_time or max_total_time,
             difficulty=difficulty_strs[0] if difficulty_strs else None,
@@ -128,6 +142,7 @@ def list_recipes(
             max_carbs=max_carbs,
             limit=page_size,
             offset=offset,
+            order_by=order_field,
         )
 
         # If search query provided, use search instead

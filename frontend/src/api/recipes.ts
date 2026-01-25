@@ -13,6 +13,15 @@ import type {
 } from '../types';
 
 /**
+ * Remove empty string values from an object to avoid API validation errors.
+ */
+const cleanParams = <T extends Record<string, unknown>>(obj: T): Partial<T> => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== '' && value !== undefined && value !== null)
+  ) as Partial<T>;
+};
+
+/**
  * Fetch paginated list of recipes with optional filters.
  */
 export const getRecipes = async (
@@ -20,12 +29,12 @@ export const getRecipes = async (
   pagination: PaginationParams = { page: 1, page_size: 20 },
   sort?: SortParams
 ): Promise<PaginatedResponse<RecipeListItem>> => {
-  const params = {
+  const params = cleanParams({
     page: pagination.page,
     page_size: pagination.page_size,
     ...sort,
     ...filters,
-  };
+  });
 
   const response = await apiClient.get<PaginatedResponse<RecipeListItem>>('/recipes', {
     params,
@@ -59,8 +68,8 @@ export const searchRecipes = async (
 ): Promise<PaginatedResponse<RecipeListItem>> => {
   const params = {
     search_query: query,
-    page: pagination?.page || 1,
-    page_size: pagination?.page_size || 20,
+    page: pagination?.page ?? 1,
+    page_size: pagination?.page_size ?? 20,
   };
 
   const response = await apiClient.get<PaginatedResponse<RecipeListItem>>('/recipes/search', {
@@ -73,7 +82,7 @@ export const searchRecipes = async (
 /**
  * Get random recipes.
  */
-export const getRandomRecipes = async (count: number = 10): Promise<RecipeListItem[]> => {
+export const getRandomRecipes = async (count = 10): Promise<RecipeListItem[]> => {
   const response = await apiClient.get<RecipeListItem[]>('/recipes/random', {
     params: { count },
   });

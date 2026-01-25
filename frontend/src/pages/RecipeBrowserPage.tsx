@@ -5,7 +5,8 @@ import { SearchBar } from '../components/common';
 import { RecipeList, RecipeFilters } from '../components/recipes';
 import { useInfiniteRecipes } from '../hooks/useRecipes';
 import { useCategories, useDietaryTags, useAllergens } from '../hooks/useCategories';
-import type { RecipeFilters as RecipeFiltersType, RecipeListItem, PaginatedResponse } from '../types';
+import type { RecipeFilters as RecipeFiltersType, RecipeListItem, PaginatedResponse, SortParams } from '../types';
+import { SortOrder } from '../types';
 import { ChevronRightIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 
 /**
@@ -85,10 +86,26 @@ const parseFiltersFromUrl = (searchParams: URLSearchParams): RecipeFiltersType =
 };
 
 /**
- * Update URL with current filters
+ * Parse sort params from URL search params
+ */
+const parseSortFromUrl = (searchParams: URLSearchParams): SortParams => {
+  const sortBy = searchParams.get('sort_by');
+  const sortOrderStr = searchParams.get('sort_order');
+  const sortOrder = sortOrderStr === 'desc' ? SortOrder.DESC : SortOrder.ASC;
+
+  const params: SortParams = { sort_order: sortOrder };
+  if (sortBy) {
+    params.sort_by = sortBy;
+  }
+  return params;
+};
+
+/**
+ * Update URL with current filters and sort params
  */
 const updateUrlWithFilters = (
   filters: RecipeFiltersType,
+  sortParams: SortParams,
   setSearchParams: (params: URLSearchParams) => void
 ) => {
   const params = new URLSearchParams();
@@ -121,6 +138,12 @@ const updateUrlWithFilters = (
     }
   }
 
+  // Sort params
+  if (sortParams.sort_by) {
+    params.set('sort_by', sortParams.sort_by);
+    params.set('sort_order', sortParams.sort_order);
+  }
+
   setSearchParams(params);
 };
 
@@ -143,6 +166,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<RecipeFiltersType>(() => parseFiltersFromUrl(searchParams));
+  const [sortParams, setSortParams] = useState<SortParams>(() => parseSortFromUrl(searchParams));
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -159,7 +183,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
     isFetchingNextPage,
     isLoading,
     error,
-  } = useInfiniteRecipes(filters, undefined, 20);
+  } = useInfiniteRecipes(filters, sortParams, 20);
 
   // Flatten paginated results from infinite query
   const recipes = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages?.flatMap((page) => page.items) ?? [];
@@ -177,13 +201,17 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
     });
   }, [searchQuery]);
 
-  // Sync URL with filters
+  // Sync URL with filters and sort params
   useEffect(() => {
-    updateUrlWithFilters(filters, setSearchParams);
-  }, [filters, setSearchParams]);
+    updateUrlWithFilters(filters, sortParams, setSearchParams);
+  }, [filters, sortParams, setSearchParams]);
 
   const handleFiltersChange = (newFilters: RecipeFiltersType) => {
     setFilters(newFilters);
+  };
+
+  const handleSortChange = (newSortParams: SortParams) => {
+    setSortParams(newSortParams);
   };
 
   const handleLoadMore = () => {
@@ -246,6 +274,9 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
                 dietaryTags={dietaryTags}
                 allergens={allergens}
                 showApplyButton={false}
+                sortParams={sortParams}
+                onSortChange={handleSortChange}
+                showSorting
               />
             </div>
           </div>

@@ -76,10 +76,12 @@ export const useInfiniteRecipes = (
       return getRecipes(filters, pagination, sort);
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || !allPages || allPages.length === 0) return undefined;
       return lastPage.has_next ? lastPage.page + 1 : undefined;
     },
-    getPreviousPageParam: (firstPage) => {
+    getPreviousPageParam: (firstPage, allPages) => {
+      if (!firstPage || !allPages || allPages.length === 0) return undefined;
       return firstPage.has_previous ? firstPage.page - 1 : undefined;
     },
     staleTime: 5 * 60 * 1000,
