@@ -1,22 +1,23 @@
 /**
- * User preferences, allergens, and favorites API functions.
+ * User preferences and allergens API functions.
+ *
+ * Note: Favorites functions are in api/favorites.ts (canonical source).
  */
 
 import { apiClient } from './client';
 import type {
   UserPreference,
   UserAllergen,
+  UserAllergensResponse,
   PreferenceUpdateRequest,
   AllergenUpdateRequest,
-  FavoriteAddRequest,
 } from '../types/user';
-import type { RecipeListItem, PaginatedResponse, PaginationParams } from '../types';
 
 /**
  * Get user preferences.
  */
 export const getPreferences = async (): Promise<UserPreference> => {
-  const { data } = await apiClient.get<UserPreference>('/users/preferences');
+  const { data } = await apiClient.get<UserPreference>('/users/me/preferences');
   return data;
 };
 
@@ -26,8 +27,8 @@ export const getPreferences = async (): Promise<UserPreference> => {
 export const updatePreferences = async (
   preferences: PreferenceUpdateRequest
 ): Promise<UserPreference> => {
-  const { data } = await apiClient.patch<UserPreference>(
-    '/users/preferences',
+  const { data } = await apiClient.put<UserPreference>(
+    '/users/me/preferences',
     preferences
   );
   return data;
@@ -35,69 +36,23 @@ export const updatePreferences = async (
 
 /**
  * Get user allergens.
+ * Backend returns: { allergens: UserAllergen[], count: number }
  */
 export const getAllergens = async (): Promise<UserAllergen[]> => {
-  const { data } = await apiClient.get<UserAllergen[]>('/users/allergens');
-  return data;
+  const { data } = await apiClient.get<UserAllergensResponse>('/users/me/allergens');
+  return data.allergens;
 };
 
 /**
  * Update user allergens (replaces all).
+ * Backend returns: { allergens: UserAllergen[], count: number }
  */
 export const updateAllergens = async (
   allergenData: AllergenUpdateRequest
 ): Promise<UserAllergen[]> => {
-  const { data } = await apiClient.put<UserAllergen[]>(
-    '/users/allergens',
+  const { data } = await apiClient.put<UserAllergensResponse>(
+    '/users/me/allergens',
     allergenData
   );
-  return data;
-};
-
-/**
- * Get user favorite recipes with pagination.
- */
-export const getFavorites = async (
-  pagination?: PaginationParams
-): Promise<PaginatedResponse<RecipeListItem>> => {
-  const params = new URLSearchParams();
-
-  if (pagination) {
-    params.append('page', String(pagination.page));
-    params.append('page_size', String(pagination.page_size));
-  }
-
-  const { data } = await apiClient.get<PaginatedResponse<RecipeListItem>>(
-    '/users/favorites',
-    { params }
-  );
-  return data;
-};
-
-/**
- * Add recipe to favorites.
- */
-export const addFavorite = async (favoriteData: FavoriteAddRequest): Promise<void> => {
-  await apiClient.post('/users/favorites', favoriteData);
-};
-
-/**
- * Remove recipe from favorites.
- */
-export const removeFavorite = async (recipeId: number): Promise<void> => {
-  await apiClient.delete(`/users/favorites/${recipeId}`);
-};
-
-/**
- * Check if recipe is favorited.
- */
-export const isFavorite = async (recipeId: number): Promise<boolean> => {
-  try {
-    const { data } = await apiClient.get<{ is_favorite: boolean }>(
-      `/users/favorites/${recipeId}/check`
-    );
-    return data.is_favorite;
-  } catch {
-    return false;
-  }
+  return data.allergens;
 };

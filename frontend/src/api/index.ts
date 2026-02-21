@@ -56,7 +56,6 @@ export {
   removeFavorite,
   updateFavorite,
   checkIsFavorite,
-  getFavoriteIds,
 } from './favorites';
 
 // Cost API
@@ -65,7 +64,6 @@ export {
   getMealPlanCost,
   getBudgetRecipes,
   getCheaperAlternatives,
-  getAverageCostsByCategory,
 } from './cost';
 
 // Multi-week planning API

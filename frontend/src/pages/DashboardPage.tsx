@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   UtensilsCrossed,
   Calendar,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useRecipes } from '../hooks/useRecipes';
 import { useMealPlanStore } from '../store/mealPlanStore';
+import { useOnboardingStore } from '../store/onboardingStore';
 import { RecipeCard } from '../components/recipes';
 
 interface QuickLinkProps {
@@ -42,6 +43,7 @@ const QuickLink: React.FC<QuickLinkProps> = ({ to, icon, title, description, col
 );
 
 export const DashboardPage: React.FC = () => {
+  const onboardingComplete = useOnboardingStore((state) => state.isComplete);
   const { data: recipesData, isLoading: recipesLoading } = useRecipes(
     { only_active: true },
     { page: 1, page_size: 6 }
@@ -49,6 +51,11 @@ export const DashboardPage: React.FC = () => {
   const recipes = recipesData?.items ?? [];
   const { getTotalRecipes } = useMealPlanStore();
   const mealPlanCount = getTotalRecipes();
+
+  // Redirect first-time users to the onboarding wizard
+  if (!onboardingComplete) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   const quickLinks: QuickLinkProps[] = [
     {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { ChevronLeftIcon, HomeIcon } from '@heroicons/react/24/outline';
 import { RecipeDetail } from '../components/recipes';
 import { LoadingScreen, EmptyState, Button } from '../components/common';
@@ -63,7 +64,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
       // Fallback: Copy URL to clipboard
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert('Recipe link copied to clipboard!');
+        toast.success('Recipe link copied to clipboard!');
       } catch (err) {
         console.error('Error copying to clipboard:', err);
       }

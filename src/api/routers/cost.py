@@ -30,6 +30,80 @@ router = APIRouter(
 
 
 @router.get(
+    "/recipes/budget",
+    response_model=BudgetRecipesResponse,
+    summary="Get recipes within budget"
+)
+def get_recipes_within_budget(
+    max_cost: float = Query(..., ge=0, description="Maximum cost per serving (GBP)"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of recipes to return"),
+    db: DatabaseSession = None,
+    user: OptionalUser = None,
+):
+    """
+    Find recipes that fit within a specified budget.
+
+    Returns recipes sorted by cost (cheapest first) that are under
+    the specified maximum cost per serving.
+
+    Parameters:
+    - max_cost: Maximum cost per serving in GBP
+    - limit: Maximum number of recipes to return (1-100)
+
+    Returns list of recipes with cost information.
+    """
+    estimator = CostEstimator(db)
+
+    try:
+        max_cost_decimal = Decimal(str(max_cost))
+
+        # Get cheapest recipes
+        recipe_costs = estimator.get_cheapest_recipes(
+            limit=limit * 2,  # Get extra to filter
+            max_cost_per_serving=max_cost_decimal
+        )
+
+        # Convert to response format
+        recipes_with_cost = []
+        for recipe, cost_per_serving in recipe_costs[:limit]:
+            recipes_with_cost.append(
+                RecipeWithCost(
+                    recipe=RecipeListItem(
+                        id=recipe.id,
+                        name=recipe.name,
+                        slug=recipe.slug,
+                        cooking_time_minutes=recipe.cooking_time_minutes,
+                        difficulty=recipe.difficulty,
+                        servings=recipe.servings,
+                        source_url=recipe.source_url,
+                        description=recipe.description
+                    ),
+                    cost=float(cost_per_serving * Decimal('2.0')),  # Assume 2 servings
+                    cost_per_serving=float(cost_per_serving)
+                )
+            )
+
+        # Calculate average
+        avg_cost = None
+        if recipes_with_cost:
+            avg_cost = sum(r.cost_per_serving for r in recipes_with_cost) / len(recipes_with_cost)
+
+        return BudgetRecipesResponse(
+            recipes=recipes_with_cost,
+            total_count=len(recipes_with_cost),
+            max_cost=max_cost,
+            average_cost=avg_cost
+        )
+
+    except Exception as e:
+        logger.error(f"Error finding budget recipes: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to find budget recipes: {str(e)}"
+        )
+
+
+@router.get(
     "/recipes/{recipe_id}",
     response_model=RecipeCostResponse,
     summary="Get cost estimate for a recipe"
@@ -179,80 +253,6 @@ def estimate_meal_plan_cost(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to estimate meal plan cost: {str(e)}"
-        )
-
-
-@router.get(
-    "/recipes/budget",
-    response_model=BudgetRecipesResponse,
-    summary="Get recipes within budget"
-)
-def get_recipes_within_budget(
-    max_cost: float = Query(..., ge=0, description="Maximum cost per serving (GBP)"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of recipes to return"),
-    db: DatabaseSession = None,
-    user: OptionalUser = None,
-):
-    """
-    Find recipes that fit within a specified budget.
-
-    Returns recipes sorted by cost (cheapest first) that are under
-    the specified maximum cost per serving.
-
-    Parameters:
-    - max_cost: Maximum cost per serving in GBP
-    - limit: Maximum number of recipes to return (1-100)
-
-    Returns list of recipes with cost information.
-    """
-    estimator = CostEstimator(db)
-
-    try:
-        max_cost_decimal = Decimal(str(max_cost))
-
-        # Get cheapest recipes
-        recipe_costs = estimator.get_cheapest_recipes(
-            limit=limit * 2,  # Get extra to filter
-            max_cost_per_serving=max_cost_decimal
-        )
-
-        # Convert to response format
-        recipes_with_cost = []
-        for recipe, cost_per_serving in recipe_costs[:limit]:
-            recipes_with_cost.append(
-                RecipeWithCost(
-                    recipe=RecipeListItem(
-                        id=recipe.id,
-                        name=recipe.name,
-                        slug=recipe.slug,
-                        cooking_time_minutes=recipe.cooking_time_minutes,
-                        difficulty=recipe.difficulty,
-                        servings=recipe.servings,
-                        source_url=recipe.source_url,
-                        description=recipe.description
-                    ),
-                    cost=float(cost_per_serving * Decimal('2.0')),  # Assume 2 servings
-                    cost_per_serving=float(cost_per_serving)
-                )
-            )
-
-        # Calculate average
-        avg_cost = None
-        if recipes_with_cost:
-            avg_cost = sum(r.cost_per_serving for r in recipes_with_cost) / len(recipes_with_cost)
-
-        return BudgetRecipesResponse(
-            recipes=recipes_with_cost,
-            total_count=len(recipes_with_cost),
-            max_cost=max_cost,
-            average_cost=avg_cost
-        )
-
-    except Exception as e:
-        logger.error(f"Error finding budget recipes: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to find budget recipes: {str(e)}"
         )
 
 

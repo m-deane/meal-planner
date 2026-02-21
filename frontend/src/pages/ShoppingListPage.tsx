@@ -2,7 +2,7 @@
  * Shopping list page with generation, viewing, and export functionality.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import {
   ShoppingList,
@@ -11,27 +11,19 @@ import {
   AddItemForm,
 } from '../components/shopping-list';
 import { useShoppingListStore } from '../store/shoppingListStore';
+import { ConfirmModal } from '../components/common/ConfirmModal';
 
 export const ShoppingListPage: React.FC = () => {
   const { clearAll, clearChecked, getTotalCount, getCheckedCount } =
     useShoppingListStore();
 
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [showClearCheckedConfirm, setShowClearCheckedConfirm] = useState(false);
+
   const totalCount = getTotalCount();
   const checkedCount = getCheckedCount();
   const hasItems = totalCount > 0;
   const hasCheckedItems = checkedCount > 0;
-
-  const handleClearAll = (): void => {
-    if (window.confirm('Are you sure you want to clear all items?')) {
-      clearAll();
-    }
-  };
-
-  const handleClearChecked = (): void => {
-    if (window.confirm('Remove all checked items from the list?')) {
-      clearChecked();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -51,7 +43,7 @@ export const ShoppingListPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {hasCheckedItems && (
                   <button
-                    onClick={handleClearChecked}
+                    onClick={() => setShowClearCheckedConfirm(true)}
                     className="flex items-center gap-2 px-4 py-2 text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -59,7 +51,7 @@ export const ShoppingListPage: React.FC = () => {
                   </button>
                 )}
                 <button
-                  onClick={handleClearAll}
+                  onClick={() => setShowClearAllConfirm(true)}
                   className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -114,6 +106,28 @@ export const ShoppingListPage: React.FC = () => {
           }
         }
       `}</style>
+
+      {/* Clear All Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearAllConfirm}
+        onClose={() => setShowClearAllConfirm(false)}
+        onConfirm={clearAll}
+        title="Clear Shopping List"
+        message="Are you sure you want to clear all items from your shopping list?"
+        confirmLabel="Clear All"
+        variant="danger"
+      />
+
+      {/* Clear Checked Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearCheckedConfirm}
+        onClose={() => setShowClearCheckedConfirm(false)}
+        onConfirm={clearChecked}
+        title="Remove Checked Items"
+        message="Remove all checked items from the list?"
+        confirmLabel="Remove Checked"
+        variant="warning"
+      />
     </div>
   );
 };

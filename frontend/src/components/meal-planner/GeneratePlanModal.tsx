@@ -67,6 +67,12 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
     const request: MealPlanGenerateRequest & {
       useNutritionEndpoint?: boolean;
       mealCounts?: { breakfasts: number; lunches: number; dinners: number };
+      nutrition_goals?: {
+        daily_calories?: number;
+        daily_protein_g?: number;
+        daily_carbs_g?: number;
+        daily_fat_g?: number;
+      };
     } = {
       days: formData.days,
       meal_preferences: {

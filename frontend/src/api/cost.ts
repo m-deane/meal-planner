@@ -22,7 +22,7 @@ export const getRecipeCost = async (
 ): Promise<RecipeCost> => {
   const params = servings ? { servings } : {};
 
-  const response = await apiClient.get<RecipeCost>(`/recipes/${recipeId}/cost`, {
+  const response = await apiClient.get<RecipeCost>(`/cost/recipes/${recipeId}`, {
     params,
   });
 
@@ -35,7 +35,7 @@ export const getRecipeCost = async (
 export const getMealPlanCost = async (
   data: MealPlanCostRequest
 ): Promise<MealPlanCostBreakdown> => {
-  const response = await apiClient.post<MealPlanCostBreakdown>('/meal-plans/cost', data);
+  const response = await apiClient.post<MealPlanCostBreakdown>('/cost/meal-plans/estimate', data);
   return response.data;
 };
 
@@ -45,7 +45,7 @@ export const getMealPlanCost = async (
 export const getBudgetRecipes = async (
   params: BudgetRecipesRequest
 ): Promise<BudgetRecipesResponse> => {
-  const response = await apiClient.get<BudgetRecipesResponse>('/recipes/budget', {
+  const response = await apiClient.get<BudgetRecipesResponse>('/cost/recipes/budget', {
     params,
   });
 
@@ -67,22 +67,9 @@ export const getCheaperAlternatives = async (
   };
 
   const response = await apiClient.get<CostAlternativesResponse>(
-    `/recipes/${recipeId}/alternatives`,
+    `/cost/recipes/${recipeId}/alternatives`,
     { params }
   );
-
-  return response.data;
-};
-
-/**
- * Get average recipe costs by category.
- */
-export const getAverageCostsByCategory = async (): Promise<
-  { category: string; average_cost: number; recipe_count: number }[]
-> => {
-  const response = await apiClient.get<
-    { category: string; average_cost: number; recipe_count: number }[]
-  >('/recipes/cost/averages');
 
   return response.data;
 };

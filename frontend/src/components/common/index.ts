@@ -17,6 +17,10 @@ export type { CardProps } from './Card';
 export { Modal } from './Modal';
 export type { ModalProps, ModalSize } from './Modal';
 
+// ConfirmModal components
+export { ConfirmModal } from './ConfirmModal';
+export type { ConfirmModalProps, ConfirmModalVariant } from './ConfirmModal';
+
 // Spinner components
 export { Spinner, SpinnerOverlay } from './Spinner';
 export type {

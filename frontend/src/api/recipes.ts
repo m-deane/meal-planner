@@ -67,7 +67,7 @@ export const searchRecipes = async (
   pagination?: PaginationParams
 ): Promise<PaginatedResponse<RecipeListItem>> => {
   const params = {
-    search_query: query,
+    q: query,
     page: pagination?.page ?? 1,
     page_size: pagination?.page_size ?? 20,
   };

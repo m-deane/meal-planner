@@ -2,13 +2,14 @@
  * Day column component - contains all meal slots for a single day.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { DayOfWeek, DayState } from '../../store/mealPlanStore';
 import { useMealPlanStore } from '../../store/mealPlanStore';
 import { MealSlot } from './MealSlot';
 import { MealType } from '../../types';
 import { Trash2, Calendar } from 'lucide-react';
 import { format, addDays, parseISO } from 'date-fns';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 // ============================================================================
 // TYPES
@@ -58,19 +59,20 @@ export const DayColumn: React.FC<DayColumnProps> = ({
   showNutrition = true,
 }) => {
   const { removeRecipe, updateServings, clearDay, getDayNutrition } = useMealPlanStore();
+  const [showClearDayConfirm, setShowClearDayConfirm] = useState(false);
 
   const formattedDate = getFormattedDate(startDate, day);
   const dayNutrition = showNutrition ? getDayNutrition(day) : null;
   const hasMeals = !!(dayData.breakfast || dayData.lunch || dayData.dinner);
 
   const handleClearDay = () => {
-    if (hasMeals && window.confirm(`Clear all meals for ${getDayLabel(day)}?`)) {
-      clearDay(day);
+    if (hasMeals) {
+      setShowClearDayConfirm(true);
     }
   };
 
   return (
-    <div className="flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden min-w-0">
       {/* Day Header */}
       <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-3">
         <div className="flex items-center justify-between">
@@ -156,6 +158,17 @@ export const DayColumn: React.FC<DayColumnProps> = ({
           </div>
         </div>
       )}
+
+      {/* Clear Day Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearDayConfirm}
+        onClose={() => setShowClearDayConfirm(false)}
+        onConfirm={() => clearDay(day)}
+        title={`Clear ${getDayLabel(day)}`}
+        message={`Are you sure you want to clear all meals for ${getDayLabel(day)}?`}
+        confirmLabel="Clear Day"
+        variant="danger"
+      />
     </div>
   );
 };

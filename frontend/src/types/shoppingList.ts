@@ -56,43 +56,56 @@ export interface ShoppingListExportRequest {
 // RESPONSE TYPES
 // ============================================================================
 
-export interface ShoppingItem {
-  ingredient_name: string;
-  quantity: number | null;
-  unit: string | null;
-  category: IngredientCategory;
-  is_optional: boolean;
-  notes: string | null;
-  recipe_count: number;
-  recipe_names: string[];
+/**
+ * A single quantity entry for a shopping list item.
+ * Matches backend format: { unit, total, count }
+ */
+export interface ShoppingItemQuantity {
+  unit: string;
+  total: number | null;
+  count: number | null;
 }
 
+/**
+ * A single item in the shopping list.
+ * Matches backend format returned by ShoppingListService.format_shopping_list_response:
+ * { name, times_needed, quantities: [{unit, total, count}], preparations }
+ */
+export interface ShoppingItem {
+  name: string;
+  times_needed: number;
+  quantities: ShoppingItemQuantity[];
+  preparations: string[];
+}
+
+/**
+ * A category grouping of shopping items.
+ * Matches backend format: { name, items, item_count }
+ */
 export interface ShoppingCategory {
-  name: IngredientCategory;
-  display_name: string;
+  name: string;
   items: ShoppingItem[];
   item_count: number;
 }
 
+/**
+ * Summary statistics for the shopping list.
+ * Matches backend format: { total_items, total_categories, recipes_count }
+ */
 export interface ShoppingListSummary {
   total_items: number;
   total_categories: number;
-  total_recipes: number;
-  estimated_cost: number | null;
+  recipes_count: number;
 }
 
+/**
+ * Full shopping list response from the backend.
+ * Matches backend format: { categories, summary, recipe_ids }
+ */
 export interface ShoppingListResponse {
-  id: number | null;
   categories: ShoppingCategory[];
-  uncategorized_items: ShoppingItem[];
   summary: ShoppingListSummary;
-  source_recipe_ids: number[];
-  source_meal_plan_id: number | null;
-  servings_multiplier: number;
-  pantry_staples_excluded: string[];
-  optional_items: ShoppingItem[];
-  markdown_url: string | null;
-  pdf_url: string | null;
+  recipe_ids: number[];
 }
 
 export interface ShoppingListExportResponse {

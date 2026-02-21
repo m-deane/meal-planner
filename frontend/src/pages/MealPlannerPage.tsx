@@ -13,6 +13,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
+import toast from 'react-hot-toast';
 import { useMealPlanStore } from '../store/mealPlanStore';
 import {
   BoardContent,
@@ -27,7 +28,9 @@ import {
   useGenerateMealPlan,
   useSaveMealPlan,
 } from '../hooks/useMealPlan';
+import { MealType, ImageType, DifficultyLevel } from '../types';
 import type { MealPlanGenerateRequest, RecipeListItem } from '../types';
+import type { DayOfWeek } from '../store/mealPlanStore';
 import {
   Save,
   Trash2,
@@ -38,6 +41,8 @@ import {
   Calendar,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ConfirmModal } from '../components/common/ConfirmModal';
+import { Modal } from '../components/common/Modal';
 
 // ============================================================================
 // TYPES
@@ -48,6 +53,55 @@ interface DragData {
   servings: number;
 }
 
+/** Shape of the nutrition data in the raw API meal response. */
+interface RawMealNutrition {
+  calories?: number;
+  protein_g?: number;
+  carbohydrates_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+}
+
+/** Shape of a single meal in the raw API response. */
+interface RawMealData {
+  id: number;
+  slug: string;
+  name: string;
+  cooking_time_minutes?: number;
+  difficulty?: string;
+  servings?: number;
+  image_url?: string;
+  nutrition?: RawMealNutrition;
+}
+
+/** Shape of a single day in the raw API response. */
+interface RawDayData {
+  meals: {
+    breakfast?: RawMealData;
+    lunch?: RawMealData;
+    dinner?: RawMealData;
+  };
+}
+
+/** Shape of the raw generate endpoint response (differs from typed MealPlanResponse). */
+interface RawGenerateResponse {
+  plan?: Record<string, RawDayData>;
+}
+
+/** Extended request type used for generation, including frontend-only fields. */
+interface ExtendedGenerateRequest extends MealPlanGenerateRequest {
+  useNutritionEndpoint?: boolean;
+  mealCounts?: { breakfasts: number; lunches: number; dinners: number };
+  nutrition_goals?: {
+    daily_calories?: number;
+    daily_protein_g?: number;
+    daily_carbs_g?: number;
+    daily_fat_g?: number;
+  };
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -56,6 +110,9 @@ export const MealPlannerPage: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pendingDate, setPendingDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
 
@@ -149,15 +206,17 @@ export const MealPlannerPage: React.FC = () => {
   const handleGeneratePlan = async (request: MealPlanGenerateRequest) => {
     try {
       const result = await generateMutation.mutateAsync(request);
+      const extendedRequest = request as ExtendedGenerateRequest;
 
       // Clear existing plan first
       clearAll();
 
       // Handle actual API response format: { plan: { Monday: { meals: { breakfast: {...}, ... } }, ... } }
-      const planData = (result as any).plan;
+      const rawResult = result as unknown as RawGenerateResponse;
+      const planData = rawResult.plan;
       if (planData) {
-        // Map day names to lowercase
-        const dayNameMap: Record<string, string> = {
+        // Map day names to lowercase DayOfWeek values
+        const dayNameMap: Record<string, DayOfWeek> = {
           'Monday': 'monday',
           'Tuesday': 'tuesday',
           'Wednesday': 'wednesday',
@@ -167,8 +226,15 @@ export const MealPlannerPage: React.FC = () => {
           'Sunday': 'sunday',
         };
 
+        // Map meal type strings to MealType enum values
+        const mealTypeMap: Record<string, MealType> = {
+          'breakfast': MealType.BREAKFAST,
+          'lunch': MealType.LUNCH,
+          'dinner': MealType.DINNER,
+        };
+
         // Check for custom meal counts
-        const mealCounts = (request as any).mealCounts;
+        const mealCounts = extendedRequest.mealCounts;
         const usesCustomCounts = mealCounts !== undefined;
 
         // Track how many of each meal type we've added
@@ -176,7 +242,7 @@ export const MealPlannerPage: React.FC = () => {
         let lunchCount = 0;
         let dinnerCount = 0;
 
-        Object.entries(planData).forEach(([dayName, dayData]: [string, any]) => {
+        Object.entries(planData).forEach(([dayName, dayData]) => {
           const dayOfWeek = dayNameMap[dayName];
           if (!dayOfWeek || !dayData.meals) return;
 
@@ -187,7 +253,7 @@ export const MealPlannerPage: React.FC = () => {
             const mealData = meals[mealType];
             if (mealData) {
               // Check if we should skip this meal based on custom counts
-              if (usesCustomCounts) {
+              if (usesCustomCounts && mealCounts) {
                 if (mealType === 'breakfast' && breakfastCount >= mealCounts.breakfasts) return;
                 if (mealType === 'lunch' && lunchCount >= mealCounts.lunches) return;
                 if (mealType === 'dinner' && dinnerCount >= mealCounts.dinners) return;
@@ -196,42 +262,46 @@ export const MealPlannerPage: React.FC = () => {
               // Convert API recipe format to frontend RecipeListItem format
               // Include nutrition data if available
               const nutritionData = mealData.nutrition;
-              const recipe = {
+              const recipe: RecipeListItem = {
                 id: mealData.id,
                 slug: mealData.slug,
                 name: mealData.name,
                 description: null,
-                cooking_time_minutes: mealData.cooking_time_minutes,
+                cooking_time_minutes: mealData.cooking_time_minutes ?? null,
                 prep_time_minutes: null,
-                total_time_minutes: mealData.cooking_time_minutes,
-                difficulty: mealData.difficulty,
-                servings: mealData.servings,
+                total_time_minutes: mealData.cooking_time_minutes ?? null,
+                difficulty: (mealData.difficulty as DifficultyLevel) ?? null,
+                servings: mealData.servings ?? 2,
                 categories: [],
                 dietary_tags: [],
                 allergens: [],
                 main_image: mealData.image_url ? {
+                  id: 0,
                   url: mealData.image_url,
+                  image_type: ImageType.MAIN,
+                  display_order: 0,
                   alt_text: mealData.name,
+                  width: null,
+                  height: null,
                 } : null,
                 // Include nutrition summary from API response
                 nutrition_summary: nutritionData ? {
-                  calories: nutritionData.calories || 0,
-                  protein_g: nutritionData.protein_g || 0,
-                  carbohydrates_g: nutritionData.carbohydrates_g || 0,
-                  fat_g: nutritionData.fat_g || 0,
-                  fiber_g: nutritionData.fiber_g || 0,
-                  sugar_g: nutritionData.sugar_g || 0,
-                  sodium_mg: nutritionData.sodium_mg || 0,
+                  calories: nutritionData.calories ?? 0,
+                  protein_g: nutritionData.protein_g ?? 0,
+                  carbohydrates_g: nutritionData.carbohydrates_g ?? 0,
+                  fat_g: nutritionData.fat_g ?? 0,
                 } : null,
                 is_active: true,
-                is_favorite: null,
               };
 
+              const mappedMealType = mealTypeMap[mealType];
+              if (!mappedMealType) return;
+
               addRecipe(
-                dayOfWeek as any,
-                mealType,
-                recipe as any,
-                mealData.servings || 2
+                dayOfWeek,
+                mappedMealType,
+                recipe,
+                mealData.servings ?? 2
               );
 
               // Track meal counts
@@ -244,7 +314,7 @@ export const MealPlannerPage: React.FC = () => {
       }
 
       // Set nutrition goals from request if provided
-      const nutritionGoals = (request as any).nutrition_goals;
+      const nutritionGoals = extendedRequest.nutrition_goals;
       if (nutritionGoals) {
         setNutritionGoals(nutritionGoals);
       }
@@ -252,31 +322,27 @@ export const MealPlannerPage: React.FC = () => {
       setShowGenerateModal(false);
     } catch (error) {
       console.error('Failed to generate meal plan:', error);
-      alert('Failed to generate meal plan. Please try again.');
+      toast.error('Failed to generate meal plan. Please try again.');
     }
   };
 
   const handleSavePlan = async () => {
     if (totalRecipes === 0) {
-      alert('Add some recipes to your meal plan first!');
+      toast('Add some recipes to your meal plan first!');
       return;
     }
 
     try {
-      // Show a placeholder message
-      alert('Save functionality requires backend integration. Plan is saved locally via localStorage.');
+      toast.success('Meal plan saved locally.');
     } catch (error) {
       console.error('Failed to save meal plan:', error);
-      alert('Failed to save meal plan. Please try again.');
+      toast.error('Failed to save meal plan. Please try again.');
     }
   };
 
   const handleClearAll = () => {
     if (totalRecipes === 0) return;
-
-    if (window.confirm('Are you sure you want to clear the entire meal plan?')) {
-      clearAll();
-    }
+    setShowClearConfirm(true);
   };
 
   const handleExport = () => {
@@ -300,14 +366,19 @@ export const MealPlannerPage: React.FC = () => {
   };
 
   const handleSetStartDate = () => {
-    const date = prompt('Enter start date (YYYY-MM-DD):', format(new Date(), 'yyyy-MM-dd'));
-    if (date) {
-      setStartDate(date);
+    setPendingDate(plan.startDate ?? format(new Date(), 'yyyy-MM-dd'));
+    setShowDatePicker(true);
+  };
+
+  const handleConfirmDate = () => {
+    if (pendingDate) {
+      setStartDate(pendingDate);
     }
+    setShowDatePicker(false);
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
@@ -443,110 +514,151 @@ export const MealPlannerPage: React.FC = () => {
       />
 
       {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Nutrition Goals</h2>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="p-1 rounded-lg hover:bg-gray-100"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+      <Modal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="Nutrition Goals"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Daily Calories
+            </label>
+            <input
+              type="number"
+              value={plan.nutritionGoals.daily_calories ?? ''}
+              onChange={(e) => {
+                const { daily_calories: _, ...rest } = plan.nutritionGoals;
+                setNutritionGoals(
+                  e.target.value
+                    ? { ...rest, daily_calories: Number(e.target.value) }
+                    : rest
+                );
+              }}
+              placeholder="e.g., 2000"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Daily Calories
-                </label>
-                <input
-                  type="number"
-                  value={plan.nutritionGoals.daily_calories || ''}
-                  onChange={(e) => {
-                    const { daily_calories: _, ...rest } = plan.nutritionGoals;
-                    setNutritionGoals(
-                      e.target.value
-                        ? { ...rest, daily_calories: Number(e.target.value) }
-                        : rest
-                    );
-                  }}
-                  placeholder="e.g., 2000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Daily Protein (g)
+            </label>
+            <input
+              type="number"
+              value={plan.nutritionGoals.daily_protein_g ?? ''}
+              onChange={(e) => {
+                const { daily_protein_g: _, ...rest } = plan.nutritionGoals;
+                setNutritionGoals(
+                  e.target.value
+                    ? { ...rest, daily_protein_g: Number(e.target.value) }
+                    : rest
+                );
+              }}
+              placeholder="e.g., 150"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Daily Protein (g)
-                </label>
-                <input
-                  type="number"
-                  value={plan.nutritionGoals.daily_protein_g || ''}
-                  onChange={(e) => {
-                    const { daily_protein_g: _, ...rest } = plan.nutritionGoals;
-                    setNutritionGoals(
-                      e.target.value
-                        ? { ...rest, daily_protein_g: Number(e.target.value) }
-                        : rest
-                    );
-                  }}
-                  placeholder="e.g., 150"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Daily Carbs (g)
+            </label>
+            <input
+              type="number"
+              value={plan.nutritionGoals.daily_carbs_g ?? ''}
+              onChange={(e) => {
+                const { daily_carbs_g: _, ...rest } = plan.nutritionGoals;
+                setNutritionGoals(
+                  e.target.value
+                    ? { ...rest, daily_carbs_g: Number(e.target.value) }
+                    : rest
+                );
+              }}
+              placeholder="e.g., 200"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Daily Carbs (g)
-                </label>
-                <input
-                  type="number"
-                  value={plan.nutritionGoals.daily_carbs_g || ''}
-                  onChange={(e) => {
-                    const { daily_carbs_g: _, ...rest } = plan.nutritionGoals;
-                    setNutritionGoals(
-                      e.target.value
-                        ? { ...rest, daily_carbs_g: Number(e.target.value) }
-                        : rest
-                    );
-                  }}
-                  placeholder="e.g., 200"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Daily Fat (g)
+            </label>
+            <input
+              type="number"
+              value={plan.nutritionGoals.daily_fat_g ?? ''}
+              onChange={(e) => {
+                const { daily_fat_g: _, ...rest } = plan.nutritionGoals;
+                setNutritionGoals(
+                  e.target.value
+                    ? { ...rest, daily_fat_g: Number(e.target.value) }
+                    : rest
+                );
+              }}
+              placeholder="e.g., 60"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Daily Fat (g)
-                </label>
-                <input
-                  type="number"
-                  value={plan.nutritionGoals.daily_fat_g || ''}
-                  onChange={(e) => {
-                    const { daily_fat_g: _, ...rest } = plan.nutritionGoals;
-                    setNutritionGoals(
-                      e.target.value
-                        ? { ...rest, daily_fat_g: Number(e.target.value) }
-                        : rest
-                    );
-                  }}
-                  placeholder="e.g., 60"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
+          <button
+            type="button"
+            onClick={() => setShowSettingsModal(false)}
+            className="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+          >
+            Save Goals
+          </button>
+        </div>
+      </Modal>
 
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
-              >
-                Save Goals
-              </button>
-            </div>
+      {/* Date Picker Modal */}
+      <Modal
+        isOpen={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        title="Set Start Date"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Week start date
+            </label>
+            <input
+              type="date"
+              value={pendingDate}
+              onChange={(e) => setPendingDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(false)}
+              className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDate}
+              className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+            >
+              Set Date
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
+
+      {/* Clear All Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={clearAll}
+        title="Clear Meal Plan"
+        message="Are you sure you want to clear the entire meal plan? This cannot be undone."
+        confirmLabel="Clear All"
+        variant="danger"
+      />
     </div>
   );
 };

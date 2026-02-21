@@ -7,12 +7,13 @@ import { useInfiniteRecipes } from '../../hooks/useRecipes';
 import { DraggableRecipe } from './DraggableRecipe';
 import { ShortlistPanel } from './ShortlistPanel';
 import { useShortlistStore } from '../../store/shortlistStore';
-import type { RecipeFilters, DifficultyLevel, PaginatedResponse, RecipeListItem } from '../../types';
+import { RecipeFilters as RecipeFiltersComponent } from '../recipes/RecipeFilters';
+import { useCategories, useDietaryTags, useAllergens } from '../../hooks/useCategories';
+import type { RecipeFilters, PaginatedResponse, RecipeListItem } from '../../types';
 import type { InfiniteData } from '@tanstack/react-query';
 import {
   Search,
   Filter,
-  X,
   ChevronDown,
   ChevronUp,
   Loader2,
@@ -41,11 +42,15 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<SidebarTab>('library');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<RecipeFilters>({
     only_active: true,
   });
   const shortlistCount = useShortlistStore((state) => state.getCount());
+
+  const { data: categoriesData } = useCategories();
+  const { data: dietaryTagsData } = useDietaryTags();
+  const { data: allergensData } = useAllergens();
 
   // Fetch recipes with infinite scroll
   const infiniteQuery = useInfiniteRecipes(
@@ -63,25 +68,6 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
-
-  const handleFilterChange = (key: keyof RecipeFilters, value: unknown) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const clearFilters = () => {
-    setFilters({ only_active: true });
-    setSearchQuery('');
-  };
-
-  const hasActiveFilters = !!(
-    filters.max_cooking_time ||
-    filters.difficulty?.length ||
-    filters.dietary_tag_slugs?.length ||
-    filters.exclude_allergen_names?.length
-  );
 
   return (
     <div className="h-full flex flex-col bg-white border-l border-gray-200">
@@ -149,76 +135,22 @@ export const PlannerSidebar: React.FC<PlannerSidebarProps> = ({
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4" />
             <span className="text-sm font-medium">Filters</span>
-            {hasActiveFilters && (
-              <span className="px-2 py-0.5 bg-indigo-500 text-white text-xs rounded-full">
-                Active
-              </span>
-            )}
           </div>
           {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3 border border-gray-200">
-            {/* Max Cooking Time */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Max Cooking Time (minutes)
-              </label>
-              <input
-                type="number"
-                value={filters.max_cooking_time || ''}
-                onChange={(e) =>
-                  handleFilterChange('max_cooking_time', e.target.value ? Number(e.target.value) : undefined)
-                }
-                placeholder="e.g., 30"
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* Difficulty */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Difficulty
-              </label>
-              <div className="flex gap-2">
-                {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => {
-                      const current = filters.difficulty || [];
-                      const updated = current.includes(level)
-                        ? current.filter((d) => d !== level)
-                        : [...current, level];
-                      handleFilterChange('difficulty', updated.length ? updated : undefined);
-                    }}
-                    className={`
-                      flex-1 px-2 py-1.5 text-xs rounded transition-colors
-                      ${
-                        filters.difficulty?.includes(level)
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <X className="w-3 h-3" />
-                Clear Filters
-              </button>
-            )}
-          </div>
+          <RecipeFiltersComponent
+            filters={filters}
+            onFiltersChange={setFilters}
+            categories={categoriesData ?? []}
+            dietaryTags={dietaryTagsData ?? []}
+            allergens={allergensData ?? []}
+            showApplyButton={false}
+            showSorting={false}
+            className="mt-3"
+          />
         )}
 
         {/* Generate Plan Button */}

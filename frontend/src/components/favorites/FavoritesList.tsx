@@ -45,7 +45,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
 
   const handleAddAllToMealPlan = (): void => {
     if (data && onAddAllToMealPlan) {
-      const recipeIds = data.favorites.map(fav => fav.recipe_id);
+      const recipeIds = data.items.map(fav => fav.recipe.id);
       onAddAllToMealPlan(recipeIds);
     }
   };
@@ -66,7 +66,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
     );
   }
 
-  if (!data || data.favorites.length === 0) {
+  if (!data || data.items.length === 0) {
     return (
       <EmptyState
         icon={
@@ -97,7 +97,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          {showAddAllToMealPlan && data.favorites.length > 0 && (
+          {showAddAllToMealPlan && data.items.length > 0 && (
             <Button variant="primary" onClick={handleAddAllToMealPlan}>
               Add All to Meal Plan
             </Button>
@@ -107,12 +107,12 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.favorites.map((favorite) => (
+        {data.items.map((favorite) => (
           <Card key={favorite.id} className="flex flex-col">
-            <Link to={`/recipes/${favorite.recipe_id}`} className="block">
-              {favorite.recipe.main_image && (
+            <Link to={`/recipes/${favorite.recipe.slug}`} className="block">
+              {favorite.recipe.image_url && (
                 <img
-                  src={favorite.recipe.main_image.url}
+                  src={favorite.recipe.image_url}
                   alt={favorite.recipe.name}
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
@@ -120,19 +120,17 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
             </Link>
 
             <div className="flex-1 p-4 space-y-3">
-              <Link to={`/recipes/${favorite.recipe_id}`}>
+              <Link to={`/recipes/${favorite.recipe.slug}`}>
                 <h3 className="font-semibold text-gray-900 hover:text-primary-600 transition-colors">
                   {favorite.recipe.name}
                 </h3>
               </Link>
 
-              {favorite.recipe.categories && favorite.recipe.categories.length > 0 && (
+              {favorite.recipe.difficulty && (
                 <div className="flex flex-wrap gap-1">
-                  {favorite.recipe.categories.slice(0, 3).map((category) => (
-                    <Badge key={category.id} color="default" size="sm">
-                      {category.name}
-                    </Badge>
-                  ))}
+                  <Badge color="default" size="sm">
+                    {favorite.recipe.difficulty}
+                  </Badge>
                 </div>
               )}
 
@@ -141,7 +139,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
               )}
 
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span>Added {new Date(favorite.date_added).toLocaleDateString()}</span>
+                <span>Added {new Date(favorite.created_at).toLocaleDateString()}</span>
               </div>
             </div>
 
@@ -157,7 +155,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleRemove(favorite.recipe_id)}
+                onClick={() => handleRemove(favorite.recipe.id)}
                 disabled={removeMutation.isPending}
                 className="text-red-600 hover:text-red-700 hover:border-red-300"
               >
