@@ -92,17 +92,22 @@ export const BoardContent: React.FC<BoardContentProps> = ({
 
   return (
     <div className={`${className}`}>
-      {/* Days Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
-        {DAYS_OF_WEEK.map((day) => (
-          <DayColumn
-            key={day}
-            day={day}
-            dayData={plan.days[day]}
-            startDate={plan.startDate}
-            showNutrition
-          />
-        ))}
+      {/* Days Grid - responsive columns that fill available space, scroll when needed */}
+      <div className="overflow-x-auto pb-4">
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: 'repeat(7, minmax(180px, 1fr))' }}
+        >
+          {DAYS_OF_WEEK.map((day) => (
+            <DayColumn
+              key={day}
+              day={day}
+              dayData={plan.days[day]}
+              startDate={plan.startDate}
+              showNutrition
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export const FavoriteNoteModal: React.FC<FavoriteNoteModalProps> = ({
     try {
       const trimmedNotes = notes.trim();
       await updateMutation.mutateAsync({
-        recipeId: favorite.recipe_id,
+        recipeId: favorite.recipe.id,
         data: trimmedNotes ? { notes: trimmedNotes } : {},
       });
       onClose();

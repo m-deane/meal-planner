@@ -6,6 +6,7 @@ Provides recipe listing, filtering, search, and detail views.
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import DatabaseSession, OptionalUser
@@ -208,6 +209,81 @@ def search_recipes(
         page=page,
         page_size=page_size
     )
+
+
+@router.get(
+    "/random",
+    response_model=List[RecipeListItem],
+    summary="Get random recipes"
+)
+def get_random_recipes(
+    db: DatabaseSession,
+    count: int = Query(5, ge=1, le=50, description="Number of random recipes to return"),
+    user: OptionalUser = None,
+):
+    """
+    Get a random selection of recipes.
+
+    Returns a specified number of randomly selected active recipes.
+    Useful for recipe discovery and inspiration.
+
+    Parameters:
+    - count: Number of random recipes to return (default 5, max 50)
+    """
+    service = RecipeService(db)
+    user_id = int(user["sub"]) if user else None
+
+    recipes = db.query(Recipe).filter(
+        Recipe.is_active == True
+    ).order_by(func.random()).limit(count).all()
+
+    recipes_data = [service._serialize_recipe_summary(r) for r in recipes]
+    recipes_data = service.enrich_with_favorite_status(recipes_data, user_id)
+
+    return [RecipeListItem(**r) for r in recipes_data]
+
+
+@router.get(
+    "/featured",
+    response_model=List[RecipeListItem],
+    summary="Get featured recipes"
+)
+def get_featured_recipes(
+    db: DatabaseSession,
+    count: int = Query(10, ge=1, le=50, description="Number of featured recipes to return"),
+    user: OptionalUser = None,
+):
+    """
+    Get featured recipes.
+
+    Returns highly-rated or most-favourited recipes. If no rating/favorite
+    data exists, returns the most recently added recipes.
+
+    Parameters:
+    - count: Number of featured recipes to return (default 10, max 50)
+    """
+    service = RecipeService(db)
+    user_id = int(user["sub"]) if user else None
+
+    from src.database.models import FavoriteRecipe
+
+    # Try to get most-favourited recipes first
+    favorited_recipes = (
+        db.query(Recipe, func.count(FavoriteRecipe.id).label("fav_count"))
+        .outerjoin(FavoriteRecipe, FavoriteRecipe.recipe_id == Recipe.id)
+        .filter(Recipe.is_active == True)
+        .group_by(Recipe.id)
+        .order_by(func.count(FavoriteRecipe.id).desc(), Recipe.created_at.desc())
+        .limit(count)
+        .all()
+    )
+
+    recipes = [row[0] for row in favorited_recipes]
+
+    recipes_data = [service._serialize_recipe_summary(r) for r in recipes]
+    recipes_data = service.enrich_with_favorite_status(recipes_data, user_id)
+
+    return [RecipeListItem(**r) for r in recipes_data]
 
 
 @router.get(

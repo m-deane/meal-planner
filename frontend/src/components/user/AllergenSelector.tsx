@@ -33,9 +33,9 @@ export const AllergenSelector = (): JSX.Element => {
       userAllergens.forEach((ua) => {
         newSelections.set(ua.allergen_id, {
           allergen_id: ua.allergen_id,
-          allergen_name: ua.allergen_name,
-          severity: ua.severity,
-          notes: ua.notes,
+          allergen_name: ua.allergen.name,
+          severity: ua.severity as AllergenSeverity,
+          notes: null,
         });
       });
       setSelections(newSelections);

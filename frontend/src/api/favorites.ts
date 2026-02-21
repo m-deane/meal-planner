@@ -36,7 +36,9 @@ export const getFavorites = async (
  * Add a recipe to favorites.
  */
 export const addFavorite = async (data: AddFavoriteRequest): Promise<FavoriteRecipe> => {
-  const response = await apiClient.post<FavoriteRecipe>('/favorites', data);
+  const response = await apiClient.post<FavoriteRecipe>(`/favorites/${data.recipe_id}`, {
+    notes: data.notes,
+  });
   return response.data;
 };
 
@@ -54,7 +56,7 @@ export const updateFavorite = async (
   recipeId: number,
   data: UpdateFavoriteRequest
 ): Promise<FavoriteRecipe> => {
-  const response = await apiClient.patch<FavoriteRecipe>(`/favorites/${recipeId}`, data);
+  const response = await apiClient.put<FavoriteRecipe>(`/favorites/${recipeId}/notes`, data);
   return response.data;
 };
 
@@ -64,18 +66,10 @@ export const updateFavorite = async (
 export const checkIsFavorite = async (recipeId: number): Promise<boolean> => {
   try {
     const response = await apiClient.get<{ is_favorite: boolean }>(
-      `/favorites/check/${recipeId}`
+      `/favorites/${recipeId}/status`
     );
     return response.data.is_favorite;
   } catch {
     return false;
   }
-};
-
-/**
- * Get all favorite recipe IDs (for quick lookup).
- */
-export const getFavoriteIds = async (): Promise<number[]> => {
-  const response = await apiClient.get<{ recipe_ids: number[] }>('/favorites/ids');
-  return response.data.recipe_ids;
 };

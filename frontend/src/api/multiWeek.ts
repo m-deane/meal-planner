@@ -18,7 +18,7 @@ import type {
 export const generateMultiWeekPlan = async (
   data: MultiWeekGenerateRequest
 ): Promise<MultiWeekPlan> => {
-  const response = await apiClient.post<MultiWeekPlan>('/meal-plans/multi-week/generate', data);
+  const response = await apiClient.post<MultiWeekPlan>('/meal-plans/generate-multi-week', data);
   return response.data;
 };
 
@@ -73,7 +73,7 @@ export const deleteMultiWeekPlan = async (id: number): Promise<void> => {
 export const getVarietyAnalysis = async (
   recipeIds: number[]
 ): Promise<VarietyBreakdown> => {
-  const response = await apiClient.post<VarietyBreakdown>('/meal-plans/variety-analysis', {
+  const response = await apiClient.post<VarietyBreakdown>('/meal-plans/calculate-variety-score', {
     recipe_ids: recipeIds,
   });
 

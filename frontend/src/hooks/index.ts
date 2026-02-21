@@ -65,20 +65,25 @@ export {
   authKeys,
 } from './useAuth';
 
-// User hooks
+// User hooks (preferences & allergens)
 export {
   usePreferences,
   useUpdatePreferences,
   useAllergens as useUserAllergens,
   useUpdateAllergens,
-  useFavorites,
-  useInfiniteFavorites,
-  useAddFavorite,
-  useRemoveFavorite,
-  useIsFavorite,
-  useToggleFavorite,
   userKeys,
 } from './useUser';
+
+// Favorites hooks (canonical source)
+export {
+  useFavorites,
+  useIsFavorite,
+  useAddFavorite,
+  useRemoveFavorite,
+  useUpdateFavorite,
+  useToggleFavorite,
+  favoriteKeys,
+} from './useFavorites';
 
 // Cost estimation hooks
 export {
@@ -86,7 +91,6 @@ export {
   useMealPlanCost,
   useBudgetRecipes,
   useCheaperAlternatives,
-  useAverageCostsByCategory,
   costKeys,
 } from './useCost';
 

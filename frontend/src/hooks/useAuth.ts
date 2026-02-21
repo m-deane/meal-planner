@@ -2,6 +2,7 @@
  * React Query hooks for authentication operations.
  */
 
+import { useEffect } from 'react';
 import {
   useMutation,
   useQuery,
@@ -117,15 +118,19 @@ export const useCurrentUser = (): UseQueryResult<User | undefined> => {
     retry: false,
   });
 
-  // Handle successful fetch
-  if (query.data && query.isSuccess) {
-    setUser(query.data);
-  }
+  // Handle successful fetch - wrapped in useEffect to avoid render-time side effects
+  useEffect(() => {
+    if (query.data && query.isSuccess) {
+      setUser(query.data);
+    }
+  }, [query.data, query.isSuccess, setUser]);
 
-  // Handle error
-  if (query.isError) {
-    clearAuth();
-  }
+  // Handle error - wrapped in useEffect to avoid render-time side effects
+  useEffect(() => {
+    if (query.isError) {
+      clearAuth();
+    }
+  }, [query.isError, clearAuth]);
 
   return query;
 };
@@ -185,10 +190,12 @@ export const useVerifyToken = (): UseQueryResult<boolean> => {
     retry: false,
   });
 
-  // Handle successful verification
-  if (query.data !== undefined && query.isSuccess && !query.data) {
-    clearAuth();
-  }
+  // Handle successful verification - wrapped in useEffect to avoid render-time side effects
+  useEffect(() => {
+    if (query.data !== undefined && query.isSuccess && !query.data) {
+      clearAuth();
+    }
+  }, [query.data, query.isSuccess, clearAuth]);
 
   return query;
 };

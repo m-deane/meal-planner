@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 // Layout
 import { Layout } from './components/layout';
@@ -17,13 +18,19 @@ import { FavoritesPage } from './pages/FavoritesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 
 const App: React.FC = () => {
   return (
-    <Routes>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
       {/* Auth routes (no layout) */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+
+      {/* Onboarding (no layout - full-screen wizard) */}
+      <Route path="/onboarding" element={<OnboardingPage />} />
 
       {/* Main app routes (with layout) */}
       <Route element={<Layout />}>
@@ -73,7 +80,8 @@ const App: React.FC = () => {
           }
         />
       </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 };
 

@@ -4,14 +4,27 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ShoppingItem, IngredientCategory } from '../types';
+import type { ShoppingCategory, IngredientCategory } from '../types';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export interface ShoppingListItem extends ShoppingItem {
+/**
+ * UI-friendly representation of a shopping list item used by the store and components.
+ * This is NOT the same as the backend ShoppingItem type; the store's loadFromResponse
+ * transforms backend items into this display format.
+ */
+export interface ShoppingListItem {
   id: string;
+  ingredient_name: string;
+  quantity: number | null;
+  unit: string | null;
+  category: string;
+  is_optional: boolean;
+  notes: string | null;
+  recipe_count: number;
+  recipe_names: string[];
   checked: boolean;
   customAdded: boolean;
 }
@@ -45,7 +58,7 @@ export interface ShoppingListStore {
   ) => void;
   setSortBy: (sortBy: 'category' | 'alphabetical') => void;
   setShowChecked: (show: boolean) => void;
-  loadFromResponse: (items: ShoppingItem[]) => void;
+  loadFromResponse: (categories: ShoppingCategory[]) => void;
 
   // Computed
   getCheckedCount: () => number;
@@ -67,24 +80,17 @@ const sortItems = (
   sortBy: 'category' | 'alphabetical'
 ): ShoppingListItem[] => {
   if (sortBy === 'alphabetical') {
-    return [...items].sort((a, b) => {
-      const nameA = a.ingredient_name ?? '';
-      const nameB = b.ingredient_name ?? '';
-      return nameA.localeCompare(nameB);
-    });
+    return [...items].sort((a, b) =>
+      a.ingredient_name.localeCompare(b.ingredient_name)
+    );
   }
 
-  // Sort by category
+  // Sort by category, then by name within category
   return [...items].sort((a, b) => {
-    const catA = a.category ?? 'other';
-    const catB = b.category ?? 'other';
-    const nameA = a.ingredient_name ?? '';
-    const nameB = b.ingredient_name ?? '';
-
-    if (catA === catB) {
-      return nameA.localeCompare(nameB);
+    if (a.category === b.category) {
+      return a.ingredient_name.localeCompare(b.ingredient_name);
     }
-    return catA.localeCompare(catB);
+    return a.category.localeCompare(b.category);
   });
 };
 
@@ -220,21 +226,44 @@ export const useShoppingListStore = create<ShoppingListStore>()(
         }));
       },
 
-      loadFromResponse: (items) => {
+      loadFromResponse: (categories) => {
         const existingItems = get().state.items;
         const existingChecked = new Map(
           existingItems.map((item) => [item.ingredient_name, item.checked])
         );
 
+        // Transform backend ShoppingCategory[] into UI ShoppingListItem[]
+        const newItems: ShoppingListItem[] = categories.flatMap((category) =>
+          category.items.map((item) => {
+            // Extract first quantity entry for display
+            let quantity: number | null = null;
+            let unit: string | null = null;
+            const firstQty = item.quantities[0];
+            if (firstQty) {
+              quantity = firstQty.total;
+              unit = firstQty.unit;
+            }
+
+            return {
+              id: generateId(),
+              ingredient_name: item.name,
+              quantity,
+              unit,
+              category: category.name.toLowerCase().replace(/[^a-z]/g, ''),
+              is_optional: false,
+              notes: item.preparations.length > 0 ? item.preparations.join(', ') : null,
+              recipe_count: item.times_needed,
+              recipe_names: [],
+              checked: existingChecked.get(item.name) ?? false,
+              customAdded: false,
+            };
+          })
+        );
+
         set((state) => ({
           state: {
             ...state.state,
-            items: items.map((item) => ({
-              ...item,
-              id: generateId(),
-              checked: existingChecked.get(item.ingredient_name) ?? false,
-              customAdded: false,
-            })),
+            items: newItems,
           },
         }));
       },
@@ -254,8 +283,8 @@ export const useShoppingListStore = create<ShoppingListStore>()(
         const grouped = new Map<IngredientCategory, ShoppingListItem[]>();
 
         sorted.forEach((item) => {
-          const category = (item.category ?? 'other') as IngredientCategory;
-          const categoryItems = grouped.get(category) || [];
+          const category = item.category as IngredientCategory;
+          const categoryItems = grouped.get(category) ?? [];
           categoryItems.push(item);
           grouped.set(category, categoryItems);
         });

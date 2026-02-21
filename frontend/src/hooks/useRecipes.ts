@@ -67,7 +67,7 @@ export const useInfiniteRecipes = (
   pageSize: number = 20
 ): UseInfiniteQueryResult<PaginatedResponse<RecipeListItem>> => {
   return useInfiniteQuery({
-    queryKey: recipeKeys.list(filters, sort),
+    queryKey: [...recipeKeys.list(filters, sort), 'infinite'],
     queryFn: ({ pageParam = 1 }) => {
       const pagination: PaginationParams = {
         page: pageParam as number,

@@ -27,8 +27,8 @@ export const PreferencesForm = (): JSX.Element => {
     if (preferences) {
       setCalorieTarget(preferences.calorie_target);
       setProteinTarget(preferences.protein_target_g);
-      setCarbTarget(preferences.carb_target_g);
-      setFatTarget(preferences.fat_target_g);
+      setCarbTarget(preferences.carb_limit_g);
+      setFatTarget(preferences.fat_limit_g);
       setDefaultServings(preferences.default_servings);
       setPreferredCuisines(preferences.preferred_cuisines);
     }
@@ -42,8 +42,8 @@ export const PreferencesForm = (): JSX.Element => {
       {
         calorie_target: calorieTarget,
         protein_target_g: proteinTarget,
-        carb_target_g: carbTarget,
-        fat_target_g: fatTarget,
+        carb_limit_g: carbTarget,
+        fat_limit_g: fatTarget,
         default_servings: defaultServings,
         preferred_cuisines: preferredCuisines,
       },

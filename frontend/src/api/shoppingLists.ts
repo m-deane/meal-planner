@@ -13,20 +13,15 @@ import { ShoppingListFormat } from '../types';
 
 /**
  * Generate shopping list from recipe IDs.
+ * Backend accepts: recipe_ids (required), combine_similar (optional, default true).
  */
 export const generateShoppingList = async (
   recipeIds: number[],
   options?: Partial<ShoppingListGenerateRequest>
 ): Promise<ShoppingListResponse> => {
-  const request: ShoppingListGenerateRequest = {
+  const request = {
     recipe_ids: recipeIds,
-    servings_multiplier: options?.servings_multiplier ?? 1.0,
-    group_by_category: options?.group_by_category ?? true,
-    combine_similar_ingredients: options?.combine_similar_ingredients ?? true,
-    exclude_pantry_staples: options?.exclude_pantry_staples ?? false,
-    include_optional_ingredients: options?.include_optional_ingredients ?? true,
-    round_quantities: options?.round_quantities ?? true,
-    ...options,
+    combine_similar: options?.combine_similar_ingredients ?? true,
   };
 
   const response = await apiClient.post<ShoppingListResponse>('/shopping-lists/generate', request);
@@ -35,23 +30,21 @@ export const generateShoppingList = async (
 
 /**
  * Generate shopping list from a meal plan.
+ * Backend accepts: meal_plan (required dict with 'plan' key), combine_similar (optional).
  */
 export const generateShoppingListFromMealPlan = async (
-  mealPlanId: number,
+  mealPlan: Record<string, unknown>,
   options?: Partial<ShoppingListGenerateRequest>
 ): Promise<ShoppingListResponse> => {
-  const request: ShoppingListGenerateRequest = {
-    meal_plan_id: mealPlanId,
-    servings_multiplier: options?.servings_multiplier ?? 1.0,
-    group_by_category: options?.group_by_category ?? true,
-    combine_similar_ingredients: options?.combine_similar_ingredients ?? true,
-    exclude_pantry_staples: options?.exclude_pantry_staples ?? false,
-    include_optional_ingredients: options?.include_optional_ingredients ?? true,
-    round_quantities: options?.round_quantities ?? true,
-    ...options,
+  const request = {
+    meal_plan: mealPlan,
+    combine_similar: options?.combine_similar_ingredients ?? true,
   };
 
-  const response = await apiClient.post<ShoppingListResponse>('/shopping-lists/generate', request);
+  const response = await apiClient.post<ShoppingListResponse>(
+    '/shopping-lists/from-meal-plan',
+    request
+  );
   return response.data;
 };
 

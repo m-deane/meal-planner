@@ -32,27 +32,55 @@ export interface User {
   updated_at: string;
 }
 
+/**
+ * User preferences as returned by the backend.
+ * Matches backend UserPreferenceResponse schema.
+ * Note: carb and fat fields use *_limit_g (not *_target_g).
+ */
 export interface UserPreference {
   id: number;
   user_id: number;
   calorie_target: number | null;
   protein_target_g: number | null;
-  carb_target_g: number | null;
-  fat_target_g: number | null;
+  carb_limit_g: number | null;
+  fat_limit_g: number | null;
   default_servings: number;
   preferred_cuisines: string[];
   created_at: string;
   updated_at: string;
 }
 
-export interface UserAllergen {
+/**
+ * Allergen detail object nested inside a UserAllergen.
+ * Matches backend AllergenResponse schema.
+ */
+export interface AllergenDetail {
   id: number;
+  name: string;
+  description: string | null;
+}
+
+/**
+ * A single user allergen record as returned by the backend.
+ * Matches backend UserAllergenResponse schema:
+ * { user_id, allergen_id, severity, allergen: AllergenResponse, created_at }
+ */
+export interface UserAllergen {
   user_id: number;
   allergen_id: number;
-  allergen_name: string;
-  severity: AllergenSeverity;
-  notes: string | null;
+  severity: string;
+  allergen: AllergenDetail;
   created_at: string;
+}
+
+/**
+ * Wrapped response for user allergens list.
+ * Matches backend UserAllergenListResponse schema:
+ * { allergens: UserAllergenResponse[], count: number }
+ */
+export interface UserAllergensResponse {
+  allergens: UserAllergen[];
+  count: number;
 }
 
 export interface UserFavorite {
@@ -97,11 +125,15 @@ export interface UserUpdateRequest {
   username?: string;
 }
 
+/**
+ * Request to update user preferences.
+ * Field names match backend UserPreferenceUpdate schema.
+ */
 export interface PreferenceUpdateRequest {
   calorie_target?: number | null;
   protein_target_g?: number | null;
-  carb_target_g?: number | null;
-  fat_target_g?: number | null;
+  carb_limit_g?: number | null;
+  fat_limit_g?: number | null;
   default_servings?: number;
   preferred_cuisines?: string[];
 }

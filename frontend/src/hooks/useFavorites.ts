@@ -15,7 +15,6 @@ import {
   removeFavorite,
   updateFavorite,
   checkIsFavorite,
-  getFavoriteIds,
 } from '../api/favorites';
 import type {
   FavoriteRecipe,
@@ -35,7 +34,6 @@ export const favoriteKeys = {
   lists: () => [...favoriteKeys.all, 'list'] as const,
   list: (page?: number, sortBy?: FavoritesSortBy) =>
     [...favoriteKeys.lists(), { page, sortBy }] as const,
-  ids: () => [...favoriteKeys.all, 'ids'] as const,
   check: (recipeId: number) => [...favoriteKeys.all, 'check', recipeId] as const,
 };
 
@@ -51,18 +49,6 @@ export const useFavorites = (
     queryFn: () => getFavorites(pagination, sortBy),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-  });
-};
-
-/**
- * Get all favorite recipe IDs for quick lookup.
- */
-export const useFavoriteIds = (): UseQueryResult<number[]> => {
-  return useQuery({
-    queryKey: favoriteKeys.ids(),
-    queryFn: getFavoriteIds,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };
 
@@ -94,10 +80,9 @@ export const useAddFavorite = (): UseMutationResult<
     onSuccess: (data) => {
       // Invalidate favorites lists
       queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.ids() });
 
       // Update the check query for this specific recipe
-      queryClient.setQueryData(favoriteKeys.check(data.recipe_id), true);
+      queryClient.setQueryData(favoriteKeys.check(data.recipe.id), true);
     },
   });
 };
@@ -113,7 +98,6 @@ export const useRemoveFavorite = (): UseMutationResult<void, APIError, number> =
     onSuccess: (_, recipeId) => {
       // Invalidate favorites lists
       queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.ids() });
 
       // Update the check query for this specific recipe
       queryClient.setQueryData(favoriteKeys.check(recipeId), false);

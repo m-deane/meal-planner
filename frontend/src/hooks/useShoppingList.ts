@@ -55,11 +55,11 @@ export const useGenerateShoppingList = (): UseMutationResult<
 export const useGenerateShoppingListFromMealPlan = (): UseMutationResult<
   ShoppingListResponse,
   Error,
-  { mealPlanId: number; options?: Partial<ShoppingListGenerateRequest> }
+  { mealPlan: Record<string, unknown>; options?: Partial<ShoppingListGenerateRequest> }
 > => {
   return useMutation({
-    mutationFn: ({ mealPlanId, options }) =>
-      generateShoppingListFromMealPlan(mealPlanId, options),
+    mutationFn: ({ mealPlan, options }) =>
+      generateShoppingListFromMealPlan(mealPlan, options),
   });
 };
 
@@ -100,11 +100,8 @@ export const useSaveShoppingList = (): UseMutationResult<
 
   return useMutation({
     mutationFn: saveShoppingList,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: shoppingListKeys.lists() });
-      if (data.id) {
-        queryClient.setQueryData(shoppingListKeys.detail(data.id), data);
-      }
     },
   });
 };

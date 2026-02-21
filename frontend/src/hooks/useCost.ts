@@ -8,7 +8,6 @@ import {
   getMealPlanCost,
   getBudgetRecipes,
   getCheaperAlternatives,
-  getAverageCostsByCategory,
 } from '../api/cost';
 import type {
   RecipeCost,
@@ -31,7 +30,6 @@ export const costKeys = {
   budget: (params: BudgetRecipesRequest) => [...costKeys.all, 'budget', params] as const,
   alternatives: (recipeId: number, maxBudget: number) =>
     [...costKeys.all, 'alternatives', recipeId, maxBudget] as const,
-  averages: () => [...costKeys.all, 'averages'] as const,
 };
 
 /**
@@ -96,19 +94,5 @@ export const useCheaperAlternatives = (
     enabled: enabled && !!recipeId && recipeId > 0 && !!maxBudget && maxBudget > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-  });
-};
-
-/**
- * Fetch average costs by category.
- */
-export const useAverageCostsByCategory = (): UseQueryResult<
-  Array<{ category: string; average_cost: number; recipe_count: number }>
-> => {
-  return useQuery({
-    queryKey: costKeys.averages(),
-    queryFn: getAverageCostsByCategory,
-    staleTime: 60 * 60 * 1000, // 1 hour - category averages are stable
-    gcTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 };

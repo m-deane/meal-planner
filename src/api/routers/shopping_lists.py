@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from src.api.dependencies import DatabaseSession, OptionalUser
 from src.api.services.shopping_list_service import ShoppingListService
 from src.api.schemas import ShoppingListGenerateRequest
+from src.database.models import Recipe
 
 router = APIRouter(
     prefix="/shopping-lists",
@@ -105,24 +106,31 @@ def generate_shopping_list_from_meal_plan(
     Returns:
     - Categorized shopping list for all recipes in the meal plan
     """
-    if not meal_plan or 'plan' not in meal_plan:
+    if not meal_plan:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid meal plan format. Must include 'plan' key."
+            detail="Invalid meal plan format. Must be a non-empty dictionary."
         )
 
     service = ShoppingListService(db)
 
     try:
+        # Support both formats:
+        # 1) {"plan": {"Monday": {"meals": {...}}}} (from /generate endpoint)
+        # 2) {"Monday": {"meals": {...}}} (direct format)
+        plan_source = meal_plan.get('plan', meal_plan)
+
         # Convert meal plan API response format to service format
         plan_data = {}
-        for day, day_data in meal_plan['plan'].items():
+        for day, day_data in plan_source.items():
             plan_data[day] = {}
-            for meal_type, meal_info in day_data['meals'].items():
-                # Fetch recipe from DB
-                recipe = db.query(db.query).filter_by(id=meal_info['id']).first()
-                if recipe:
-                    plan_data[day][meal_type] = recipe
+            meals = day_data.get('meals', day_data)
+            for meal_type, meal_info in meals.items():
+                if isinstance(meal_info, dict) and 'id' in meal_info:
+                    # Fetch recipe from DB
+                    recipe = db.query(Recipe).filter_by(id=meal_info['id']).first()
+                    if recipe:
+                        plan_data[day][meal_type] = recipe
 
         shopping_list = service.generate_from_meal_plan(
             meal_plan=plan_data,

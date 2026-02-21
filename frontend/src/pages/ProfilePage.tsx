@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useAuth';
-import { useInfiniteFavorites } from '../hooks/useUser';
+import { useFavorites } from '../hooks/useFavorites';
 import { ProfileForm } from '../components/user/ProfileForm';
 import { PreferencesForm } from '../components/user/PreferencesForm';
 import { AllergenSelector } from '../components/user/AllergenSelector';
@@ -17,7 +17,6 @@ import {
   Heart,
   ChevronLeft,
   Clock,
-  Users,
   ChefHat,
 } from 'lucide-react';
 
@@ -38,14 +37,12 @@ const tabs: Tab[] = [
 
 export const ProfilePage = (): JSX.Element => {
   const [activeTab, setActiveTab] = useState<TabId>('profile');
+  const [favoritesPage, setFavoritesPage] = useState(1);
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const {
     data: favoritesData,
     isLoading: favoritesLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteFavorites(12);
+  } = useFavorites({ page: favoritesPage, page_size: 12 });
 
   if (userLoading) {
     return (
@@ -174,12 +171,12 @@ export const ProfilePage = (): JSX.Element => {
                   ) : (
                     <>
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {allFavorites.map((recipe) => {
-                          const mainImage = recipe.main_image;
+                        {allFavorites.map((favorite) => {
+                          const recipe = favorite.recipe;
 
                           return (
                             <Link
-                              key={recipe.id}
+                              key={favorite.id}
                               to={`/recipes/${recipe.slug}`}
                               className="
                                 group bg-white border border-gray-200 rounded-lg
@@ -187,11 +184,11 @@ export const ProfilePage = (): JSX.Element => {
                               "
                             >
                               {/* Recipe image */}
-                              {mainImage ? (
+                              {recipe.image_url ? (
                                 <div className="aspect-w-16 aspect-h-9 bg-gray-200">
                                   <img
-                                    src={mainImage.url}
-                                    alt={mainImage.alt_text || recipe.name}
+                                    src={recipe.image_url}
+                                    alt={recipe.name}
                                     className="w-full h-48 object-cover"
                                   />
                                 </div>
@@ -214,45 +211,28 @@ export const ProfilePage = (): JSX.Element => {
 
                                 {/* Recipe metadata */}
                                 <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
-                                  {recipe.total_time_minutes && (
+                                  {recipe.cooking_time_minutes && (
                                     <div className="flex items-center">
                                       <Clock className="h-4 w-4 mr-1" />
-                                      <span>{recipe.total_time_minutes} min</span>
+                                      <span>{recipe.cooking_time_minutes} min</span>
                                     </div>
                                   )}
-                                  <div className="flex items-center">
-                                    <Users className="h-4 w-4 mr-1" />
-                                    <span>{recipe.servings} servings</span>
-                                  </div>
+                                  {recipe.difficulty && (
+                                    <span className="capitalize">{recipe.difficulty}</span>
+                                  )}
                                 </div>
-
-                                {/* Nutrition summary */}
-                                {recipe.nutrition_summary && (
-                                  <div className="mt-3 flex items-center space-x-3 text-xs text-gray-600">
-                                    {recipe.nutrition_summary.calories && (
-                                      <span>
-                                        {recipe.nutrition_summary.calories} cal
-                                      </span>
-                                    )}
-                                    {recipe.nutrition_summary.protein_g && (
-                                      <span>
-                                        {recipe.nutrition_summary.protein_g}g protein
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
                               </div>
                             </Link>
                           );
                         })}
                       </div>
 
-                      {/* Load more button */}
-                      {hasNextPage && (
-                        <div className="mt-8 text-center">
+                      {/* Pagination buttons */}
+                      {favoritesData && favoritesData.total_pages > 1 && (
+                        <div className="mt-8 flex items-center justify-center space-x-4">
                           <button
-                            onClick={() => fetchNextPage()}
-                            disabled={isFetchingNextPage}
+                            onClick={() => setFavoritesPage((p) => Math.max(1, p - 1))}
+                            disabled={favoritesPage <= 1}
                             className="
                               inline-flex items-center px-4 py-2 border
                               border-gray-300 shadow-sm text-sm font-medium
@@ -260,14 +240,22 @@ export const ProfilePage = (): JSX.Element => {
                               disabled:opacity-50 disabled:cursor-not-allowed
                             "
                           >
-                            {isFetchingNextPage ? (
-                              <>
-                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                                Loading...
-                              </>
-                            ) : (
-                              'Load More'
-                            )}
+                            Previous
+                          </button>
+                          <span className="text-sm text-gray-600">
+                            Page {favoritesPage} of {favoritesData.total_pages}
+                          </span>
+                          <button
+                            onClick={() => setFavoritesPage((p) => p + 1)}
+                            disabled={favoritesPage >= favoritesData.total_pages}
+                            className="
+                              inline-flex items-center px-4 py-2 border
+                              border-gray-300 shadow-sm text-sm font-medium
+                              rounded-md text-gray-700 bg-white hover:bg-gray-50
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                          >
+                            Next
                           </button>
                         </div>
                       )}

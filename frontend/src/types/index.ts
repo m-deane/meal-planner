@@ -48,6 +48,7 @@ export { MealType } from './mealPlan';
 export type {
   ShoppingListGenerateRequest,
   ShoppingListExportRequest,
+  ShoppingItemQuantity,
   ShoppingItem,
   ShoppingCategory,
   ShoppingListSummary,
@@ -59,6 +60,7 @@ export { IngredientCategory, ShoppingListFormat } from './shoppingList';
 
 // Favorites types
 export type {
+  FavoriteRecipeSummary,
   FavoriteRecipe,
   FavoritesResponse,
   AddFavoriteRequest,
@@ -69,13 +71,10 @@ export { FavoritesSortBy } from './favorites';
 
 // Cost estimation types
 export type {
-  IngredientCost,
   RecipeCost,
-  DayCostBreakdown,
   MealPlanCostBreakdown,
-  BudgetRecipe,
+  RecipeWithCost,
   BudgetRecipesResponse,
-  CostAlternative,
   CostAlternativesResponse,
   RecipeCostRequest,
   MealPlanCostRequest,
@@ -98,7 +97,9 @@ export type {
 export type {
   User,
   UserPreference,
+  AllergenDetail,
   UserAllergen,
+  UserAllergensResponse,
   UserFavorite,
   LoginRequest,
   RegisterRequest,

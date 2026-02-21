@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { Card } from '../common/Card';
-import { Badge } from '../common/Badge';
 import { Spinner } from '../common/Spinner';
 import type { MealPlanCostBreakdown } from '../../types';
 
@@ -45,31 +44,14 @@ export const CostEstimate: React.FC<CostEstimateProps> = ({
     );
   }
 
-  const getBudgetColor = (utilization: number): string => {
-    if (utilization <= 80) return 'bg-green-500';
-    if (utilization <= 95) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
   const getSavingsSuggestions = (): string[] => {
-    const suggestions: string[] = [];
+    const suggestions: string[] = [...costData.savings_suggestions];
 
-    if (costData.budget_comparison) {
-      const { under_over_budget, budget_utilization_percent } = costData.budget_comparison;
-
-      if (under_over_budget > 0) {
-        suggestions.push(`You're over budget by $${under_over_budget.toFixed(2)}`);
-        suggestions.push('Consider choosing more budget-friendly recipes');
-      } else if (budget_utilization_percent < 80) {
-        suggestions.push('You have room in your budget for variety');
-      }
-    }
-
-    if (costData.average_per_meal > 15) {
+    if (costData.per_meal_average > 15) {
       suggestions.push('Try batch cooking to reduce costs');
     }
 
-    if (costData.days_covered > 0 && costData.average_daily_cost > 50) {
+    if (costData.per_day_average !== null && costData.per_day_average > 50) {
       suggestions.push('Look for seasonal ingredients for savings');
     }
 
@@ -84,7 +66,7 @@ export const CostEstimate: React.FC<CostEstimateProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Cost Estimate</h3>
           <div className="text-3xl font-bold text-primary-600">
-            ${costData.total_cost.toFixed(2)}
+            ${costData.total.toFixed(2)}
           </div>
           <p className="text-sm text-gray-500 mt-1">
             Total estimated cost
@@ -96,84 +78,51 @@ export const CostEstimate: React.FC<CostEstimateProps> = ({
           <h4 className="text-sm font-semibold text-gray-700">Breakdown</h4>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Per Day</span>
-              <span className="font-semibold text-gray-900">
-                ${costData.average_daily_cost.toFixed(2)}
-              </span>
-            </div>
+            {costData.per_day_average !== null && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Per Day</span>
+                <span className="font-semibold text-gray-900">
+                  ${costData.per_day_average.toFixed(2)}
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Per Meal</span>
               <span className="font-semibold text-gray-900">
-                ${costData.average_per_meal.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Per Serving</span>
-              <span className="font-semibold text-gray-900">
-                ${costData.cost_per_serving.toFixed(2)}
+                ${costData.per_meal_average.toFixed(2)}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
-              <span className="text-gray-600">Days Covered</span>
+              <span className="text-gray-600">Total Meals</span>
               <span className="font-semibold text-gray-900">
-                {costData.days_covered}
+                {costData.total_meals}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Total Servings</span>
+              <span className="text-gray-600">Unique Ingredients</span>
               <span className="font-semibold text-gray-900">
-                {costData.total_servings}
+                {costData.ingredient_count}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Budget Comparison */}
-        {costData.budget_comparison && (
+        {/* Category breakdown */}
+        {Object.keys(costData.by_category).length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-700">Budget Status</h4>
-
-            <div>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-600">Budget</span>
-                <span className="font-semibold text-gray-900">
-                  ${costData.budget_comparison.budget_amount.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-300 ${getBudgetColor(
-                    costData.budget_comparison.budget_utilization_percent
-                  )}`}
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      costData.budget_comparison.budget_utilization_percent
-                    )}%`,
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                <span>
-                  {costData.budget_comparison.budget_utilization_percent.toFixed(1)}% used
-                </span>
-                {costData.budget_comparison.under_over_budget !== 0 && (
-                  <Badge
-                    color={costData.budget_comparison.under_over_budget < 0 ? 'success' : 'error'}
-                    size="sm"
-                  >
-                    {costData.budget_comparison.under_over_budget > 0 ? '+' : ''}
-                    ${Math.abs(costData.budget_comparison.under_over_budget).toFixed(2)}
-                  </Badge>
-                )}
-              </div>
+            <h4 className="text-sm font-semibold text-gray-700">By Category</h4>
+            <div className="space-y-2">
+              {Object.entries(costData.by_category).map(([category, cost]) => (
+                <div key={category} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 capitalize">{category}</span>
+                  <span className="font-semibold text-gray-900">
+                    ${cost.toFixed(2)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

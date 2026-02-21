@@ -2,107 +2,86 @@
  * Cost estimation TypeScript types for recipe and meal plan budgeting.
  */
 
+import type { RecipeListItem } from './recipe';
+
 // ============================================================================
 // RECIPE COST TYPES
 // ============================================================================
 
-export interface IngredientCost {
-  ingredient_name: string;
-  quantity: number | null;
-  unit: string | null;
-  estimated_cost: number;
-  cost_per_unit: number;
-  cost_confidence: 'high' | 'medium' | 'low';
-  notes?: string;
-}
-
+/**
+ * Cost estimate for a single recipe.
+ * Matches backend RecipeCostResponse schema:
+ * { recipe_id, recipe_name, total_cost, cost_per_serving, servings,
+ *   estimated, cost_breakdown, missing_prices }
+ */
 export interface RecipeCost {
   recipe_id: number;
   recipe_name: string;
-  servings: number;
   total_cost: number;
   cost_per_serving: number;
-  ingredient_costs: IngredientCost[];
-  last_updated: string;
+  servings: number;
+  estimated: boolean;
+  cost_breakdown: Record<string, number> | null;
+  missing_prices: number | null;
 }
 
 // ============================================================================
 // MEAL PLAN COST TYPES
 // ============================================================================
 
-export interface DayCostBreakdown {
-  date: string;
-  total_cost: number;
-  breakfast_cost: number;
-  lunch_cost: number;
-  dinner_cost: number;
-  snacks_cost: number;
-  recipe_count: number;
-}
-
+/**
+ * Detailed cost breakdown for a meal plan.
+ * Matches backend MealPlanCostBreakdown schema:
+ * { total, by_category, by_day, per_meal_average, per_day_average,
+ *   savings_suggestions, total_meals, ingredient_count }
+ */
 export interface MealPlanCostBreakdown {
-  total_cost: number;
-  average_daily_cost: number;
-  average_per_meal: number;
-  days_covered: number;
-  total_servings: number;
-  cost_per_serving: number;
-  daily_breakdown: DayCostBreakdown[];
-  budget_comparison?: {
-    budget_amount: number;
-    under_over_budget: number;
-    budget_utilization_percent: number;
-  };
+  total: number;
+  by_category: Record<string, number>;
+  by_day: Record<number, number>;
+  per_meal_average: number;
+  per_day_average: number | null;
+  savings_suggestions: string[];
+  total_meals: number;
+  ingredient_count: number;
 }
 
 // ============================================================================
 // BUDGET RECIPE TYPES
 // ============================================================================
 
-export interface BudgetRecipe {
-  id: number;
-  name: string;
-  slug: string;
-  estimated_cost: number;
+/**
+ * A recipe paired with its cost information.
+ * Matches backend RecipeWithCost schema.
+ */
+export interface RecipeWithCost {
+  recipe: RecipeListItem;
+  cost: number;
   cost_per_serving: number;
-  servings: number;
-  cooking_time_minutes: number | null;
-  difficulty: string | null;
-  main_image_url: string | null;
-  nutrition_summary: {
-    calories?: number | null;
-    protein_g?: number | null;
-  } | null;
-  savings_vs_average: number;
-  cost_confidence: 'high' | 'medium' | 'low';
 }
 
+/**
+ * Response for budget recipe queries.
+ * Matches backend BudgetRecipesResponse schema:
+ * { recipes, total_count, max_cost, average_cost }
+ */
 export interface BudgetRecipesResponse {
-  recipes: BudgetRecipe[];
-  average_cost_all_recipes: number;
-  max_cost_filter: number;
-  count: number;
+  recipes: RecipeWithCost[];
+  total_count: number;
+  max_cost: number;
+  average_cost: number | null;
 }
 
 // ============================================================================
 // COST ALTERNATIVES TYPES
 // ============================================================================
 
-export interface CostAlternative {
-  recipe: BudgetRecipe;
-  cost_savings: number;
-  savings_percent: number;
-  similarity_score: number;
-  matching_attributes: string[];
-}
-
-export interface CostAlternativesResponse {
-  original_recipe_id: number;
-  original_recipe_name: string;
-  original_cost: number;
-  alternatives: CostAlternative[];
-  max_budget: number;
-}
+/**
+ * Response for cheaper recipe alternatives.
+ * The alternatives endpoint uses the same BudgetRecipesResponse shape:
+ * { recipes, total_count, max_cost, average_cost }
+ */
+export type CostAlternativesResponse = BudgetRecipesResponse;
 
 // ============================================================================
 // REQUEST TYPES
