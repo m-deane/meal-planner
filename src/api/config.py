@@ -66,6 +66,10 @@ class APIConfig(BaseConfig):
             "http://127.0.0.1:3200",
             "http://localhost:8200",
             "http://127.0.0.1:8200",
+            "http://localhost:3300",
+            "http://127.0.0.1:3300",
+            "http://localhost:8300",
+            "http://127.0.0.1:8300",
         ],
         description="Allowed CORS origins"
     )
