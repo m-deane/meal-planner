@@ -3,11 +3,15 @@ FastAPI application factory and configuration.
 Main entry point for the Gousto Recipe Meal Planner API.
 """
 
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.config import api_config
 from src.api.middleware import (
@@ -76,10 +80,15 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
 
+    # Build CORS origins list, adding HF Spaces origin if deployed there
+    cors_origins = list(api_config.cors_origins)
+    if os.environ.get("SPACE_ID"):
+        cors_origins.append("*")
+
     # Configure middleware (order matters - CORS first, then rate limit, then logging)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=api_config.cors_origins,
+        allow_origins=cors_origins,
         allow_credentials=api_config.cors_allow_credentials,
         allow_methods=api_config.cors_allow_methods,
         allow_headers=api_config.cors_allow_headers,
@@ -98,16 +107,6 @@ def create_app() -> FastAPI:
     register_routers(app)
 
     # Health check endpoint
-    @app.get("/", tags=["health"])
-    async def root():
-        """Root endpoint - API health check."""
-        return {
-            "status": "healthy",
-            "service": api_config.api_title,
-            "version": api_config.api_version,
-            "docs": f"{api_config.docs_url}" if api_config.api_debug else None
-        }
-
     @app.get("/health", tags=["health"])
     async def health_check():
         """Detailed health check with database connectivity."""
@@ -130,6 +129,34 @@ def create_app() -> FastAPI:
                     "error": str(e)
                 }
             )
+
+    # Serve React frontend (only when built frontend exists, e.g. Docker/HF Spaces)
+    frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.is_dir():
+        # Serve static assets (JS, CSS, images)
+        app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="static-assets")
+
+        # SPA fallback: serve index.html for all non-API routes
+        @app.get("/{full_path:path}", tags=["frontend"])
+        async def serve_spa(request: Request, full_path: str):
+            """Serve the React SPA for any non-API route."""
+            # Check if a static file exists at the requested path
+            file_path = frontend_dist / full_path
+            if full_path and file_path.is_file():
+                return FileResponse(file_path)
+            # Otherwise serve index.html (SPA routing)
+            return FileResponse(frontend_dist / "index.html")
+    else:
+        # No frontend build - serve API health check at root
+        @app.get("/", tags=["health"])
+        async def root():
+            """Root endpoint - API health check."""
+            return {
+                "status": "healthy",
+                "service": api_config.api_title,
+                "version": api_config.api_version,
+                "docs": f"{api_config.docs_url}" if api_config.api_debug else None
+            }
 
     return app
 
