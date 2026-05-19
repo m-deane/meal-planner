@@ -8,7 +8,8 @@ import {
 import { Card, Badge, BadgeGroup } from '../common';
 import { NutritionBadge } from './NutritionBadge';
 import { ShortlistButton } from './ShortlistButton';
-import type { RecipeListItem, DifficultyLevel } from '../../types';
+import { getDifficultyColor, getDifficultyLabel } from '../../utils/recipeUtils';
+import type { RecipeListItem } from '../../types';
 
 /**
  * RecipeCard component props
@@ -60,29 +61,6 @@ export interface RecipeCardProps {
   className?: string;
 }
 
-/**
- * Get difficulty level color
- */
-const getDifficultyColor = (difficulty: DifficultyLevel | null): 'success' | 'warning' | 'error' | 'default' => {
-  switch (difficulty) {
-    case 'easy':
-      return 'success';
-    case 'medium':
-      return 'warning';
-    case 'hard':
-      return 'error';
-    default:
-      return 'default';
-  }
-};
-
-/**
- * Get difficulty level label
- */
-const getDifficultyLabel = (difficulty: DifficultyLevel | null): string => {
-  if (!difficulty) return 'Unknown';
-  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-};
 
 /**
  * RecipeCard component
@@ -113,17 +91,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleCardClick = () => {
+  const handleCardClick = (): void => {
     navigate(`/recipes/${recipe.slug}`);
   };
 
-  const handleAddToMealPlan = (e: React.MouseEvent) => {
+  const handleAddToMealPlan = (e: React.MouseEvent): void => {
     e.stopPropagation();
     onAddToMealPlan?.(recipe);
   };
 
-  const mainImage = recipe.main_image?.url || '/placeholder-recipe.jpg';
-  const altText = recipe.main_image?.alt_text || recipe.name;
+  const mainImage = recipe.main_image?.url ?? '/placeholder-recipe.jpg';
+  const altText = recipe.main_image?.alt_text ?? recipe.name;
 
   // Filter categories by type for display
   const displayCategories = showCategories

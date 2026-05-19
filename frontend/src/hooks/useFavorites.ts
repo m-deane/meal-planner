@@ -6,9 +6,9 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  UseQueryResult,
-  UseMutationResult,
 } from '@tanstack/react-query';
+import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import {
   getFavorites,
   addFavorite,
@@ -79,10 +79,13 @@ export const useAddFavorite = (): UseMutationResult<
     mutationFn: addFavorite,
     onSuccess: (data) => {
       // Invalidate favorites lists
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
 
       // Update the check query for this specific recipe
       queryClient.setQueryData(favoriteKeys.check(data.recipe.id), true);
+    },
+    onError: () => {
+      toast.error('Failed to add recipe to favorites. Please try again.');
     },
   });
 };
@@ -97,10 +100,13 @@ export const useRemoveFavorite = (): UseMutationResult<void, APIError, number> =
     mutationFn: removeFavorite,
     onSuccess: (_, recipeId) => {
       // Invalidate favorites lists
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
 
       // Update the check query for this specific recipe
       queryClient.setQueryData(favoriteKeys.check(recipeId), false);
+    },
+    onError: () => {
+      toast.error('Failed to remove recipe from favorites. Please try again.');
     },
   });
 };
@@ -119,7 +125,7 @@ export const useUpdateFavorite = (): UseMutationResult<
     mutationFn: ({ recipeId, data }) => updateFavorite(recipeId, data),
     onSuccess: () => {
       // Invalidate favorites lists to refresh the data
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
     },
   });
 };
@@ -130,6 +136,8 @@ export const useUpdateFavorite = (): UseMutationResult<
 export const useToggleFavorite = (): {
   toggleFavorite: (recipeId: number, notes?: string) => Promise<void>;
   isLoading: boolean;
+  isError: boolean;
+  error: APIError | null;
 } => {
   const queryClient = useQueryClient();
   const addMutation = useAddFavorite();
@@ -150,8 +158,13 @@ export const useToggleFavorite = (): {
     }
   };
 
+  const isError = addMutation.isError || removeMutation.isError;
+  const error = addMutation.error ?? removeMutation.error ?? null;
+
   return {
     toggleFavorite,
     isLoading: addMutation.isPending || removeMutation.isPending,
+    isError,
+    error,
   };
 };

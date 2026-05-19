@@ -5,14 +5,13 @@
 import React, { useState } from 'react';
 import {
   DndContext,
-  DragEndEvent,
   DragOverlay,
-  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import toast from 'react-hot-toast';
 import { useMealPlanStore } from '../store/mealPlanStore';
 import {
@@ -28,8 +27,9 @@ import {
   useGenerateMealPlan,
   useSaveMealPlan,
 } from '../hooks/useMealPlan';
-import { MealType, ImageType, DifficultyLevel } from '../types';
-import type { MealPlanGenerateRequest, RecipeListItem } from '../types';
+import { mealPlanStateToResponse } from '../utils/mealPlanAdapter';
+import { MealType, ImageType } from '../types';
+import type { MealPlanGenerateRequest, RecipeListItem, DifficultyLevel } from '../types';
 import type { DayOfWeek } from '../store/mealPlanStore';
 import {
   Save,
@@ -141,7 +141,7 @@ export const MealPlannerPage: React.FC = () => {
     })
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = (event: DragStartEvent): void => {
     const { active } = event;
     setActiveId(active.id as string);
 
@@ -151,7 +151,7 @@ export const MealPlannerPage: React.FC = () => {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent): void => {
     const { active, over } = event;
 
     setActiveId(null);
@@ -173,7 +173,7 @@ export const MealPlannerPage: React.FC = () => {
     }
 
     // Get the recipe data
-    const dragData = active.data.current as DragData;
+    const dragData = active.data.current as DragData | null;
 
     if (!dragData?.recipe) {
       return;
@@ -185,7 +185,7 @@ export const MealPlannerPage: React.FC = () => {
     } else {
       // Moving within board
       const targetDayState = plan.days[target.day];
-      const targetMealKey = target.mealType === 'breakfast' ? 'breakfast' : target.mealType === 'lunch' ? 'lunch' : 'dinner';
+      const targetMealKey = target.mealType === MealType.BREAKFAST ? 'breakfast' : target.mealType === MealType.LUNCH ? 'lunch' : 'dinner';
       const targetSlot = targetDayState[targetMealKey];
 
       if (targetSlot) {
@@ -198,12 +198,12 @@ export const MealPlannerPage: React.FC = () => {
     }
   };
 
-  const handleDragCancel = () => {
+  const handleDragCancel = (): void => {
     setActiveId(null);
     setActiveDragData(null);
   };
 
-  const handleGeneratePlan = async (request: MealPlanGenerateRequest) => {
+  const handleGeneratePlan = async (request: MealPlanGenerateRequest): Promise<void> => {
     try {
       const result = await generateMutation.mutateAsync(request);
       const extendedRequest = request as ExtendedGenerateRequest;
@@ -235,7 +235,6 @@ export const MealPlannerPage: React.FC = () => {
 
         // Check for custom meal counts
         const mealCounts = extendedRequest.mealCounts;
-        const usesCustomCounts = mealCounts !== undefined;
 
         // Track how many of each meal type we've added
         let breakfastCount = 0;
@@ -244,7 +243,7 @@ export const MealPlannerPage: React.FC = () => {
 
         Object.entries(planData).forEach(([dayName, dayData]) => {
           const dayOfWeek = dayNameMap[dayName];
-          if (!dayOfWeek || !dayData.meals) return;
+          if (!dayOfWeek) return;
 
           const meals = dayData.meals;
 
@@ -253,7 +252,7 @@ export const MealPlannerPage: React.FC = () => {
             const mealData = meals[mealType];
             if (mealData) {
               // Check if we should skip this meal based on custom counts
-              if (usesCustomCounts && mealCounts) {
+              if (mealCounts) {
                 if (mealType === 'breakfast' && breakfastCount >= mealCounts.breakfasts) return;
                 if (mealType === 'lunch' && lunchCount >= mealCounts.lunches) return;
                 if (mealType === 'dinner' && dinnerCount >= mealCounts.dinners) return;
@@ -270,7 +269,7 @@ export const MealPlannerPage: React.FC = () => {
                 cooking_time_minutes: mealData.cooking_time_minutes ?? null,
                 prep_time_minutes: null,
                 total_time_minutes: mealData.cooking_time_minutes ?? null,
-                difficulty: (mealData.difficulty as DifficultyLevel) ?? null,
+                difficulty: mealData.difficulty as DifficultyLevel | null,
                 servings: mealData.servings ?? 2,
                 categories: [],
                 dietary_tags: [],
@@ -320,32 +319,29 @@ export const MealPlannerPage: React.FC = () => {
       }
 
       setShowGenerateModal(false);
+      toast.success('Meal plan generated!');
     } catch (error) {
       console.error('Failed to generate meal plan:', error);
       toast.error('Failed to generate meal plan. Please try again.');
     }
   };
 
-  const handleSavePlan = async () => {
+  const handleSavePlan = (): void => {
     if (totalRecipes === 0) {
       toast('Add some recipes to your meal plan first!');
       return;
     }
-
-    try {
-      toast.success('Meal plan saved locally.');
-    } catch (error) {
-      console.error('Failed to save meal plan:', error);
-      toast.error('Failed to save meal plan. Please try again.');
-    }
+    saveMutation.mutate(mealPlanStateToResponse(plan), {
+      onSuccess: () => toast.success('Meal plan saved!'),
+    });
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = (): void => {
     if (totalRecipes === 0) return;
     setShowClearConfirm(true);
   };
 
-  const handleExport = () => {
+  const handleExport = (): void => {
     // Export to markdown/JSON
     const exportData = {
       plan,
@@ -365,12 +361,12 @@ export const MealPlannerPage: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSetStartDate = () => {
+  const handleSetStartDate = (): void => {
     setPendingDate(plan.startDate ?? format(new Date(), 'yyyy-MM-dd'));
     setShowDatePicker(true);
   };
 
-  const handleConfirmDate = () => {
+  const handleConfirmDate = (): void => {
     if (pendingDate) {
       setStartDate(pendingDate);
     }
@@ -402,7 +398,7 @@ export const MealPlannerPage: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setShowSettingsModal(true)}
+                onClick={() => { setShowSettingsModal(true); }}
                 className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                 title="Nutrition goals"
               >
@@ -464,14 +460,14 @@ export const MealPlannerPage: React.FC = () => {
           >
             {showSidebar && (
               <PlannerSidebar
-                onGeneratePlan={() => setShowGenerateModal(true)}
+                onGeneratePlan={() => { setShowGenerateModal(true); }}
                 isGenerating={generateMutation.isPending}
               />
             )}
 
             {/* Sidebar Toggle */}
             <button
-              onClick={() => setShowSidebar(!showSidebar)}
+              onClick={() => { setShowSidebar(!showSidebar); }}
               className="absolute -left-4 top-6 w-8 h-8 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
               aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
             >
@@ -508,7 +504,7 @@ export const MealPlannerPage: React.FC = () => {
       {/* Generate Plan Modal */}
       <GeneratePlanModal
         isOpen={showGenerateModal}
-        onClose={() => setShowGenerateModal(false)}
+        onClose={() => { setShowGenerateModal(false); }}
         onGenerate={handleGeneratePlan}
         isGenerating={generateMutation.isPending}
       />
@@ -516,7 +512,7 @@ export const MealPlannerPage: React.FC = () => {
       {/* Settings Modal */}
       <Modal
         isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
+        onClose={() => { setShowSettingsModal(false); }}
         title="Nutrition Goals"
         size="sm"
       >
@@ -529,12 +525,13 @@ export const MealPlannerPage: React.FC = () => {
               type="number"
               value={plan.nutritionGoals.daily_calories ?? ''}
               onChange={(e) => {
-                const { daily_calories: _, ...rest } = plan.nutritionGoals;
-                setNutritionGoals(
-                  e.target.value
-                    ? { ...rest, daily_calories: Number(e.target.value) }
-                    : rest
-                );
+                const next = { ...plan.nutritionGoals };
+                if (e.target.value) {
+                  next.daily_calories = Number(e.target.value);
+                } else {
+                  delete next.daily_calories;
+                }
+                setNutritionGoals(next);
               }}
               placeholder="e.g., 2000"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -549,12 +546,13 @@ export const MealPlannerPage: React.FC = () => {
               type="number"
               value={plan.nutritionGoals.daily_protein_g ?? ''}
               onChange={(e) => {
-                const { daily_protein_g: _, ...rest } = plan.nutritionGoals;
-                setNutritionGoals(
-                  e.target.value
-                    ? { ...rest, daily_protein_g: Number(e.target.value) }
-                    : rest
-                );
+                const next = { ...plan.nutritionGoals };
+                if (e.target.value) {
+                  next.daily_protein_g = Number(e.target.value);
+                } else {
+                  delete next.daily_protein_g;
+                }
+                setNutritionGoals(next);
               }}
               placeholder="e.g., 150"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -569,12 +567,13 @@ export const MealPlannerPage: React.FC = () => {
               type="number"
               value={plan.nutritionGoals.daily_carbs_g ?? ''}
               onChange={(e) => {
-                const { daily_carbs_g: _, ...rest } = plan.nutritionGoals;
-                setNutritionGoals(
-                  e.target.value
-                    ? { ...rest, daily_carbs_g: Number(e.target.value) }
-                    : rest
-                );
+                const next = { ...plan.nutritionGoals };
+                if (e.target.value) {
+                  next.daily_carbs_g = Number(e.target.value);
+                } else {
+                  delete next.daily_carbs_g;
+                }
+                setNutritionGoals(next);
               }}
               placeholder="e.g., 200"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -589,12 +588,13 @@ export const MealPlannerPage: React.FC = () => {
               type="number"
               value={plan.nutritionGoals.daily_fat_g ?? ''}
               onChange={(e) => {
-                const { daily_fat_g: _, ...rest } = plan.nutritionGoals;
-                setNutritionGoals(
-                  e.target.value
-                    ? { ...rest, daily_fat_g: Number(e.target.value) }
-                    : rest
-                );
+                const next = { ...plan.nutritionGoals };
+                if (e.target.value) {
+                  next.daily_fat_g = Number(e.target.value);
+                } else {
+                  delete next.daily_fat_g;
+                }
+                setNutritionGoals(next);
               }}
               placeholder="e.g., 60"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -603,7 +603,7 @@ export const MealPlannerPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setShowSettingsModal(false)}
+            onClick={() => { setShowSettingsModal(false); }}
             className="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
           >
             Save Goals
@@ -614,7 +614,7 @@ export const MealPlannerPage: React.FC = () => {
       {/* Date Picker Modal */}
       <Modal
         isOpen={showDatePicker}
-        onClose={() => setShowDatePicker(false)}
+        onClose={() => { setShowDatePicker(false); }}
         title="Set Start Date"
         size="sm"
       >
@@ -626,14 +626,14 @@ export const MealPlannerPage: React.FC = () => {
             <input
               type="date"
               value={pendingDate}
-              onChange={(e) => setPendingDate(e.target.value)}
+              onChange={(e) => { setPendingDate(e.target.value); }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => setShowDatePicker(false)}
+              onClick={() => { setShowDatePicker(false); }}
               className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               Cancel
@@ -652,7 +652,7 @@ export const MealPlannerPage: React.FC = () => {
       {/* Clear All Confirmation Modal */}
       <ConfirmModal
         isOpen={showClearConfirm}
-        onClose={() => setShowClearConfirm(false)}
+        onClose={() => { setShowClearConfirm(false); }}
         onConfirm={clearAll}
         title="Clear Meal Plan"
         message="Are you sure you want to clear the entire meal plan? This cannot be undone."

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { InfiniteData } from '@tanstack/react-query';
-import { SearchBar } from '../components/common';
+import { SearchBar, EmptyState } from '../components/common';
 import { RecipeList, RecipeFilters } from '../components/recipes';
 import { useInfiniteRecipes } from '../hooks/useRecipes';
 import { useCategories, useDietaryTags, useAllergens } from '../hooks/useCategories';
-import type { RecipeFilters as RecipeFiltersType, RecipeListItem, PaginatedResponse, SortParams } from '../types';
+import type { RecipeFilters as RecipeFiltersType, RecipeListItem, PaginatedResponse, SortParams, DifficultyLevel } from '../types';
 import { SortOrder } from '../types';
-import { ChevronRightIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon, AdjustmentsHorizontalIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 /**
  * RecipeBrowserPage component props
@@ -59,7 +59,7 @@ const parseFiltersFromUrl = (searchParams: URLSearchParams): RecipeFiltersType =
   // Difficulty
   const difficulty = searchParams.getAll('difficulty');
   if (difficulty.length > 0) {
-    filters.difficulty = difficulty as any[];
+    filters.difficulty = difficulty as DifficultyLevel[];
   }
 
   // Max cooking time
@@ -74,7 +74,7 @@ const parseFiltersFromUrl = (searchParams: URLSearchParams): RecipeFiltersType =
   const maxCarbs = searchParams.get('max_carbs');
   const maxFat = searchParams.get('max_fat');
 
-  if (maxCalories || minProtein || maxCarbs || maxFat) {
+  if (maxCalories ?? minProtein ?? maxCarbs ?? maxFat) {
     filters.nutrition = {};
     if (maxCalories) filters.nutrition.max_calories = parseInt(maxCalories, 10);
     if (minProtein) filters.nutrition.min_protein_g = parseInt(minProtein, 10);
@@ -107,17 +107,17 @@ const updateUrlWithFilters = (
   filters: RecipeFiltersType,
   sortParams: SortParams,
   setSearchParams: (params: URLSearchParams) => void
-) => {
+): void => {
   const params = new URLSearchParams();
 
   if (filters.search_query) {
     params.set('search', filters.search_query);
   }
 
-  filters.category_slugs?.forEach((cat) => params.append('category', cat));
-  filters.dietary_tag_slugs?.forEach((tag) => params.append('dietary', tag));
-  filters.exclude_allergen_names?.forEach((allergen) => params.append('exclude_allergen', allergen));
-  filters.difficulty?.forEach((diff) => params.append('difficulty', diff));
+  filters.category_slugs?.forEach((cat) => { params.append('category', cat); });
+  filters.dietary_tag_slugs?.forEach((tag) => { params.append('dietary', tag); });
+  filters.exclude_allergen_names?.forEach((allergen) => { params.append('exclude_allergen', allergen); });
+  filters.difficulty?.forEach((diff) => { params.append('difficulty', diff); });
 
   if (filters.max_cooking_time) {
     params.set('max_time', filters.max_cooking_time.toString());
@@ -167,7 +167,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<RecipeFiltersType>(() => parseFiltersFromUrl(searchParams));
   const [sortParams, setSortParams] = useState<SortParams>(() => parseSortFromUrl(searchParams));
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') ?? '');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Fetch filter options
@@ -186,7 +186,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
   } = useInfiniteRecipes(filters, sortParams, 20);
 
   // Flatten paginated results from infinite query
-  const recipes = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages?.flatMap((page) => page.items) ?? [];
+  const recipes = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages.flatMap((page) => page.items) ?? [];
 
   // Update filters when search query changes
   useEffect(() => {
@@ -206,25 +206,32 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
     updateUrlWithFilters(filters, sortParams, setSearchParams);
   }, [filters, sortParams, setSearchParams]);
 
-  const handleFiltersChange = (newFilters: RecipeFiltersType) => {
+  const handleFiltersChange = (newFilters: RecipeFiltersType): void => {
     setFilters(newFilters);
   };
 
-  const handleSortChange = (newSortParams: SortParams) => {
+  const handleClearFilters = (): void => {
+    const defaultFilters: RecipeFiltersType = { only_active: true };
+    setFilters(defaultFilters);
+    setSortParams({ sort_order: SortOrder.ASC });
+    setSearchQuery('');
+  };
+
+  const handleSortChange = (newSortParams: SortParams): void => {
     setSortParams(newSortParams);
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = (): void => {
     if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   };
 
-  const toggleSidebar = () => {
+  const toggleSidebar = (): void => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const totalResults = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages?.[0]?.total ?? 0;
+  const totalResults = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages[0]?.total ?? 0;
 
   return (
     <div className={`min-h-screen bg-gray-50 ${className}`}>
@@ -266,7 +273,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
             </button>
 
             {/* Filter panel */}
-            <div className={`${isSidebarOpen ? 'block' : 'hidden lg:block'}`}>
+            <div className={isSidebarOpen ? 'block' : 'hidden lg:block'}>
               <RecipeFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -283,6 +290,21 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
 
           {/* Recipe grid */}
           <div className="flex-1">
+            {/* Empty state — shown when not loading and no recipes match the active filters */}
+            {!isLoading && recipes.length === 0 && !error && (
+              <EmptyState
+                icon={<FunnelIcon className="h-8 w-8" />}
+                title="No recipes match your filters."
+                description="Try adjusting your search terms or filters to find what you're looking for."
+                action={{
+                  label: 'Clear filters',
+                  onClick: handleClearFilters,
+                }}
+              />
+            )}
+
+            {/* Recipe list — hidden when empty state is showing */}
+            {(isLoading || recipes.length > 0 || error) && (
             <RecipeList
               recipes={recipes}
               loading={isLoading}
@@ -290,6 +312,7 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
               {...(onAddToMealPlan && { onAddToMealPlan })}
               columns={{ sm: 1, md: 2, lg: 2, xl: 3 }}
             />
+            )}
 
             {/* Load more button */}
             {hasNextPage && (

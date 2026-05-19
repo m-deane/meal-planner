@@ -6,9 +6,9 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  UseQueryResult,
-  UseMutationResult,
 } from '@tanstack/react-query';
+import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import {
   generateMealPlan,
   generateNutritionMealPlan,
@@ -96,10 +96,13 @@ export const useSaveMealPlan = (): UseMutationResult<
   return useMutation({
     mutationFn: saveMealPlan,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: mealPlanKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: mealPlanKeys.lists() });
       if (data.id) {
         queryClient.setQueryData(mealPlanKeys.detail(data.id), data);
       }
+    },
+    onError: () => {
+      toast.error('Failed to save meal plan. Please try again.');
     },
   });
 };
@@ -113,8 +116,11 @@ export const useDeleteMealPlan = (): UseMutationResult<void, Error, number> => {
   return useMutation({
     mutationFn: deleteMealPlan,
     onSuccess: (_, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: mealPlanKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: mealPlanKeys.lists() });
       queryClient.removeQueries({ queryKey: mealPlanKeys.detail(deletedId) });
+    },
+    onError: () => {
+      toast.error('Failed to delete meal plan.');
     },
   });
 };

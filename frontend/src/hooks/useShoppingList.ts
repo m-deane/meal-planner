@@ -6,9 +6,9 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  UseQueryResult,
-  UseMutationResult,
 } from '@tanstack/react-query';
+import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import {
   generateShoppingList,
   generateShoppingListFromMealPlan,
@@ -46,6 +46,9 @@ export const useGenerateShoppingList = (): UseMutationResult<
 > => {
   return useMutation({
     mutationFn: ({ recipeIds, options }) => generateShoppingList(recipeIds, options),
+    onError: () => {
+      toast.error('Failed to generate shopping list.');
+    },
   });
 };
 
@@ -101,7 +104,7 @@ export const useSaveShoppingList = (): UseMutationResult<
   return useMutation({
     mutationFn: saveShoppingList,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: shoppingListKeys.lists() });
     },
   });
 };
@@ -115,7 +118,7 @@ export const useDeleteShoppingList = (): UseMutationResult<void, Error, number> 
   return useMutation({
     mutationFn: deleteShoppingList,
     onSuccess: (_, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: shoppingListKeys.lists() });
       queryClient.removeQueries({ queryKey: shoppingListKeys.detail(deletedId) });
     },
   });
@@ -132,6 +135,12 @@ export const useExportShoppingListMarkdown = (): UseMutationResult<
   return useMutation({
     mutationFn: ({ shoppingListId, options }) =>
       exportShoppingListMarkdown(shoppingListId, options),
+    onSuccess: () => {
+      toast.success('Shopping list exported successfully.');
+    },
+    onError: () => {
+      toast.error('Export failed. Please try again.');
+    },
   });
 };
 
@@ -145,5 +154,11 @@ export const useExportShoppingListPDF = (): UseMutationResult<
 > => {
   return useMutation({
     mutationFn: ({ shoppingListId, options }) => exportShoppingListPDF(shoppingListId, options),
+    onSuccess: () => {
+      toast.success('Shopping list exported successfully.');
+    },
+    onError: () => {
+      toast.error('Export failed. Please try again.');
+    },
   });
 };

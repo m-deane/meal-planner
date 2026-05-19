@@ -3,7 +3,8 @@
  */
 
 import React, { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Trash2, CalendarDays } from 'lucide-react';
 import {
   ShoppingList,
   ShoppingListGenerator,
@@ -11,11 +12,19 @@ import {
   AddItemForm,
 } from '../components/shopping-list';
 import { useShoppingListStore } from '../store/shoppingListStore';
+import { useMealPlanStore } from '../store/mealPlanStore';
 import { ConfirmModal } from '../components/common/ConfirmModal';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const ShoppingListPage: React.FC = () => {
+  const navigate = useNavigate();
   const { clearAll, clearChecked, getTotalCount, getCheckedCount } =
     useShoppingListStore();
+
+  // Heuristic: a meal plan exists when at least one recipe slot has been filled.
+  // getTotalRecipes() counts all non-null recipe slots across all 7 days × 3 meals.
+  const mealPlanRecipeCount = useMealPlanStore((s) => s.getTotalRecipes());
+  const hasMealPlan = mealPlanRecipeCount > 0;
 
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [showClearCheckedConfirm, setShowClearCheckedConfirm] = useState(false);
@@ -43,7 +52,7 @@ export const ShoppingListPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {hasCheckedItems && (
                   <button
-                    onClick={() => setShowClearCheckedConfirm(true)}
+                    onClick={() => { setShowClearCheckedConfirm(true); }}
                     className="flex items-center gap-2 px-4 py-2 text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -51,7 +60,7 @@ export const ShoppingListPage: React.FC = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => setShowClearAllConfirm(true)}
+                  onClick={() => { setShowClearAllConfirm(true); }}
                   className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -65,24 +74,37 @@ export const ShoppingListPage: React.FC = () => {
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left column: Generator and add form */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Generator */}
-            <ShoppingListGenerator />
+        {/* Guard: if no meal plan exists, prompt the user to build one first */}
+        {!hasMealPlan ? (
+          <EmptyState
+            icon={<CalendarDays className="h-10 w-10" />}
+            title="No meal plan yet — build one first"
+            description="Head to the Meal Planner to drag and drop recipes into your weekly plan, then come back here to generate your shopping list."
+            action={{
+              label: 'Go to Meal Planner',
+              onClick: () => { navigate('/meal-planner'); },
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left column: Generator and add form */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Generator */}
+              <ShoppingListGenerator />
 
-            {/* Add item form */}
-            <AddItemForm />
+              {/* Add item form */}
+              <AddItemForm />
 
-            {/* Export options */}
-            {hasItems && <ExportOptions />}
+              {/* Export options */}
+              {hasItems && <ExportOptions />}
+            </div>
+
+            {/* Right column: Shopping list */}
+            <div className="lg:col-span-2">
+              <ShoppingList />
+            </div>
           </div>
-
-          {/* Right column: Shopping list */}
-          <div className="lg:col-span-2">
-            <ShoppingList />
-          </div>
-        </div>
+        )}
       </main>
 
       {/* Print styles */}
@@ -110,7 +132,7 @@ export const ShoppingListPage: React.FC = () => {
       {/* Clear All Confirmation Modal */}
       <ConfirmModal
         isOpen={showClearAllConfirm}
-        onClose={() => setShowClearAllConfirm(false)}
+        onClose={() => { setShowClearAllConfirm(false); }}
         onConfirm={clearAll}
         title="Clear Shopping List"
         message="Are you sure you want to clear all items from your shopping list?"
@@ -121,7 +143,7 @@ export const ShoppingListPage: React.FC = () => {
       {/* Clear Checked Confirmation Modal */}
       <ConfirmModal
         isOpen={showClearCheckedConfirm}
-        onClose={() => setShowClearCheckedConfirm(false)}
+        onClose={() => { setShowClearCheckedConfirm(false); }}
         onConfirm={clearChecked}
         title="Remove Checked Items"
         message="Remove all checked items from the list?"

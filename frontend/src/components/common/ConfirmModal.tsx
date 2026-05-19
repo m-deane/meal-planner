@@ -1,5 +1,7 @@
 import React from 'react';
 import { Modal } from './Modal';
+import { Button } from './Button';
+import type { ButtonVariant } from './Button';
 
 /**
  * ConfirmModal variant types
@@ -28,10 +30,10 @@ export interface ConfirmModalProps {
   variant?: ConfirmModalVariant;
 }
 
-const confirmButtonClasses: Record<ConfirmModalVariant, string> = {
-  danger: 'bg-red-500 hover:bg-red-600 text-white',
-  warning: 'bg-amber-500 hover:bg-amber-600 text-white',
-  default: 'bg-indigo-500 hover:bg-indigo-600 text-white',
+const confirmButtonVariant: Record<ConfirmModalVariant, ButtonVariant> = {
+  danger: 'danger',
+  warning: 'primary',
+  default: 'primary',
 };
 
 /**
@@ -62,7 +64,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelLabel = 'Cancel',
   variant = 'default',
 }) => {
-  const handleConfirm = () => {
+  const handleConfirm = (): void => {
     onConfirm();
     onClose();
   };
@@ -71,20 +73,21 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <p className="text-gray-600 mb-6">{message}</p>
       <div className="flex justify-end gap-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onClose}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="border border-gray-300"
         >
           {cancelLabel}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant={confirmButtonVariant[variant]}
+          size="sm"
           onClick={handleConfirm}
-          className={`px-4 py-2 text-sm rounded-lg ${confirmButtonClasses[variant]}`}
         >
           {confirmLabel}
-        </button>
+        </Button>
       </div>
     </Modal>
   );
