@@ -29,11 +29,8 @@ RUN touch .env
 # Copy pre-built frontend
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
-# Copy database
-COPY data/recipes.db ./data/recipes.db
-
-# Create necessary directories
-RUN mkdir -p logs meal_plans
+# Create necessary directories and initialise empty database
+RUN mkdir -p data logs meal_plans
 
 # Configure for Hugging Face Spaces
 ENV DATABASE_URL=sqlite:////app/data/recipes.db
@@ -46,4 +43,5 @@ ENV JWT_SECRET="hf-spaces-demo-key-not-for-production-use-change-me"
 
 EXPOSE 7860
 
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Initialise database schema on first run then start the API
+CMD ["sh", "-c", "python -m src.cli init-db && uvicorn src.api.main:app --host 0.0.0.0 --port 7860"]
