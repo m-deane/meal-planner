@@ -1,3 +1,12 @@
+---
+title: Meal Planner
+emoji: 🥗
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # Gousto Recipe Database Scraper
 
 A production-ready web scraping system to extract all recipes from [Gousto's cookbook](https://www.gousto.co.uk/cookbook/recipes) and store them in a structured database.
