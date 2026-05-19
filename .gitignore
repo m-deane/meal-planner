@@ -121,3 +121,7 @@ site/
 *.key
 credentials.json
 secrets.json
+
+# Browser automation artifacts
+.playwright-mcp/
+*.png
