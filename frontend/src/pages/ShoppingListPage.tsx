@@ -35,25 +35,25 @@ export const ShoppingListPage: React.FC = () => {
   const hasCheckedItems = checkedCount > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Shopping List</h1>
-              <p className="mt-1 text-gray-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Shopping List</h1>
+              <p className="mt-1 text-sm sm:text-base text-gray-600">
                 Generate from your meal plan or add items manually
               </p>
             </div>
 
             {/* Clear buttons */}
             {hasItems && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
                 {hasCheckedItems && (
                   <button
                     onClick={() => { setShowClearCheckedConfirm(true); }}
-                    className="flex items-center gap-2 px-4 py-2 text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     Clear Checked
@@ -61,7 +61,7 @@ export const ShoppingListPage: React.FC = () => {
                 )}
                 <button
                   onClick={() => { setShowClearAllConfirm(true); }}
-                  className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   Clear All

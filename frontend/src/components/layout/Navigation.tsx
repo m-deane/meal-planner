@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home,
@@ -35,7 +35,24 @@ export const Navigation: React.FC = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('keydown', handleKeyDown); };
+  }, []);
+
+  const bottomNavItems: NavItem[] = [
+    { to: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" aria-hidden="true" /> },
+    { to: '/recipes', label: 'Recipes', icon: <UtensilsCrossed className="w-5 h-5" aria-hidden="true" /> },
+    { to: '/meal-planner', label: 'Planner', icon: <Calendar className="w-5 h-5" aria-hidden="true" /> },
+    { to: '/shopping-list', label: 'Shopping', icon: <ShoppingCart className="w-5 h-5" aria-hidden="true" /> },
+    { to: '/nutrition', label: 'Nutrition', icon: <BarChart3 className="w-5 h-5" aria-hidden="true" /> },
+  ];
+
   return (
+    <>
     <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -85,7 +102,7 @@ export const Navigation: React.FC = () => {
           {/* Mobile menu button */}
           <button
             type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); }}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
@@ -108,7 +125,7 @@ export const Navigation: React.FC = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => { setIsMobileMenuOpen(false); }}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                   ${isActive(item.to)
@@ -123,7 +140,7 @@ export const Navigation: React.FC = () => {
             ))}
             <NavLink
               to="/profile"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => { setIsMobileMenuOpen(false); }}
               className={`
                 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                 ${isActive('/profile')
@@ -139,6 +156,29 @@ export const Navigation: React.FC = () => {
         </div>
       )}
     </nav>
+
+    {/* Bottom Navigation Bar — mobile only */}
+    <nav
+      aria-label="Bottom navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 md:hidden"
+    >
+      <div className="flex items-stretch justify-around">
+        {bottomNavItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={`
+              flex flex-col items-center gap-0.5 py-2 px-3 text-xs font-medium transition-colors min-w-[44px]
+              ${isActive(item.to) ? 'text-green-700' : 'text-gray-500 hover:text-gray-900'}
+            `}
+          >
+            {item.icon}
+            {item.label}
+          </NavLink>
+        ))}
+      </div>
+    </nav>
+    </>
   );
 };
 

@@ -116,9 +116,9 @@ export const NutritionDashboard: React.FC<NutritionDashboardProps> = ({
   return (
     <div className={className}>
       {/* Header with date range */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
             Nutrition Dashboard
           </h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -127,7 +127,7 @@ export const NutritionDashboard: React.FC<NutritionDashboardProps> = ({
         </div>
 
         {plan.startDate && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg self-start sm:self-auto">
             <Calendar className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">
               Week of {new Date(plan.startDate).toLocaleDateString()}

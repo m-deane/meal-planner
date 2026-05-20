@@ -42,26 +42,27 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const { data: recipe, isLoading, error } = useRecipeBySlug(slug || '');
+  const { data: recipe, isLoading, error } = useRecipeBySlug(slug ?? '');
 
-  const handlePrint = () => {
+  const handlePrint = (): void => {
     window.print();
   };
 
-  const handleShare = async () => {
-    if (recipe && navigator.share) {
+  const handleShare = async (): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!recipe) return;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (navigator.share) {
       try {
         await navigator.share({
           title: recipe.name,
-          text: recipe.description || `Check out this recipe: ${recipe.name}`,
+          text: recipe.description ?? `Check out this recipe: ${recipe.name}`,
           url: window.location.href,
         });
       } catch (err) {
-        // User cancelled or share failed
         console.error('Error sharing:', err);
       }
-    } else if (recipe) {
-      // Fallback: Copy URL to clipboard
+    } else {
       try {
         await navigator.clipboard.writeText(window.location.href);
         toast.success('Recipe link copied to clipboard!');
@@ -71,7 +72,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
     }
   };
 
-  const handleBack = () => {
+  const handleBack = (): void => {
     navigate(-1);
   };
 
@@ -88,7 +89,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
           title="Error loading recipe"
           description={error.message || 'The recipe could not be loaded. Please try again.'}
         >
-          <Button variant="primary" onClick={() => navigate('/recipes')}>
+          <Button variant="primary" onClick={() => { navigate('/recipes'); }}>
             Browse All Recipes
           </Button>
         </EmptyState>
@@ -104,7 +105,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
           title="Recipe not found"
           description="The recipe you're looking for doesn't exist or has been removed."
         >
-          <Button variant="primary" onClick={() => navigate('/recipes')}>
+          <Button variant="primary" onClick={() => { navigate('/recipes'); }}>
             Browse All Recipes
           </Button>
         </EmptyState>
@@ -113,7 +114,7 @@ export const RecipeDetailPage: React.FC<RecipeDetailPageProps> = ({
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-50 pb-20 md:pb-0 ${className}`}>
       {/* Breadcrumb navigation */}
       <nav className="bg-white border-b border-gray-200 print:hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

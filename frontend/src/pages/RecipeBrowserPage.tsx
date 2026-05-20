@@ -234,12 +234,12 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
   const totalResults = (infiniteData as InfiniteData<PaginatedResponse<RecipeListItem>> | undefined)?.pages[0]?.total ?? 0;
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-50 pb-20 md:pb-0 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Browse Recipes</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Browse Recipes</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             {totalResults > 0
               ? `Showing ${recipes.length} of ${totalResults} recipes`
               : 'Search and filter to find your perfect recipe'}
@@ -266,14 +266,14 @@ export const RecipeBrowserPage: React.FC<RecipeBrowserPageProps> = ({
             <button
               type="button"
               onClick={toggleSidebar}
-              className="lg:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="lg:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <AdjustmentsHorizontalIcon className="h-5 w-5" aria-hidden="true" />
               {isSidebarOpen ? 'Hide Filters' : 'Show Filters'}
             </button>
 
             {/* Filter panel */}
-            <div className={isSidebarOpen ? 'block' : 'hidden lg:block'}>
+            <div className={`${isSidebarOpen ? 'block' : 'hidden lg:block'} lg:max-h-none max-h-[70vh] overflow-y-auto`}>
               <RecipeFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}

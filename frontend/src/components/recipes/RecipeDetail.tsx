@@ -11,7 +11,8 @@ import { Badge, BadgeGroup, Button } from '../common';
 import { IngredientList } from './IngredientList';
 import { InstructionSteps } from './InstructionSteps';
 import { NutritionBadge } from './NutritionBadge';
-import type { Recipe, DifficultyLevel } from '../../types';
+import { DifficultyLevel, ImageType } from '../../types';
+import type { Recipe } from '../../types';
 
 /**
  * RecipeDetail component props
@@ -48,11 +49,11 @@ export interface RecipeDetailProps {
  */
 const getDifficultyColor = (difficulty: DifficultyLevel | null): 'success' | 'warning' | 'error' | 'default' => {
   switch (difficulty) {
-    case 'easy':
+    case DifficultyLevel.EASY:
       return 'success';
-    case 'medium':
+    case DifficultyLevel.MEDIUM:
       return 'warning';
-    case 'hard':
+    case DifficultyLevel.HARD:
       return 'error';
     default:
       return 'default';
@@ -92,19 +93,19 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 }) => {
   const [servingsMultiplier, setServingsMultiplier] = useState(1);
 
-  const mainImage = recipe.images.find((img) => img.image_type === 'main' || img.image_type === 'hero');
-  const imageUrl = mainImage?.url || '/placeholder-recipe.jpg';
-  const imageAlt = mainImage?.alt_text || recipe.name;
+  const mainImage = recipe.images.find((img) => img.image_type === ImageType.MAIN || img.image_type === ImageType.HERO);
+  const imageUrl = mainImage?.url ?? '/placeholder-recipe.jpg';
+  const imageAlt = mainImage?.alt_text ?? recipe.name;
 
   const adjustedServings = recipe.servings * servingsMultiplier;
 
-  const handleServingsDecrease = () => {
+  const handleServingsDecrease = (): void => {
     if (servingsMultiplier > 0.5) {
       setServingsMultiplier((prev) => prev - 0.5);
     }
   };
 
-  const handleServingsIncrease = () => {
+  const handleServingsIncrease = (): void => {
     if (servingsMultiplier < 5) {
       setServingsMultiplier((prev) => prev + 0.5);
     }
@@ -113,7 +114,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   return (
     <div className={`bg-white ${className}`}>
       {/* Hero image */}
-      <div className="w-full h-96 overflow-hidden bg-gray-200">
+      <div className="w-full h-56 sm:h-96 overflow-hidden bg-gray-200">
         <img
           src={imageUrl}
           alt={imageAlt}
@@ -124,7 +125,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{recipe.name}</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{recipe.name}</h1>
 
           {recipe.description && (
             <p className="text-lg text-gray-600 mb-6">{recipe.description}</p>
@@ -208,7 +209,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             {onAddToMealPlan && (
               <Button
                 variant="primary"
-                onClick={() => onAddToMealPlan(recipe)}
+                onClick={() => { onAddToMealPlan(recipe); }}
                 iconLeft={<PlusCircleIcon className="h-5 w-5" />}
               >
                 Add to Meal Plan
@@ -280,7 +281,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         {/* Nutrition information */}
         {recipe.nutritional_info && (
           <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Nutrition Information</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Nutrition Information</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {recipe.nutritional_info.calories !== null && (
                 <div className="text-center">
@@ -326,7 +327,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Ingredients */}
           <div className="md:col-span-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
             <IngredientList
               ingredients={recipe.ingredients}
               servingsMultiplier={servingsMultiplier}
@@ -337,7 +338,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
           {/* Instructions */}
           <div className="md:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Instructions</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Instructions</h2>
             <InstructionSteps
               instructions={recipe.instructions}
               showCheckboxes

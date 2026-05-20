@@ -107,7 +107,7 @@ interface ExtendedGenerateRequest extends MealPlanGenerateRequest {
 // ============================================================================
 
 export const MealPlannerPage: React.FC = () => {
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -374,63 +374,70 @@ export const MealPlannerPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-gray-50">
+    <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] flex flex-col bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Meal Planner</h1>
-              <p className="text-sm text-gray-600 mt-1">
+        <div className="px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-shrink">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Meal Planner</h1>
+              <p className="text-sm text-gray-600 mt-0.5 hidden sm:block">
                 Drag and drop recipes to build your weekly meal plan
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            {/* Action Buttons — icon-only on mobile, icon+text on sm+ */}
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto flex-shrink-0">
               <button
                 onClick={handleSetStartDate}
-                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap"
                 title="Set start date"
               >
-                <Calendar className="w-4 h-4" />
-                {plan.startDate ? format(new Date(plan.startDate), 'MMM d') : 'Set Date'}
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  {plan.startDate ? format(new Date(plan.startDate), 'MMM d') : 'Set Date'}
+                </span>
               </button>
 
               <button
                 onClick={() => { setShowSettingsModal(true); }}
-                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap"
                 title="Nutrition goals"
               >
-                <Settings className="w-4 h-4" />
-                Goals
+                <Settings className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Goals</span>
               </button>
 
               <button
                 onClick={handleExport}
                 disabled={totalRecipes === 0}
-                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                title="Export plan"
               >
-                <Download className="w-4 h-4" />
-                Export
+                <Download className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Export</span>
               </button>
 
               <button
                 onClick={handleSavePlan}
                 disabled={totalRecipes === 0 || saveMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                title="Save plan"
               >
-                <Save className="w-4 h-4" />
-                {saveMutation.isPending ? 'Saving...' : 'Save Plan'}
+                <Save className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  {saveMutation.isPending ? 'Saving...' : 'Save Plan'}
+                </span>
               </button>
 
               <button
                 onClick={handleClearAll}
                 disabled={totalRecipes === 0}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                title="Clear all"
               >
-                <Trash2 className="w-4 h-4" />
-                Clear All
+                <Trash2 className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Clear All</span>
               </button>
             </div>
           </div>
@@ -447,7 +454,7 @@ export const MealPlannerPage: React.FC = () => {
       >
         <div className="flex-1 flex overflow-hidden">
           {/* Meal Planner Board */}
-          <div className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-2 sm:p-6">
             <BoardContent />
           </div>
 
@@ -468,7 +475,7 @@ export const MealPlannerPage: React.FC = () => {
             {/* Sidebar Toggle */}
             <button
               onClick={() => { setShowSidebar(!showSidebar); }}
-              className="absolute -left-4 top-6 w-8 h-8 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
+              className="absolute -left-5 top-6 w-10 h-10 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
               aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
             >
               {showSidebar ? (
@@ -497,7 +504,7 @@ export const MealPlannerPage: React.FC = () => {
       </DndContext>
 
       {/* Nutrition Summary Footer */}
-      <div className="border-t border-gray-200 bg-white">
+      <div className="border-t border-gray-200 bg-white pb-20 md:pb-0">
         <NutritionSummary className="shadow-none border-0 rounded-none" />
       </div>
 

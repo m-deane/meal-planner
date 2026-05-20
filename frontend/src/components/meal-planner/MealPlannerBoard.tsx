@@ -5,17 +5,17 @@
 import React from 'react';
 import {
   DndContext,
-  DragEndEvent,
   DragOverlay,
-  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useMealPlanStore, type DayOfWeek } from '../../store/mealPlanStore';
 import { DayColumn } from './DayColumn';
-import type { RecipeListItem, MealType } from '../../types';
+import { MealType } from '../../types';
+import type { RecipeListItem } from '../../types';
 import { DraggableRecipe } from './DraggableRecipe';
 
 // ============================================================================
@@ -45,6 +45,7 @@ const DAYS_OF_WEEK: DayOfWeek[] = [
   'sunday',
 ];
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const parseDragId = (
   id: string
 ): { day: DayOfWeek; mealType: MealType } | null => {
@@ -63,6 +64,7 @@ export const parseDragId = (
   return null;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const parseDropId = (
   id: string
 ): { day: DayOfWeek; mealType: MealType } | null => {
@@ -91,21 +93,22 @@ export const BoardContent: React.FC<BoardContentProps> = ({
   const { plan } = useMealPlanStore();
 
   return (
-    <div className={`${className}`}>
+    <div className={className}>
       {/* Days Grid - responsive columns that fill available space, scroll when needed */}
-      <div className="overflow-x-auto pb-4">
+      <div className="overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory">
         <div
           className="grid gap-3"
-          style={{ gridTemplateColumns: 'repeat(7, minmax(180px, 1fr))' }}
+          style={{ gridTemplateColumns: 'repeat(7, minmax(160px, 1fr))' }}
         >
           {DAYS_OF_WEEK.map((day) => (
-            <DayColumn
-              key={day}
-              day={day}
-              dayData={plan.days[day]}
-              startDate={plan.startDate}
-              showNutrition
-            />
+            <div key={day} className="snap-start">
+              <DayColumn
+                day={day}
+                dayData={plan.days[day]}
+                startDate={plan.startDate}
+                showNutrition
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -133,7 +136,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
     })
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = (event: DragStartEvent): void => {
     const { active } = event;
     setActiveId(active.id as string);
 
@@ -143,7 +146,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent): void => {
     const { active, over } = event;
 
     setActiveId(null);
@@ -165,7 +168,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
     }
 
     // Get the recipe data
-    const dragData = active.data.current as DragData;
+    const dragData = active.data.current as DragData | null;
 
     if (!dragData?.recipe) {
       return;
@@ -177,7 +180,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
     } else {
       // Moving within board
       const targetDayState = plan.days[target.day];
-      const targetMealKey = target.mealType === 'breakfast' ? 'breakfast' : target.mealType === 'lunch' ? 'lunch' : 'dinner';
+      const targetMealKey = target.mealType === MealType.BREAKFAST ? 'breakfast' : target.mealType === MealType.LUNCH ? 'lunch' : 'dinner';
       const targetSlot = targetDayState[targetMealKey];
 
       if (targetSlot) {
@@ -190,7 +193,7 @@ export const MealPlannerBoard: React.FC<MealPlannerBoardProps> = ({
     }
   };
 
-  const handleDragCancel = () => {
+  const handleDragCancel = (): void => {
     setActiveId(null);
     setActiveDragData(null);
   };
