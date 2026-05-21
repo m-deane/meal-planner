@@ -30,9 +30,12 @@ except Exception:
 
 print(f"Seeding database from {seed_file} ...", flush=True)
 with open(seed_file, "r", encoding="utf-8") as f:
-    sql = f.read()
+    lines = f.readlines()
 
-conn.executescript(sql)
+# Only execute INSERT statements — schema is already created by init-db
+inserts = [l for l in lines if l.strip().upper().startswith("INSERT")]
+insert_sql = "BEGIN TRANSACTION;\n" + "".join(inserts) + "\nCOMMIT;"
+conn.executescript(insert_sql)
 count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
 print(f"Seeded {count} recipes.", flush=True)
 conn.close()
