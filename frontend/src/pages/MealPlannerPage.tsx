@@ -379,6 +379,7 @@ export const MealPlannerPage: React.FC = () => {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-3 sm:px-6 py-3 sm:py-4">
+          {/* Title row */}
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-shrink">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Meal Planner</h1>
@@ -387,16 +388,16 @@ export const MealPlannerPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Action Buttons — icon-only on mobile, icon+text on sm+ */}
-            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto flex-shrink-0">
-              {/* Generate Plan — always prominent */}
+            {/* Secondary actions — icon-only on mobile, icon+text on sm+ */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Generate — shown in this row on sm+; hidden on mobile (shown in row below) */}
               <button
                 onClick={() => { setShowGenerateModal(true); }}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 whitespace-nowrap"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 whitespace-nowrap"
                 title="Generate meal plan"
               >
                 <Wand2 className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Generate</span>
+                Generate
               </button>
 
               <button
@@ -406,7 +407,7 @@ export const MealPlannerPage: React.FC = () => {
               >
                 <Calendar className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">
-                  {plan.startDate ? format(new Date(plan.startDate), 'MMM d') : 'Set Date'}
+                  {plan.startDate ? format(new Date(plan.startDate), 'MMM d') : 'Date'}
                 </span>
               </button>
 
@@ -422,11 +423,11 @@ export const MealPlannerPage: React.FC = () => {
               <button
                 onClick={handleExport}
                 disabled={totalRecipes === 0}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 title="Export plan"
               >
                 <Download className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Export</span>
+                Export
               </button>
 
               <button
@@ -437,7 +438,7 @@ export const MealPlannerPage: React.FC = () => {
               >
                 <Save className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">
-                  {saveMutation.isPending ? 'Saving...' : 'Save Plan'}
+                  {saveMutation.isPending ? 'Saving...' : 'Save'}
                 </span>
               </button>
 
@@ -448,19 +449,29 @@ export const MealPlannerPage: React.FC = () => {
                 title="Clear all"
               >
                 <Trash2 className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Clear All</span>
+                <span className="hidden sm:inline">Clear</span>
               </button>
 
-              {/* Sidebar toggle — in header so it's never clipped */}
               <button
                 onClick={() => { setShowSidebar(!showSidebar); }}
-                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap ${showSidebar ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300'}`}
+                className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap ${showSidebar ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300'}`}
                 title={showSidebar ? 'Hide recipe library' : 'Show recipe library'}
               >
                 <PanelRight className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Recipes</span>
+                Recipes
               </button>
             </div>
+          </div>
+
+          {/* Mobile-only Generate row — full-width, always visible */}
+          <div className="mt-2 sm:hidden">
+            <button
+              onClick={() => { setShowGenerateModal(true); }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+            >
+              <Wand2 className="w-4 h-4" />
+              Generate Meal Plan
+            </button>
           </div>
         </div>
       </header>
