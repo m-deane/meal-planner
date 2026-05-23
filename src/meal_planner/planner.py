@@ -63,6 +63,31 @@ class MealPlanner:
         """
         self.session = session
 
+    def _name_protein_score(self, recipe: Recipe) -> float:
+        """Score protein likelihood from recipe name and description alone."""
+        text = (recipe.name + ' ' + (recipe.description or '')).lower()
+        protein_keywords = [
+            'chicken', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'cod', 'basa',
+            'turkey', 'duck', 'lamb', 'prawn', 'shrimp', 'scallop',
+            'egg', 'tofu', 'tempeh', 'lentil', 'chickpea', 'bean',
+            'halloumi', 'mozzarella', 'cheese', 'feta',
+        ]
+        matches = sum(1 for kw in protein_keywords if kw in text)
+        score = min(matches * 25, 80)
+        return float(score)
+
+    def _name_carb_score(self, recipe: Recipe) -> float:
+        """Score carb content from recipe name and description alone."""
+        text = (recipe.name + ' ' + (recipe.description or '')).lower()
+        high_carb = ['pasta', 'spaghetti', 'noodle', 'rice', 'bread', 'tortilla',
+                     'potato', 'chips', 'fries', 'couscous', 'bulgur', 'gnocchi', 'dough']
+        low_carb = ['salad', 'chicken', 'fish', 'beef', 'pork', 'steak',
+                    'broccoli', 'cauliflower', 'courgette', 'spinach', 'kale']
+        carb_hits = sum(1 for kw in high_carb if kw in text)
+        low_hits = sum(1 for kw in low_carb if kw in text)
+        score = carb_hits * 25 - low_hits * 10
+        return float(max(0.0, min(score, 100.0)))
+
     def _calculate_protein_score(self, recipe: Recipe) -> float:
         """
         Calculate protein likelihood score based on ingredients.
@@ -78,7 +103,8 @@ class MealPlanner:
         ).all()
 
         if not ingredients:
-            return 0.0
+            # No ingredient data — fall back to name-based scoring
+            return self._name_protein_score(recipe)
 
         ingredient_names = ' '.join([ing.normalized_name for ing in ingredients]).lower()
 
@@ -117,7 +143,8 @@ class MealPlanner:
         ).all()
 
         if not ingredients:
-            return 100.0  # Assume high carb if no data
+            # No ingredient data — fall back to name-based scoring
+            return self._name_carb_score(recipe)
 
         ingredient_names = ' '.join([ing.normalized_name for ing in ingredients]).lower()
 
@@ -208,6 +235,19 @@ class MealPlanner:
 
         # Sort by protein score (high) and carb score (low)
         scored_recipes.sort(key=lambda x: (x[1], -x[2]), reverse=True)
+
+        # Safety net: if too few qualify, relax constraints progressively
+        if len(scored_recipes) < 21 and recipes:
+            logger.warning(
+                f"Only {len(scored_recipes)} recipes qualify; relaxing constraints"
+            )
+            scored_recipes = []
+            for recipe in recipes:
+                protein_score = self._calculate_protein_score(recipe)
+                carb_score = self._calculate_carb_score(recipe)
+                scored_recipes.append((recipe, protein_score, carb_score))
+            # Sort best first; still prefer higher protein / lower carb
+            scored_recipes.sort(key=lambda x: (x[1], -x[2]), reverse=True)
 
         return scored_recipes[:limit]
 
