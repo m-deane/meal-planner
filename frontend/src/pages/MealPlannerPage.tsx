@@ -36,9 +36,9 @@ import {
   Trash2,
   Download,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   Calendar,
+  Wand2,
+  PanelRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ConfirmModal } from '../components/common/ConfirmModal';
@@ -107,7 +107,8 @@ interface ExtendedGenerateRequest extends MealPlanGenerateRequest {
 // ============================================================================
 
 export const MealPlannerPage: React.FC = () => {
-  const [showSidebar, setShowSidebar] = useState(false);
+  // Open sidebar by default on desktop (≥768 px); keep closed on mobile
+  const [showSidebar, setShowSidebar] = useState(() => window.innerWidth >= 768);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -388,6 +389,16 @@ export const MealPlannerPage: React.FC = () => {
 
             {/* Action Buttons — icon-only on mobile, icon+text on sm+ */}
             <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto flex-shrink-0">
+              {/* Generate Plan — always prominent */}
+              <button
+                onClick={() => { setShowGenerateModal(true); }}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 whitespace-nowrap"
+                title="Generate meal plan"
+              >
+                <Wand2 className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Generate</span>
+              </button>
+
               <button
                 onClick={handleSetStartDate}
                 className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap"
@@ -439,6 +450,16 @@ export const MealPlannerPage: React.FC = () => {
                 <Trash2 className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">Clear All</span>
               </button>
+
+              {/* Sidebar toggle — in header so it's never clipped */}
+              <button
+                onClick={() => { setShowSidebar(!showSidebar); }}
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap ${showSidebar ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300'}`}
+                title={showSidebar ? 'Hide recipe library' : 'Show recipe library'}
+              >
+                <PanelRight className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Recipes</span>
+              </button>
             </div>
           </div>
         </div>
@@ -459,32 +480,14 @@ export const MealPlannerPage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div
-            className={`
-              relative transition-all duration-300 bg-white border-l border-gray-200
-              ${showSidebar ? 'w-96' : 'w-0'}
-            `}
-          >
-            {showSidebar && (
+          {showSidebar && (
+            <div className="w-80 xl:w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
               <PlannerSidebar
                 onGeneratePlan={() => { setShowGenerateModal(true); }}
                 isGenerating={generateMutation.isPending}
               />
-            )}
-
-            {/* Sidebar Toggle */}
-            <button
-              onClick={() => { setShowSidebar(!showSidebar); }}
-              className="absolute -left-5 top-6 w-10 h-10 bg-white border border-gray-300 rounded-full shadow-md hover:bg-gray-50 flex items-center justify-center"
-              aria-label={showSidebar ? 'Hide sidebar' : 'Show sidebar'}
-            >
-              {showSidebar ? (
-                <ChevronRight className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Drag Overlay */}
