@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY scripts/seed_db.py ./scripts/seed_db.py
 COPY data/seed.sql ./data/seed.sql
+COPY data/seed_ingredients.sql ./data/seed_ingredients.sql
 
 # Create minimal .env (env vars below override; avoids .env.example parse issues)
 RUN touch .env

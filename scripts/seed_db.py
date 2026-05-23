@@ -1,4 +1,4 @@
-"""Load seed.sql into the database if it exists and the recipes table is empty."""
+"""Load seed SQL files into the database if it exists and the recipes table is empty."""
 import sqlite3
 import os
 import sys
@@ -12,34 +12,58 @@ else:
     print("Non-SQLite database — skipping seed.", flush=True)
     sys.exit(0)
 
-seed_file = os.path.join(os.path.dirname(__file__), "..", "data", "seed.sql")
-seed_file = os.path.normpath(seed_file)
-
-if not os.path.exists(seed_file):
-    print(f"No seed file at {seed_file} — skipping.", flush=True)
-    sys.exit(0)
+base_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data"))
 
 conn = sqlite3.connect(db_file)
+
+
+def run_seed_file(path: str, insert_only: bool = False) -> None:
+    """Execute a seed SQL file against the open connection."""
+    if not os.path.exists(path):
+        print(f"No seed file at {path} — skipping.", flush=True)
+        return
+
+    print(f"Loading {path} ...", flush=True)
+    with open(path, "r", encoding="utf-8") as f:
+        sql = f.read()
+
+    if insert_only:
+        # Legacy mode: seed.sql came from sqlite3 .dump and contains CREATE TABLE
+        # statements that conflict with init-db. Filter to INSERT lines only and
+        # rewrite as INSERT OR IGNORE so duplicates are silently skipped.
+        lines = sql.splitlines(keepends=True)
+        insert_lines = [
+            l.replace("INSERT INTO", "INSERT OR IGNORE INTO", 1)
+            for l in lines
+            if l.strip().upper().startswith("INSERT")
+        ]
+        sql = "BEGIN TRANSACTION;\n" + "".join(insert_lines) + "\nCOMMIT;"
+
+    conn.executescript(sql)
+    print(f"  Done: {path}", flush=True)
+
+
 try:
     count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
     if count > 0:
-        print(f"Database already has {count} recipes — skipping seed.", flush=True)
+        print(f"Database already has {count} recipes — skipping recipe seed.", flush=True)
+        # Still seed ingredients if the table is empty (upgrade path)
+        ing_count = conn.execute("SELECT COUNT(*) FROM ingredients").fetchone()[0]
+        if ing_count == 0:
+            print("Ingredients table empty — seeding ingredients.", flush=True)
+            run_seed_file(os.path.join(base_dir, "seed_ingredients.sql"))
+        else:
+            print(f"Ingredients already seeded ({ing_count} rows) — skipping.", flush=True)
         sys.exit(0)
 except Exception:
     pass
 
-print(f"Seeding database from {seed_file} ...", flush=True)
-with open(seed_file, "r", encoding="utf-8") as f:
-    lines = f.readlines()
+# Fresh DB: seed recipes first (insert_only=True because seed.sql is a raw .dump)
+run_seed_file(os.path.join(base_dir, "seed.sql"), insert_only=True)
+# Then seed ingredients (already uses INSERT OR IGNORE, no filtering needed)
+run_seed_file(os.path.join(base_dir, "seed_ingredients.sql"))
 
-# Only execute INSERT statements — schema is already created by init-db.
-# Use INSERT OR IGNORE so rows already seeded by init-db are silently skipped.
-inserts = [
-    l.replace("INSERT INTO", "INSERT OR IGNORE INTO", 1)
-    for l in lines if l.strip().upper().startswith("INSERT")
-]
-insert_sql = "BEGIN TRANSACTION;\n" + "".join(inserts) + "\nCOMMIT;"
-conn.executescript(insert_sql)
 count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
-print(f"Seeded {count} recipes.", flush=True)
+ing_count = conn.execute("SELECT COUNT(*) FROM ingredients").fetchone()[0]
+print(f"Seeded {count} recipes, {ing_count} ingredients.", flush=True)
 conn.close()
