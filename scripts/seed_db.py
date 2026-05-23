@@ -32,8 +32,12 @@ print(f"Seeding database from {seed_file} ...", flush=True)
 with open(seed_file, "r", encoding="utf-8") as f:
     lines = f.readlines()
 
-# Only execute INSERT statements — schema is already created by init-db
-inserts = [l for l in lines if l.strip().upper().startswith("INSERT")]
+# Only execute INSERT statements — schema is already created by init-db.
+# Use INSERT OR IGNORE so rows already seeded by init-db are silently skipped.
+inserts = [
+    l.replace("INSERT INTO", "INSERT OR IGNORE INTO", 1)
+    for l in lines if l.strip().upper().startswith("INSERT")
+]
 insert_sql = "BEGIN TRANSACTION;\n" + "".join(inserts) + "\nCOMMIT;"
 conn.executescript(insert_sql)
 count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
