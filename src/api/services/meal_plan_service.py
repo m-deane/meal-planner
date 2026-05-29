@@ -90,7 +90,7 @@ class MealPlanService:
         Returns:
             Meal plan with nutrition analysis
         """
-        # Get filtered recipes
+        # Get recipes filtered by their ACTUAL nutrition values
         candidates = self.nutrition_planner.filter_by_actual_nutrition(
             min_protein_g=min_protein_g,
             max_carbs_g=max_carbs_g,
@@ -99,10 +99,10 @@ class MealPlanService:
             limit=200
         )
 
-        # Generate meal plan
-        meal_plan = self.nutrition_planner.generate_weekly_meal_plan(
-            min_protein_score=40.0,  # Use default scores for now
-            max_carb_score=30.0,
+        # Build the plan from those candidates so the requested macro
+        # constraints are actually honoured (previously they were discarded).
+        meal_plan = self.nutrition_planner.generate_weekly_meal_plan_from_candidates(
+            candidates,
             include_breakfast=include_breakfast,
             include_lunch=include_lunch,
             include_dinner=include_dinner

@@ -14,6 +14,7 @@ from src.database.models import (
     Recipe, Ingredient, RecipeIngredient, IngredientPrice,
     Unit, NutritionalInfo
 )
+from src.utils.food_taxonomy import categorize_ingredient
 from src.utils.logger import get_logger
 
 logger = get_logger("cost_estimator")
@@ -107,6 +108,9 @@ class CostEstimator:
             session: Database session
         """
         self.session = session
+        # Cache the per-100g BASE price keyed by ingredient id. Caching the
+        # final scaled cost (the previous behaviour) mispriced shared
+        # ingredients because the first recipe's quantity leaked into others.
         self._price_cache: Dict[int, Decimal] = {}
 
     def estimate_recipe_cost(
@@ -126,7 +130,28 @@ class CostEstimator:
         Returns:
             Estimated cost in GBP
         """
-        # Get recipe ingredients
+        total_cost, _ = self._recipe_cost_breakdown(
+            recipe, servings=servings, use_cache=use_cache
+        )
+        return total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    def _recipe_cost_breakdown(
+        self,
+        recipe: Recipe,
+        servings: int = 2,
+        use_cache: bool = True
+    ) -> Tuple[Decimal, Dict[str, Decimal]]:
+        """
+        Compute a recipe's total cost and its cost split by ingredient category,
+        both scaled to the requested number of servings.
+
+        Attributing each ingredient's actual estimated cost to its own category
+        (rather than splitting the total evenly) makes the by-category breakdown
+        and savings suggestions meaningful.
+
+        Returns:
+            (total_cost, {category: cost}) — unrounded.
+        """
         recipe_ingredients = self.session.query(
             RecipeIngredient, Ingredient, Unit
         ).join(
@@ -139,50 +164,43 @@ class CostEstimator:
 
         if not recipe_ingredients:
             logger.warning(f"No ingredients found for recipe {recipe.id}, using base estimate")
-            return Decimal('5.00')
+            # Allocate the base estimate to 'other' so totals reconcile.
+            return Decimal('5.00'), {'other': Decimal('5.00')}
 
-        total_cost = Decimal('0.00')
+        raw_total = Decimal('0.00')
+        by_category: Dict[str, Decimal] = defaultdict(lambda: Decimal('0.00'))
 
         for recipe_ing, ingredient, unit in recipe_ingredients:
-            # Get ingredient price
-            if use_cache and ingredient.id in self._price_cache:
-                ingredient_cost = self._price_cache[ingredient.id]
-            else:
-                ingredient_cost = self._get_ingredient_cost(
-                    ingredient=ingredient,
-                    quantity=recipe_ing.quantity,
-                    unit=unit
-                )
-                if use_cache:
-                    self._price_cache[ingredient.id] = ingredient_cost
+            ingredient_cost = self._get_ingredient_cost(
+                ingredient=ingredient,
+                quantity=recipe_ing.quantity,
+                unit=unit,
+                use_cache=use_cache,
+            )
+            raw_total += ingredient_cost
+            category = ingredient.category or categorize_ingredient(ingredient.normalized_name)
+            by_category[category] += ingredient_cost
 
-            total_cost += ingredient_cost
-
-        # Scale by servings
+        # Scale by servings relative to the recipe's own yield.
         if recipe.servings and recipe.servings > 0:
-            cost_per_serving = total_cost / Decimal(str(recipe.servings))
-            total_cost = cost_per_serving * Decimal(str(servings))
+            factor = Decimal(str(servings)) / Decimal(str(recipe.servings))
+            raw_total *= factor
+            for key in list(by_category.keys()):
+                by_category[key] *= factor
 
-        return total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return raw_total, dict(by_category)
 
-    def _get_ingredient_cost(
-        self,
-        ingredient: Ingredient,
-        quantity: Optional[Decimal],
-        unit: Optional[Unit]
-    ) -> Decimal:
+    def _base_price_per_100g(self, ingredient: Ingredient, use_cache: bool = True) -> Decimal:
         """
-        Get cost for a single ingredient.
+        Resolve an ingredient's base price per 100g.
 
-        Args:
-            ingredient: Ingredient object
-            quantity: Quantity needed
-            unit: Unit of measurement
-
-        Returns:
-            Cost in GBP
+        Prefers a stored 'average' IngredientPrice; otherwise falls back to the
+        category default (deriving the category from the name when the column is
+        unset). The per-100g base — not the scaled cost — is what gets cached.
         """
-        # Try to get actual price from database
+        if use_cache and ingredient.id in self._price_cache:
+            return self._price_cache[ingredient.id]
+
         price_record = self.session.query(IngredientPrice).filter(
             IngredientPrice.ingredient_id == ingredient.id,
             IngredientPrice.store == 'average'
@@ -191,26 +209,47 @@ class CostEstimator:
         ).first()
 
         if price_record:
-            price_per_unit = price_record.price_per_unit
+            base = Decimal(str(price_record.price_per_unit))
+        else:
+            category = ingredient.category or categorize_ingredient(ingredient.normalized_name)
+            base = self.DEFAULT_PRICES.get(category, self.DEFAULT_PRICES['other'])
 
-            # Convert quantity to price unit
-            if quantity and unit:
-                # Get quantity in grams for standardization
-                quantity_grams = self._estimate_quantity_grams(
-                    ingredient_name=ingredient.normalized_name,
-                    quantity=quantity,
-                    unit=unit
-                )
-                # Price is typically per 100g, so divide by 100
-                total_cost = price_per_unit * (quantity_grams / Decimal('100.0'))
-            else:
-                # Use price as-is if no quantity specified
-                total_cost = price_per_unit
+        if use_cache and ingredient.id is not None:
+            self._price_cache[ingredient.id] = base
 
-            return total_cost
+        return base
 
-        # Fallback to estimation
-        return self.estimate_ingredient_price(ingredient, quantity, unit)
+    def _get_ingredient_cost(
+        self,
+        ingredient: Ingredient,
+        quantity: Optional[Decimal],
+        unit: Optional[Unit],
+        use_cache: bool = True
+    ) -> Decimal:
+        """
+        Get cost for a single ingredient at the given quantity.
+
+        Args:
+            ingredient: Ingredient object
+            quantity: Quantity needed
+            unit: Unit of measurement
+            use_cache: Whether to use the per-100g price cache
+
+        Returns:
+            Cost in GBP (unrounded)
+        """
+        base_per_100g = self._base_price_per_100g(ingredient, use_cache=use_cache)
+
+        if quantity is None:
+            # No quantity available — assume a ~100g portion.
+            return base_per_100g
+
+        quantity_grams = self._estimate_quantity_grams(
+            ingredient_name=ingredient.normalized_name,
+            quantity=quantity,
+            unit=unit
+        )
+        return base_per_100g * (quantity_grams / Decimal('100.0'))
 
     def estimate_ingredient_price(
         self,
@@ -229,8 +268,9 @@ class CostEstimator:
         Returns:
             Estimated price in GBP
         """
-        # Get base price from category
-        category = ingredient.category or 'other'
+        # Get base price from category (derive from the name when unset, so the
+        # cost is not silently flattened to the 'other' default).
+        category = ingredient.category or categorize_ingredient(ingredient.normalized_name)
         base_price = self.DEFAULT_PRICES.get(category, self.DEFAULT_PRICES['other'])
 
         if not quantity:
@@ -327,22 +367,25 @@ class CostEstimator:
                 day_num = day.get('day_number', 0)
 
                 for meal_type, recipe in day.get('meals', {}).items():
-                    # Calculate recipe cost
-                    recipe_cost = self.estimate_recipe_cost(recipe, servings=servings_per_meal)
+                    # Calculate recipe cost and its per-category split together so
+                    # the category breakdown reconciles with the total.
+                    recipe_cost, recipe_by_category = self._recipe_cost_breakdown(
+                        recipe, servings=servings_per_meal
+                    )
+                    recipe_cost = recipe_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                     total_cost += recipe_cost
                     day_cost += recipe_cost
                     meal_count += 1
 
-                    # Track by category
-                    ingredients = self.session.query(Ingredient).join(RecipeIngredient).filter(
+                    for category, cost in recipe_by_category.items():
+                        by_category[category] += cost
+
+                    # Track unique ingredients
+                    ingredient_ids = self.session.query(RecipeIngredient.ingredient_id).filter(
                         RecipeIngredient.recipe_id == recipe.id
                     ).all()
-
-                    for ing in ingredients:
-                        all_ingredients.add(ing.id)
-                        category = ing.category or 'other'
-                        # Distribute recipe cost proportionally to ingredients
-                        by_category[category] += recipe_cost / Decimal(str(len(ingredients)))
+                    for (ing_id,) in ingredient_ids:
+                        all_ingredients.add(ing_id)
 
                 by_day[day_num] = day_cost
 
@@ -465,10 +508,8 @@ class CostEstimator:
             if cost_per_serving <= max_budget:
                 alternatives.append((candidate, cost_per_serving))
 
-            if len(alternatives) >= limit:
-                break
-
-        # Sort by cost
+        # Sort by cost first, then take the cheapest `limit` (do not break early,
+        # which would return an arbitrary subset rather than the cheapest).
         alternatives.sort(key=lambda x: x[1])
 
         return alternatives[:limit]

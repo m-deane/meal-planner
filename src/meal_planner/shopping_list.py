@@ -91,6 +91,65 @@ class ShoppingListGenerator:
 
         return 'Other'
 
+    def _aggregate_quantities(self, items: List[Dict]) -> Dict[str, Dict]:
+        """
+        Sum ingredient quantities, converting compatible units to a canonical
+        measure first.
+
+        Weight units are converted to grams (via ``Unit.metric_equivalent``) and
+        volume units to millilitres, so e.g. "200 g + 1 kg" reconciles to a
+        single "1200 g" rather than two fragmented lines. Count/unknown units
+        (cloves, "to taste", pieces) cannot be combined with weight/volume and
+        are kept under their own label. Large totals are rolled up to kg / l.
+        """
+        grams = 0.0
+        weight_count = 0
+        millis = 0.0
+        volume_count = 0
+        other = defaultdict(lambda: {'total': 0.0, 'count': 0, 'has_qty': False})
+
+        for item in items:
+            qty = item['quantity']
+            unit_type = item.get('unit_type')
+            metric_equivalent = item.get('metric_equivalent')
+
+            if unit_type == 'weight' and metric_equivalent is not None:
+                weight_count += 1
+                if qty:
+                    grams += qty * metric_equivalent
+            elif unit_type == 'volume' and metric_equivalent is not None:
+                volume_count += 1
+                if qty:
+                    millis += qty * metric_equivalent
+            else:
+                label = item.get('unit') or 'piece'
+                other[label]['count'] += 1
+                if qty:
+                    other[label]['total'] += qty
+                    other[label]['has_qty'] = True
+
+        quantities: Dict[str, Dict] = {}
+
+        if weight_count:
+            if grams >= 1000:
+                quantities['kg'] = {'total': round(grams / 1000, 3) if grams > 0 else None, 'count': weight_count}
+            else:
+                quantities['g'] = {'total': round(grams, 1) if grams > 0 else None, 'count': weight_count}
+
+        if volume_count:
+            if millis >= 1000:
+                quantities['l'] = {'total': round(millis / 1000, 3) if millis > 0 else None, 'count': volume_count}
+            else:
+                quantities['ml'] = {'total': round(millis, 1) if millis > 0 else None, 'count': volume_count}
+
+        for label, data in other.items():
+            quantities[label] = {
+                'total': data['total'] if data['has_qty'] and data['total'] > 0 else None,
+                'count': data['count'],
+            }
+
+        return quantities
+
     def generate_from_recipes(
         self,
         recipe_ids: List[int],
@@ -115,10 +174,19 @@ class ShoppingListGenerator:
             ).all()
 
             for ri in recipe_ingredients:
+                # Guard against orphaned associations with no ingredient row.
+                if ri.ingredient is None:
+                    continue
+                unit = ri.unit
                 ingredient_data[ri.ingredient.normalized_name].append({
                     'name': ri.ingredient.name,
                     'quantity': float(ri.quantity) if ri.quantity else None,
-                    'unit': ri.unit.abbreviation if ri.unit else None,
+                    'unit': unit.abbreviation if unit else None,
+                    'unit_type': unit.unit_type if unit else None,
+                    'metric_equivalent': (
+                        float(unit.metric_equivalent)
+                        if unit and unit.metric_equivalent is not None else None
+                    ),
                     'preparation': ri.preparation_note,
                     'recipe_id': recipe_id,
                     'original_name': ri.ingredient.name
@@ -132,21 +200,7 @@ class ShoppingListGenerator:
             display_name = max(set(item['original_name'] for item in items),
                              key=lambda x: sum(1 for item in items if item['original_name'] == x))
 
-            # Group by unit
-            by_unit = defaultdict(list)
-            for item in items:
-                unit = item['unit'] or 'piece'
-                by_unit[unit].append(item)
-
-            # Sum quantities by unit
-            quantities = {}
-            for unit, unit_items in by_unit.items():
-                total = sum(item['quantity'] for item in unit_items if item['quantity'])
-                count = len(unit_items)
-                quantities[unit] = {
-                    'total': total if total > 0 else None,
-                    'count': count
-                }
+            quantities = self._aggregate_quantities(items)
 
             # Get all preparation notes
             prep_notes = set(item['preparation'] for item in items if item['preparation'])
