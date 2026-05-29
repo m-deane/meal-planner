@@ -16,14 +16,10 @@ import type {
  * Login with username and password.
  */
 export const login = async (credentials: LoginRequest): Promise<TokenResponse> => {
-  const formData = new URLSearchParams();
-  formData.append('username', credentials.username);
-  formData.append('password', credentials.password);
-
-  const { data } = await apiClient.post<TokenResponse>('/auth/login', formData, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+  // The backend /auth/login expects a JSON LoginRequest body.
+  const { data } = await apiClient.post<TokenResponse>('/auth/login', {
+    username: credentials.username,
+    password: credentials.password,
   });
 
   // Store token in localStorage
@@ -66,7 +62,8 @@ export const getMe = async (): Promise<User> => {
  * Update current user profile.
  */
 export const updateMe = async (userData: UserUpdateRequest): Promise<User> => {
-  const { data } = await apiClient.patch<User>('/auth/me', userData);
+  // Backend exposes PUT /auth/me (not PATCH).
+  const { data } = await apiClient.put<User>('/auth/me', userData);
   return data;
 };
 

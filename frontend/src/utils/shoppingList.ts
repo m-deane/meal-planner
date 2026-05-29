@@ -3,11 +3,40 @@
  */
 
 import type { ShoppingListItem } from '../store/shoppingListStore';
-import type { IngredientCategory } from '../types';
+import { IngredientCategory } from '../types';
 
 // ============================================================================
 // CATEGORY DISPLAY
 // ============================================================================
+
+/**
+ * Map a backend ShoppingCategory name (e.g. "Grains & Pasta") to the UI
+ * IngredientCategory enum. Replaces the previous lossy slugify that collapsed
+ * most multi-word categories into unmatched slugs (falling back to "Other").
+ */
+export const mapBackendCategoryName = (name: string): IngredientCategory => {
+  const lookup: Record<string, IngredientCategory> = {
+    proteins: IngredientCategory.PROTEIN,
+    protein: IngredientCategory.PROTEIN,
+    dairy: IngredientCategory.DAIRY,
+    'dairy & eggs': IngredientCategory.DAIRY,
+    vegetables: IngredientCategory.VEGETABLES,
+    fruits: IngredientCategory.FRUITS,
+    'grains & pasta': IngredientCategory.GRAINS,
+    grains: IngredientCategory.GRAINS,
+    legumes: IngredientCategory.PANTRY,
+    'herbs & spices': IngredientCategory.SPICES,
+    spices: IngredientCategory.SPICES,
+    'sauces & condiments': IngredientCategory.CONDIMENTS,
+    condiments: IngredientCategory.CONDIMENTS,
+    'nuts & seeds': IngredientCategory.PANTRY,
+    beverages: IngredientCategory.BEVERAGES,
+    frozen: IngredientCategory.FROZEN,
+    bakery: IngredientCategory.BAKERY,
+    other: IngredientCategory.OTHER,
+  };
+  return lookup[name.trim().toLowerCase()] ?? IngredientCategory.OTHER;
+};
 
 export const getCategoryDisplayName = (category: IngredientCategory): string => {
   const displayNames: Record<IngredientCategory, string> = {

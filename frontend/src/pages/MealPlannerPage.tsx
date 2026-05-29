@@ -7,6 +7,8 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
@@ -133,13 +135,24 @@ export const MealPlannerPage: React.FC = () => {
 
   const totalRecipes = getTotalRecipes();
 
-  // Configure drag sensors
+  // Configure drag sensors:
+  // - PointerSensor for mouse (small movement threshold)
+  // - TouchSensor with a short hold delay so the board can still be scrolled on
+  //   touch devices before a drag begins
+  // - KeyboardSensor so the drag-and-drop planner is fully keyboard-accessible
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8, // 8px movement required to start drag
       },
-    })
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor)
   );
 
   const handleDragStart = (event: DragStartEvent): void => {
@@ -454,11 +467,12 @@ export const MealPlannerPage: React.FC = () => {
 
               <button
                 onClick={() => { setShowSidebar(!showSidebar); }}
-                className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap ${showSidebar ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300'}`}
+                className={`flex items-center gap-2 px-2 sm:px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap ${showSidebar ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300'}`}
                 title={showSidebar ? 'Hide recipe library' : 'Show recipe library'}
+                aria-pressed={showSidebar}
               >
                 <PanelRight className="w-4 h-4 flex-shrink-0" />
-                Recipes
+                <span className="hidden sm:inline">Recipes</span>
               </button>
             </div>
           </div>
@@ -490,9 +504,19 @@ export const MealPlannerPage: React.FC = () => {
             <BoardContent />
           </div>
 
-          {/* Sidebar */}
+          {/* Recipe library sidebar.
+              On mobile this is a bottom sheet so the board stays visible above
+              and recipes can be dragged up onto a meal slot; on >=sm it is the
+              usual side column. */}
           {showSidebar && (
-            <div className="w-80 xl:w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
+            <div
+              className="
+                bg-white border-gray-200 overflow-y-auto
+                fixed bottom-0 left-0 right-0 z-40 max-h-[60vh] border-t rounded-t-xl shadow-2xl
+                sm:static sm:max-h-none sm:rounded-none sm:shadow-none sm:border-t-0
+                sm:border-l sm:w-80 xl:w-96 sm:flex-shrink-0 sm:z-auto
+              "
+            >
               <PlannerSidebar
                 onGeneratePlan={() => { setShowGenerateModal(true); }}
                 isGenerating={generateMutation.isPending}
