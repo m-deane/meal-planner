@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import List, Optional, Dict, Any
 
 from sqlalchemy import and_, or_, func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from .models import (
     Recipe, Category, Ingredient, RecipeIngredient, DietaryTag,
@@ -125,8 +125,82 @@ class RecipeQuery:
         Returns:
             List of filtered recipes
         """
-        query = self.session.query(Recipe).filter(Recipe.is_active == True)
+        nutrition_filtered = any(
+            v is not None for v in (min_calories, max_calories, min_protein, max_carbs)
+        )
 
+        query = self._apply_recipe_filters(
+            self.session.query(Recipe).filter(Recipe.is_active == True),
+            category_ids=category_ids,
+            categories=categories,
+            dietary_tag_ids=dietary_tag_ids,
+            dietary_tags=dietary_tags,
+            exclude_allergen_ids=exclude_allergen_ids,
+            exclude_allergens=exclude_allergens,
+            max_cooking_time=max_cooking_time,
+            difficulty=difficulty,
+            min_calories=min_calories,
+            max_calories=max_calories,
+            min_protein=min_protein,
+            max_carbs=max_carbs,
+        )
+
+        # Ordering - supports descending with '-' prefix (e.g., '-calories')
+        descending = order_by.startswith('-') if order_by else False
+        sort_field = order_by.lstrip('-') if order_by else 'name'
+
+        if sort_field == 'cooking_time':
+            sort_col = Recipe.cooking_time_minutes
+            if descending:
+                query = query.order_by(sort_col.desc())
+            else:
+                query = query.order_by(sort_col)
+        elif sort_field == 'calories':
+            # Only join if not already joined for nutrition filters
+            if not nutrition_filtered:
+                query = query.join(Recipe.nutritional_info)
+            if descending:
+                query = query.order_by(NutritionalInfo.calories.desc())
+            else:
+                query = query.order_by(NutritionalInfo.calories)
+        elif sort_field == 'protein':
+            # Only join if not already joined for nutrition filters
+            if not nutrition_filtered:
+                query = query.join(Recipe.nutritional_info)
+            if descending:
+                query = query.order_by(NutritionalInfo.protein_g.desc())
+            else:
+                query = query.order_by(NutritionalInfo.protein_g)
+        else:  # Default to name
+            if descending:
+                query = query.order_by(Recipe.name.desc())
+            else:
+                query = query.order_by(Recipe.name)
+
+        return query.limit(limit).offset(offset).all()
+
+    def _apply_recipe_filters(
+        self,
+        query,
+        category_ids: Optional[List[int]] = None,
+        categories: Optional[List[str]] = None,
+        dietary_tag_ids: Optional[List[int]] = None,
+        dietary_tags: Optional[List[str]] = None,
+        exclude_allergen_ids: Optional[List[int]] = None,
+        exclude_allergens: Optional[List[str]] = None,
+        max_cooking_time: Optional[int] = None,
+        difficulty: Optional[str] = None,
+        min_calories: Optional[int] = None,
+        max_calories: Optional[int] = None,
+        min_protein: Optional[float] = None,
+        max_carbs: Optional[float] = None,
+    ):
+        """
+        Apply the shared recipe filtering predicates to a base query.
+
+        Used by both filter_recipes (list) and count_filtered_recipes (total) so
+        the reported total always matches the filtered result set.
+        """
         # Category filter by ID (OR - match any category)
         if category_ids:
             query = query.join(Recipe.categories).filter(
@@ -178,8 +252,8 @@ class RecipeQuery:
         if difficulty:
             query = query.filter(Recipe.difficulty == difficulty)
 
-        # Nutritional filters
-        if any([min_calories, max_calories, min_protein, max_carbs]):
+        # Nutritional filters (use `is not None` so a 0 bound is respected)
+        if any(v is not None for v in (min_calories, max_calories, min_protein, max_carbs)):
             query = query.join(Recipe.nutritional_info)
 
             if min_calories is not None:
@@ -191,39 +265,40 @@ class RecipeQuery:
             if max_carbs is not None:
                 query = query.filter(NutritionalInfo.carbohydrates_g <= max_carbs)
 
-        # Ordering - supports descending with '-' prefix (e.g., '-calories')
-        descending = order_by.startswith('-') if order_by else False
-        sort_field = order_by.lstrip('-') if order_by else 'name'
+        return query
 
-        if sort_field == 'cooking_time':
-            sort_col = Recipe.cooking_time_minutes
-            if descending:
-                query = query.order_by(sort_col.desc())
-            else:
-                query = query.order_by(sort_col)
-        elif sort_field == 'calories':
-            # Only join if not already joined for nutrition filters
-            if not any([min_calories, max_calories, min_protein, max_carbs]):
-                query = query.join(Recipe.nutritional_info)
-            if descending:
-                query = query.order_by(NutritionalInfo.calories.desc())
-            else:
-                query = query.order_by(NutritionalInfo.calories)
-        elif sort_field == 'protein':
-            # Only join if not already joined for nutrition filters
-            if not any([min_calories, max_calories, min_protein, max_carbs]):
-                query = query.join(Recipe.nutritional_info)
-            if descending:
-                query = query.order_by(NutritionalInfo.protein_g.desc())
-            else:
-                query = query.order_by(NutritionalInfo.protein_g)
-        else:  # Default to name
-            if descending:
-                query = query.order_by(Recipe.name.desc())
-            else:
-                query = query.order_by(Recipe.name)
-
-        return query.limit(limit).offset(offset).all()
+    def count_filtered_recipes(
+        self,
+        category_ids: Optional[List[int]] = None,
+        categories: Optional[List[str]] = None,
+        dietary_tag_ids: Optional[List[int]] = None,
+        dietary_tags: Optional[List[str]] = None,
+        exclude_allergen_ids: Optional[List[int]] = None,
+        exclude_allergens: Optional[List[str]] = None,
+        max_cooking_time: Optional[int] = None,
+        difficulty: Optional[str] = None,
+        min_calories: Optional[int] = None,
+        max_calories: Optional[int] = None,
+        min_protein: Optional[float] = None,
+        max_carbs: Optional[float] = None,
+    ) -> int:
+        """Count recipes matching the same filters as filter_recipes."""
+        query = self._apply_recipe_filters(
+            self.session.query(Recipe.id).filter(Recipe.is_active == True),
+            category_ids=category_ids,
+            categories=categories,
+            dietary_tag_ids=dietary_tag_ids,
+            dietary_tags=dietary_tags,
+            exclude_allergen_ids=exclude_allergen_ids,
+            exclude_allergens=exclude_allergens,
+            max_cooking_time=max_cooking_time,
+            difficulty=difficulty,
+            min_calories=min_calories,
+            max_calories=max_calories,
+            min_protein=min_protein,
+            max_carbs=max_carbs,
+        )
+        return query.distinct().count()
 
     def get_recipes_by_ingredient(
         self,

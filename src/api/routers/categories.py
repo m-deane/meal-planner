@@ -57,6 +57,35 @@ def list_categories(
     ]
 
 
+# NOTE: static paths must be declared BEFORE the dynamic "/{slug}" route,
+# otherwise FastAPI matches them as a slug and they become unreachable.
+@router.get(
+    "/dietary-tags",
+    response_model=List[DietaryTagResponse],
+    summary="List all dietary tags",
+    deprecated=True,
+    description="Use /dietary-tags endpoint instead"
+)
+def list_dietary_tags_deprecated(
+    db: DatabaseSession,
+    user: OptionalUser = None,
+):
+    """
+    Get all dietary tags (deprecated - use /dietary-tags instead).
+    """
+    tags = db.query(DietaryTag).order_by(DietaryTag.name).all()
+
+    return [
+        DietaryTagResponse(
+            id=tag.id,
+            name=tag.name,
+            slug=tag.slug,
+            description=tag.description
+        )
+        for tag in tags
+    ]
+
+
 @router.get(
     "/{slug}",
     response_model=CategoryResponse,
@@ -88,33 +117,6 @@ def get_category_by_slug(
         category_type=category.category_type,
         description=category.description
     )
-
-
-@router.get(
-    "/dietary-tags",
-    response_model=List[DietaryTagResponse],
-    summary="List all dietary tags",
-    deprecated=True,
-    description="Use /dietary-tags endpoint instead"
-)
-def list_dietary_tags_deprecated(
-    db: DatabaseSession,
-    user: OptionalUser = None,
-):
-    """
-    Get all dietary tags (deprecated - use /dietary-tags instead).
-    """
-    tags = db.query(DietaryTag).order_by(DietaryTag.name).all()
-
-    return [
-        DietaryTagResponse(
-            id=tag.id,
-            name=tag.name,
-            slug=tag.slug,
-            description=tag.description
-        )
-        for tag in tags
-    ]
 
 
 # Dietary tags router (separate from categories)

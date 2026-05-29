@@ -89,10 +89,9 @@ class InstructionResponse(BaseModel):
     instruction: Optional[str] = Field(None, description="Step instruction text", alias="text")
     time_minutes: Optional[int] = Field(None, ge=0, description="Time required for this step")
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
     model_config = ConfigDict(
         from_attributes=True,
+        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {
@@ -116,10 +115,9 @@ class ImageResponse(BaseModel):
     width: Optional[int] = Field(None, description="Image width in pixels")
     height: Optional[int] = Field(None, description="Image height in pixels")
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
     model_config = ConfigDict(
         from_attributes=True,
+        populate_by_name=True,
         json_schema_extra={
             "examples": [
                 {

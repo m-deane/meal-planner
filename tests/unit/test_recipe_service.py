@@ -133,7 +133,7 @@ class TestRecipeService:
         assert len(result['allergens']) == 1
         assert len(result['ingredients']) == 1
         assert len(result['instructions']) == 1
-        assert result['nutrition'] is not None
+        assert result['nutritional_info'] is not None
 
     def test_get_recipe_by_id_not_found(self, recipe_service):
         """Test getting non-existent recipe."""
@@ -211,7 +211,7 @@ class TestRecipeService:
     def test_get_recipes_with_filters(self, recipe_service, sample_recipe):
         """Test getting recipes with filters and pagination."""
         recipe_service.query.filter_recipes = Mock(return_value=[sample_recipe])
-        recipe_service.query.get_recipe_count = Mock(return_value=1)
+        recipe_service.query.count_filtered_recipes = Mock(return_value=1)
 
         result = recipe_service.get_recipes(
             categories=['italian'],
@@ -265,7 +265,7 @@ class TestRecipeService:
         assert result['difficulty'] == 'easy'
         assert 'categories' in result
         assert 'dietary_tags' in result
-        assert 'image' in result
+        assert 'main_image' in result
         assert 'nutrition_summary' in result
 
     def test_serialize_recipe_full(self, recipe_service, sample_recipe):
@@ -276,7 +276,7 @@ class TestRecipeService:
         assert result['gousto_id'] == 'test-123'
         assert 'ingredients' in result
         assert 'instructions' in result
-        assert 'nutrition' in result
+        assert 'nutritional_info' in result
         assert 'allergens' in result
         assert len(result['ingredients']) == 1
         assert len(result['instructions']) == 1
