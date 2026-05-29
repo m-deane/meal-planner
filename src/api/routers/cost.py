@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import DatabaseSession, OptionalUser
+from src.api.dependencies import DatabaseSession, OptionalUser, safe_error_detail
 from src.api.schemas.cost import (
     RecipeCostResponse,
     MealPlanCostBreakdown,
@@ -78,7 +78,7 @@ def get_recipes_within_budget(
                         source_url=recipe.source_url,
                         description=recipe.description
                     ),
-                    cost=float(cost_per_serving * Decimal('2.0')),  # Assume 2 servings
+                    cost=float(cost_per_serving * Decimal(str(recipe.servings or 2))),
                     cost_per_serving=float(cost_per_serving)
                 )
             )
@@ -95,11 +95,13 @@ def get_recipes_within_budget(
             average_cost=avg_cost
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error finding budget recipes: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to find budget recipes: {str(e)}"
+            detail=safe_error_detail("Failed to find budget recipes", e)
         )
 
 
@@ -158,11 +160,13 @@ def get_recipe_cost(
             missing_prices=None
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error estimating cost for recipe {recipe_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to estimate recipe cost: {str(e)}"
+            detail=safe_error_detail("Failed to estimate recipe cost", e)
         )
 
 
@@ -252,7 +256,7 @@ def estimate_meal_plan_cost(
         logger.error(f"Error estimating meal plan cost: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to estimate meal plan cost: {str(e)}"
+            detail=safe_error_detail("Failed to estimate meal plan cost", e)
         )
 
 
@@ -322,7 +326,7 @@ def get_budget_alternatives(
                         source_url=alt_recipe.source_url,
                         description=alt_recipe.description
                     ),
-                    cost=float(cost_per_serving * Decimal('2.0')),
+                    cost=float(cost_per_serving * Decimal(str(alt_recipe.servings or 2))),
                     cost_per_serving=float(cost_per_serving)
                 )
             )
@@ -339,9 +343,11 @@ def get_budget_alternatives(
             average_cost=avg_cost
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error finding budget alternatives for recipe {recipe_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to find budget alternatives: {str(e)}"
+            detail=safe_error_detail("Failed to find budget alternatives", e)
         )

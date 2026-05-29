@@ -15,12 +15,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.config import config
+from src.api.config import api_config
 from src.database.models import (
     Base, Recipe, Ingredient, Unit, Category, User, UserPreference,
     Allergen, DietaryTag
 )
 from src.utils.checkpoint import CheckpointManager
 from src.utils.http_client import RateLimitedHTTPClient
+
+# Ensure a hermetic, production-like API configuration during the whole test
+# session, regardless of any local .env file (which may set API_DEBUG=true).
+# This keeps error-handler tests asserting production behaviour deterministic.
+# Individual tests that need debug behaviour set it explicitly.
+api_config.api_debug = False
 
 
 @pytest.fixture(scope="session")

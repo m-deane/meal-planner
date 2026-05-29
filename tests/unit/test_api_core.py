@@ -44,7 +44,8 @@ class TestAPIConfig:
 
     def test_api_config_defaults(self):
         """Test default API configuration values."""
-        config = APIConfig()
+        # _env_file=None ignores any local .env so we assert true code defaults.
+        config = APIConfig(_env_file=None)
 
         assert config.api_host == "0.0.0.0"
         assert config.api_port == 8000
@@ -61,9 +62,13 @@ class TestAPIConfig:
         config = APIConfig(cors_origins=["http://localhost:3000", "https://example.com"])
         assert len(config.cors_origins) == 2
 
-        # Wildcard allowed
-        config = APIConfig(cors_origins=["*"])
+        # Wildcard is only allowed when credentials are disabled
+        config = APIConfig(cors_origins=["*"], cors_allow_credentials=False)
         assert config.cors_origins == ["*"]
+
+        # Wildcard combined with credentials must be rejected (security)
+        with pytest.raises(ValueError, match="wildcard"):
+            APIConfig(cors_origins=["*"], cors_allow_credentials=True)
 
         # Invalid origin should raise error
         with pytest.raises(ValueError, match="Invalid CORS origin format"):
@@ -140,8 +145,10 @@ class TestJWTAuthentication:
             algorithms=[api_config.jwt_algorithm]
         )
 
-        # Check expiration is approximately 30 minutes from now
-        exp_time = datetime.fromtimestamp(decoded["exp"])
+        # Check expiration is approximately 30 minutes from now.
+        # Tokens encode exp from datetime.utcnow(), so decode with utcfromtimestamp
+        # to avoid a local-vs-UTC offset (e.g. BST) skewing the comparison.
+        exp_time = datetime.utcfromtimestamp(decoded["exp"])
         expected_exp = datetime.utcnow() + expires_delta
         time_diff = abs((exp_time - expected_exp).total_seconds())
 

@@ -8,7 +8,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import DatabaseSession, OptionalUser
+from src.api.dependencies import DatabaseSession, OptionalUser, safe_error_detail
 from src.api.services.shopping_list_service import ShoppingListService
 from src.api.schemas import ShoppingListGenerateRequest
 from src.database.models import Recipe
@@ -66,10 +66,12 @@ def generate_shopping_list(
 
         return shopping_list
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate shopping list: {str(e)}"
+            detail=safe_error_detail("Failed to generate shopping list", e)
         )
 
 
@@ -139,6 +141,8 @@ def generate_shopping_list_from_meal_plan(
 
         return shopping_list
 
+    except HTTPException:
+        raise
     except KeyError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -147,7 +151,7 @@ def generate_shopping_list_from_meal_plan(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate shopping list from meal plan: {str(e)}"
+            detail=safe_error_detail("Failed to generate shopping list from meal plan", e)
         )
 
 
@@ -191,10 +195,12 @@ def generate_compact_shopping_list(
 
         return shopping_list
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate compact shopping list: {str(e)}"
+            detail=safe_error_detail("Failed to generate compact shopping list", e)
         )
 
 

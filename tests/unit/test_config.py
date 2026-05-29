@@ -17,7 +17,8 @@ class TestConfig:
 
     def test_default_values(self):
         """Test default configuration values."""
-        config = Config()
+        # _env_file=None ignores any local .env so we assert true code defaults.
+        config = Config(_env_file=None)
 
         assert config.database_url == 'sqlite:///recipes.db'
         assert config.scraper_delay_seconds == 3.0
