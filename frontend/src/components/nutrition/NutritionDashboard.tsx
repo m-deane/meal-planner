@@ -55,8 +55,10 @@ export const NutritionDashboard: React.FC<NutritionDashboardProps> = ({
   const { getDayNutrition, getDailyAverage, plan } = useMealPlanStore();
   const { goals } = useNutritionGoalsStore();
 
-  // Calculate all nutrition data
-  const dailyAverage = useMemo(() => getDailyAverage(), [getDailyAverage]);
+  // Calculate all nutrition data. These selectors read the current plan, so we
+  // must depend on plan.days (the actual data) — depending only on the Zustand
+  // action refs, which are stable, would freeze these on the first render.
+  const dailyAverage = useMemo(() => getDailyAverage(), [getDailyAverage, plan.days]);
 
   // Prepare weekly trends data
   const weeklyTrendsData = useMemo(() => {
@@ -70,7 +72,7 @@ export const NutritionDashboard: React.FC<NutritionDashboardProps> = ({
         fat_g: nutrition.fat_g,
       };
     });
-  }, [getDayNutrition]);
+  }, [getDayNutrition, plan.days]);
 
   // Prepare daily breakdown data
   const dailyBreakdownData = useMemo(() => {

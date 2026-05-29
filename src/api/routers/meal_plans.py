@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import DatabaseSession, OptionalUser
+from src.api.dependencies import DatabaseSession, OptionalUser, safe_error_detail
 from src.api.services.meal_plan_service import MealPlanService
 from src.api.schemas import MealPlanGenerateRequest, MealPlanResponse
 
@@ -62,10 +62,12 @@ def generate_meal_plan(
 
         return meal_plan
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate meal plan: {str(e)}"
+            detail=safe_error_detail("Failed to generate meal plan", e)
         )
 
 
@@ -118,10 +120,12 @@ def generate_nutrition_meal_plan(
 
         return meal_plan
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate nutrition meal plan: {str(e)}"
+            detail=safe_error_detail("Failed to generate nutrition meal plan", e)
         )
 
 

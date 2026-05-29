@@ -483,6 +483,8 @@ class User(Base):
     full_name = Column(String(200))
     is_active = Column(Boolean, default=True, index=True)
     is_verified = Column(Boolean, default=False)
+    # Bumped on logout / password change to revoke previously-issued JWTs.
+    token_version = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     last_login = Column(DateTime)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

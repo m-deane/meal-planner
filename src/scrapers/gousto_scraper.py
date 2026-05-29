@@ -16,11 +16,13 @@ from src.config import config
 from src.database.connection import get_db_session
 from src.database.models import (
     Recipe, Category, Ingredient, Unit, CookingInstruction,
-    NutritionalInfo, Image, RecipeIngredient, ScrapingHistory
+    NutritionalInfo, Image, RecipeIngredient, ScrapingHistory,
+    Allergen, RecipeAllergen
 )
 from src.scrapers.data_normalizer import create_data_normalizer
 from src.scrapers.recipe_discoverer import create_recipe_discoverer
 from src.utils.checkpoint import CheckpointManager, create_checkpoint_manager
+from src.utils.food_taxonomy import categorize_ingredient, detect_allergens
 from src.utils.http_client import create_http_client
 from src.utils.logger import get_logger
 from src.validators.data_validator import validate_recipe
@@ -102,9 +104,16 @@ class GoustoScraper:
             checkpoint = self.checkpoint_manager.load()
             if checkpoint:
                 logger.info("Resuming from checkpoint")
-                urls = checkpoint.pending_urls
+                # Retry both pending and previously-failed URLs so a resume is a
+                # true recovery rather than silently abandoning failures.
+                pending = list(checkpoint.pending_urls)
+                retry_failed = [u for u in checkpoint.failed_urls if u not in checkpoint.pending_urls]
+                urls = pending + retry_failed
                 self.stats['success'] = checkpoint.success_count
-                self.stats['failed'] = checkpoint.failure_count
+                # Reset failure tracking so retried failures are recounted fresh.
+                self.stats['failed'] = 0
+                checkpoint.failed_urls.clear()
+                checkpoint.failure_count = 0
             else:
                 logger.warning("No checkpoint found, starting fresh")
                 resume = False
@@ -131,7 +140,9 @@ class GoustoScraper:
 
         logger.info(f"Starting scrape of {len(urls)} recipes")
 
-        for i, url in enumerate(urls, start=1):
+        # Iterate a snapshot so that checkpoint updates (which remove from
+        # pending_urls) cannot perturb iteration and skip URLs.
+        for i, url in enumerate(list(urls), start=1):
             try:
                 logger.info(f"[{i}/{len(urls)}] Scraping: {url}")
 
@@ -355,6 +366,9 @@ class GoustoScraper:
             if recipe_data.get('ingredients'):
                 for idx, ing_data in enumerate(recipe_data['ingredients']):
                     self._add_ingredient_to_recipe(recipe, ing_data, idx)
+                # Derive allergens from the ingredient list so allergen
+                # filtering has data to work with.
+                self._populate_recipe_allergens(recipe, recipe_data['ingredients'])
 
             if recipe_data.get('instructions'):
                 for inst_data in recipe_data['instructions']:
@@ -407,6 +421,37 @@ class GoustoScraper:
 
         return category
 
+    def _populate_recipe_allergens(self, recipe: Recipe, ingredients: List[Dict]) -> None:
+        """
+        Detect allergens from a recipe's ingredient names and link them.
+
+        recipe-scrapers does not reliably expose allergens, so they are derived
+        from the ingredient list using the shared food taxonomy. This is what
+        makes the allergen filter actually function on scraped data.
+        """
+        detected: set = set()
+        for ing_data in ingredients:
+            detected |= detect_allergens(ing_data.get('name', ''))
+
+        if not detected:
+            return
+
+        for allergen_name in detected:
+            allergen = self.session.query(Allergen).filter_by(name=allergen_name).first()
+            if not allergen:
+                # Allergen lookup table is seeded; create defensively if missing.
+                allergen = Allergen(name=allergen_name)
+                self.session.add(allergen)
+                self.session.flush()
+
+            exists = self.session.query(RecipeAllergen).filter_by(
+                recipe_id=recipe.id, allergen_id=allergen.id
+            ).first()
+            if not exists:
+                self.session.add(
+                    RecipeAllergen(recipe_id=recipe.id, allergen_id=allergen.id)
+                )
+
     def _get_or_create_ingredient(self, name: str) -> Ingredient:
         """Get or create ingredient."""
         normalized_name = name.lower().strip()
@@ -418,10 +463,15 @@ class GoustoScraper:
         if not ingredient:
             ingredient = Ingredient(
                 name=name,
-                normalized_name=normalized_name
+                normalized_name=normalized_name,
+                category=categorize_ingredient(normalized_name),
+                is_allergen=bool(detect_allergens(normalized_name)),
             )
             self.session.add(ingredient)
             self.session.flush()
+        elif ingredient.category is None:
+            # Backfill category for ingredients created before classification.
+            ingredient.category = categorize_ingredient(normalized_name)
 
         return ingredient
 

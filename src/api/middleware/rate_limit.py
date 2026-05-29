@@ -3,9 +3,10 @@ Rate limiting middleware for FastAPI.
 Simple in-memory rate limiter with configurable requests per minute.
 """
 
+import os
 import time
 from collections import defaultdict, deque
-from typing import Callable, DefaultDict, Deque, Tuple
+from typing import Callable, DefaultDict, Deque, Set, Tuple
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
@@ -45,6 +46,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         self.enabled = api_config.rate_limit_enabled
         self.requests_per_minute = api_config.rate_limit_per_minute
+
+        # Forwarded headers (X-Forwarded-For / X-Real-IP) are only trusted when
+        # the direct peer is a known proxy. Otherwise any client could spoof the
+        # header and trivially bypass per-IP limits. Configure via the
+        # TRUSTED_PROXIES env var (comma-separated IPs).
+        self.trusted_proxies: Set[str] = {
+            ip.strip()
+            for ip in os.environ.get("TRUSTED_PROXIES", "").split(",")
+            if ip.strip()
+        }
 
         # Store request timestamps per IP: {ip: deque([timestamp1, timestamp2, ...])}
         self.request_history: DefaultDict[str, Deque[float]] = defaultdict(deque)
@@ -137,7 +148,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _get_client_ip(self, request: Request) -> str:
         """
         Extract client IP from request.
-        Checks X-Forwarded-For header first (for proxies).
+
+        Forwarded headers (X-Forwarded-For / X-Real-IP) are honoured only when
+        the direct connection comes from a configured trusted proxy; otherwise
+        they are ignored to prevent rate-limit bypass via header spoofing.
 
         Args:
             request: Incoming request
@@ -145,22 +159,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         Returns:
             Client IP address
         """
-        # Check X-Forwarded-For header (set by proxies)
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for:
-            # Take first IP in chain
-            return forwarded_for.split(",")[0].strip()
+        direct_ip = request.client.host if request.client else "unknown"
 
-        # Check X-Real-IP header
-        real_ip = request.headers.get("X-Real-IP")
-        if real_ip:
-            return real_ip.strip()
+        # Only trust forwarded headers from a known proxy.
+        if direct_ip in self.trusted_proxies:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                # Left-most entry is the originating client.
+                return forwarded_for.split(",")[0].strip()
 
-        # Fall back to direct connection IP
-        if request.client:
-            return request.client.host
+            real_ip = request.headers.get("X-Real-IP")
+            if real_ip:
+                return real_ip.strip()
 
-        return "unknown"
+        return direct_ip
 
     def _check_rate_limit(self, client_ip: str) -> Tuple[bool, int]:
         """

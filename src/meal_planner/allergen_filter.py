@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
 from src.database.models import Recipe, Allergen, UserAllergen, RecipeAllergen, RecipeIngredient
+from src.utils.food_taxonomy import ingredient_contains_allergen
 
 
 @dataclass
@@ -117,6 +118,40 @@ class AllergenFilter:
 
         return safe_recipes
 
+    def _recipe_ingredient_names(self, recipe: Recipe) -> List[str]:
+        """
+        Safely collect ingredient names for a recipe.
+
+        Returns an empty list if the association is not loaded/iterable so that
+        ingredient-name scanning never raises.
+        """
+        names: List[str] = []
+        try:
+            for recipe_ingredient in recipe.ingredients_association:
+                ingredient = getattr(recipe_ingredient, 'ingredient', None)
+                if ingredient is not None and getattr(ingredient, 'name', None):
+                    names.append(ingredient.name)
+        except TypeError:
+            return []
+        return names
+
+    def _recipe_has_allergen(self, recipe: Recipe, allergen_name: str, allergen_id: int) -> bool:
+        """
+        Determine whether a recipe contains an allergen, using BOTH the
+        recipe_allergens table and ingredient-name analysis (defense in depth).
+
+        Relying on the table alone is unsafe when allergen links are missing
+        (e.g. older scraped data), so ingredient names are always scanned too.
+        """
+        # Table-based link
+        if any(getattr(a, 'id', None) == allergen_id for a in recipe.allergens):
+            return True
+        # Ingredient-name analysis
+        for name in self._recipe_ingredient_names(recipe):
+            if ingredient_contains_allergen(name, allergen_name):
+                return True
+        return False
+
     def _is_recipe_safe(self, recipe: Recipe) -> bool:
         """
         Check if recipe is safe for user's allergen profile.
@@ -130,15 +165,16 @@ class AllergenFilter:
         if not self.user_allergens:
             return True
 
-        recipe_allergen_ids = {allergen.id for allergen in recipe.allergens}
-
         for user_allergen in self.user_allergens:
-            if user_allergen.allergen_id in recipe_allergen_ids:
-                # If severity is 'severe' or 'avoid', recipe is not safe
+            allergen = user_allergen.allergen
+            if self._recipe_has_allergen(recipe, allergen.name, user_allergen.allergen_id):
+                # 'severe'/'avoid' -> recipe excluded.
                 if user_allergen.severity in ['severe', 'avoid']:
                     return False
-                # If severity is 'trace_ok', recipe might still be acceptable
-                # (for trace amounts that might be present)
+                # 'trace_ok' -> the user tolerates trace amounts, so the recipe
+                # is kept. NOTE: until a 'may_contain' vs 'contains' distinction
+                # exists in the data model this cannot tell a main ingredient
+                # from a trace; see the next-phase plan.
 
         return True
 
@@ -197,15 +233,11 @@ class AllergenFilter:
             List of ingredient names
         """
         ingredient_names = []
-        allergen_name_lower = allergen.name.lower()
 
         for recipe_ingredient in recipe.ingredients_association:
-            ingredient_name = recipe_ingredient.ingredient.name.lower()
+            ingredient_name = recipe_ingredient.ingredient.name
 
-            # Simple check - see if allergen name is in ingredient name
-            # This is basic; a production system would use a more sophisticated mapping
-            if (allergen_name_lower in ingredient_name or
-                self._is_related_ingredient(allergen_name_lower, ingredient_name)):
+            if ingredient_contains_allergen(ingredient_name, allergen.name):
                 ingredient_names.append(recipe_ingredient.ingredient.name)
 
         return ingredient_names
@@ -214,30 +246,17 @@ class AllergenFilter:
         """
         Check if an ingredient is related to an allergen.
 
+        Thin wrapper over the shared food taxonomy, which uses whole-word
+        matching and an extensive lexicon (avoiding e.g. eggplant -> eggs).
+
         Args:
-            allergen: Allergen name (lowercase)
-            ingredient: Ingredient name (lowercase)
+            allergen: Allergen name
+            ingredient: Ingredient name
 
         Returns:
-            True if ingredient likely contains allergen
+            True if ingredient likely contains the allergen
         """
-        # Common mappings
-        mappings = {
-            'dairy': ['milk', 'cheese', 'butter', 'cream', 'yogurt', 'whey', 'casein', 'lactose'],
-            'gluten': ['wheat', 'flour', 'bread', 'pasta', 'barley', 'rye', 'seitan'],
-            'tree nuts': ['almond', 'walnut', 'cashew', 'pecan', 'pistachio', 'hazelnut', 'macadamia'],
-            'shellfish': ['shrimp', 'crab', 'lobster', 'prawn', 'crayfish', 'oyster', 'mussel', 'clam'],
-            'fish': ['salmon', 'tuna', 'cod', 'halibut', 'sardine', 'anchovy', 'bass', 'trout'],
-            'eggs': ['egg', 'mayonnaise', 'meringue'],
-            'soy': ['soy', 'tofu', 'tempeh', 'edamame', 'miso'],
-            'peanuts': ['peanut'],
-            'sesame': ['sesame', 'tahini']
-        }
-
-        if allergen in mappings:
-            return any(term in ingredient for term in mappings[allergen])
-
-        return False
+        return ingredient_contains_allergen(ingredient, allergen)
 
     def suggest_substitutions(self, recipe: Recipe, allergen: Allergen) -> List[Dict[str, Any]]:
         """
@@ -326,7 +345,7 @@ class AllergenFilter:
                 query = query.filter(~Recipe.id.in_(allergen_recipes))
 
         # Apply filters
-        if max_cooking_time:
+        if max_cooking_time is not None:
             query = query.filter(Recipe.cooking_time_minutes <= max_cooking_time)
 
         if difficulty:
@@ -344,15 +363,21 @@ class AllergenFilter:
                 DietaryTag.slug.in_(dietary_tag_slugs)
             )
 
-        if min_protein or max_carbs:
+        if min_protein is not None or max_carbs is not None:
             from src.database.models import NutritionalInfo
             query = query.join(NutritionalInfo)
 
-            if min_protein:
+            if min_protein is not None:
                 query = query.filter(NutritionalInfo.protein_g >= min_protein)
-            if max_carbs:
+            if max_carbs is not None:
                 query = query.filter(NutritionalInfo.carbohydrates_g <= max_carbs)
 
-        # Apply pagination and return
+        # Apply pagination
         recipes = query.offset(offset).limit(limit).all()
+
+        # Defense in depth: also drop any page result whose ingredient names
+        # reveal an excluded allergen the recipe_allergens table missed.
+        if self.user_allergens:
+            recipes = [r for r in recipes if self._is_recipe_safe(r)]
+
         return recipes

@@ -143,10 +143,16 @@ def login(
     # Update last login timestamp
     UserService.update_last_login(db, user.id)
 
-    # Create access token
+    # Create access token (ver pins the token to the user's current
+    # token_version so it can be revoked on logout/password change).
     access_token_expires = timedelta(minutes=api_config.jwt_expire_minutes)
     access_token = create_access_token(
-        data={"sub": str(user.id), "username": user.username, "email": user.email},
+        data={
+            "sub": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "ver": user.token_version,
+        },
         expires_delta=access_token_expires
     )
 
@@ -157,6 +163,96 @@ def login(
         token_type="bearer",
         expires_in=api_config.jwt_expire_minutes * 60  # Convert to seconds
     )
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Log out",
+    description="Revoke all outstanding tokens for the authenticated user"
+)
+def logout(
+    current_user: CurrentUser,
+    db: DatabaseSession
+) -> dict:
+    """
+    Log the user out by revoking outstanding access tokens.
+
+    Bumps the user's token_version so any previously-issued JWT (including the
+    one used for this request) is rejected on subsequent requests.
+    """
+    user_id = int(current_user.get("sub"))
+    UserService.increment_token_version(db, user_id)
+    logger.info(f"User logged out: ID {user_id}")
+    return {"message": "Logged out successfully"}
+
+
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    summary="Refresh access token",
+    description="Issue a fresh access token for the authenticated user"
+)
+def refresh_token(
+    current_user: CurrentUser,
+    db: DatabaseSession
+) -> TokenResponse:
+    """
+    Issue a new access token for a still-valid session.
+
+    Requires a currently-valid (non-revoked, non-expired) token and mints a new
+    one with the user's current token_version, extending the session.
+    """
+    user_id = int(current_user.get("sub"))
+    user = UserService.get_user_by_id(db, user_id)
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is inactive or no longer exists",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "ver": user.token_version,
+        },
+        expires_delta=timedelta(minutes=api_config.jwt_expire_minutes)
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=api_config.jwt_expire_minutes * 60
+    )
+
+
+@router.get(
+    "/verify",
+    response_model=UserResponse,
+    summary="Verify token",
+    description="Validate the current access token and return the user profile"
+)
+def verify_token(
+    current_user: CurrentUser,
+    db: DatabaseSession
+) -> UserResponse:
+    """
+    Validate the supplied token and return the associated user profile.
+
+    Useful for the frontend to confirm a persisted token is still valid on
+    application start.
+    """
+    user_id = int(current_user.get("sub"))
+    user = UserService.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return UserResponse.model_validate(user)
 
 
 @router.get(

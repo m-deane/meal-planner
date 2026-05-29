@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ShoppingCategory, IngredientCategory } from '../types';
+import { mapBackendCategoryName } from '../utils/shoppingList';
 
 // ============================================================================
 // TYPES
@@ -249,7 +250,7 @@ export const useShoppingListStore = create<ShoppingListStore>()(
               ingredient_name: item.name,
               quantity,
               unit,
-              category: category.name.toLowerCase().replace(/[^a-z]/g, ''),
+              category: mapBackendCategoryName(category.name),
               is_optional: false,
               notes: item.preparations.length > 0 ? item.preparations.join(', ') : null,
               recipe_count: item.times_needed,

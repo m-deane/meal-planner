@@ -2,7 +2,8 @@
 Enhanced meal planning with actual nutrition data analysis.
 """
 
-from typing import List, Dict, Optional
+import random
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 from decimal import Decimal
 
@@ -76,10 +77,11 @@ class NutritionMealPlanner(MealPlanner):
             NutritionalInfo.carbohydrates_g <= max_carbs_g
         )
 
-        if min_calories:
+        # Use `is not None` so a legitimate 0 floor/ceiling is respected.
+        if min_calories is not None:
             query = query.filter(NutritionalInfo.calories >= min_calories)
 
-        if max_calories:
+        if max_calories is not None:
             query = query.filter(NutritionalInfo.calories <= max_calories)
 
         # Order by protein (high) and carbs (low)
@@ -97,6 +99,67 @@ class NutritionMealPlanner(MealPlanner):
             output.append((recipe, nutrition_dict))
 
         return output
+
+    def generate_weekly_meal_plan_from_candidates(
+        self,
+        candidates: List[Tuple],
+        include_breakfast: bool = True,
+        include_lunch: bool = True,
+        include_dinner: bool = True,
+    ) -> Dict[str, Dict[str, Recipe]]:
+        """
+        Build a 7-day meal plan from a pre-filtered list of nutrition candidates.
+
+        Unlike the inherited keyword-based scorer, this uses the actual
+        nutrition-filtered recipes returned by ``filter_by_actual_nutrition`` so
+        the plan genuinely reflects the requested macro constraints. Recipes are
+        not repeated until the relevant pool is exhausted, and breakfast falls
+        back to the main pool (with de-duplication) when no breakfast-suitable
+        recipes are available.
+
+        Args:
+            candidates: List of (recipe, nutrition_dict) tuples
+            include_breakfast/lunch/dinner: Which meals to populate
+
+        Returns:
+            Meal plan dictionary {day: {meal_type: Recipe}}
+        """
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+        breakfast_pool = [c for c in candidates if self._is_breakfast_suitable(c[0])]
+        main_pool = [c for c in candidates if not self._is_breakfast_suitable(c[0])]
+        used: set = set()
+
+        def pick(pool: List[Tuple]) -> Optional[Recipe]:
+            available = [c for c in pool if c[0].id not in used]
+            if not available:
+                available = pool  # allow reuse once the pool is exhausted
+            if not available:
+                return None
+            recipe = self._rng.choice(available)[0]
+            used.add(recipe.id)
+            return recipe
+
+        meal_plan: Dict[str, Dict[str, Recipe]] = {}
+        for day in days:
+            meal_plan[day] = {}
+
+            if include_breakfast:
+                recipe = pick(breakfast_pool) or pick(main_pool)
+                if recipe:
+                    meal_plan[day]['breakfast'] = recipe
+
+            if include_lunch:
+                recipe = pick(main_pool) or pick(breakfast_pool)
+                if recipe:
+                    meal_plan[day]['lunch'] = recipe
+
+            if include_dinner:
+                recipe = pick(main_pool) or pick(breakfast_pool)
+                if recipe:
+                    meal_plan[day]['dinner'] = recipe
+
+        return meal_plan
 
     def calculate_daily_totals(self, meals: Dict[str, Recipe]) -> Dict:
         """
@@ -191,18 +254,25 @@ class NutritionMealPlanner(MealPlanner):
             for key in ['calories', 'protein_g', 'carbohydrates_g', 'fat_g']:
                 weekly_totals[key] += daily_totals[key]
 
-        # Weekly summary
+        # Weekly summary — average over days that actually contain meals, and
+        # guard against division by zero when no nutrition data is present.
+        days_with_meals = sum(1 for meals in meal_plan.values() if meals) or 1
+        total_cals = weekly_totals['calories']
+
         output.append("\n" + "=" * 100)
         output.append("WEEKLY NUTRITION SUMMARY")
         output.append("=" * 100)
-        output.append(f"Total Calories: {weekly_totals['calories']:.0f} kcal (avg {weekly_totals['calories']/7:.0f}/day)")
-        output.append(f"Total Protein: {weekly_totals['protein_g']:.1f}g (avg {weekly_totals['protein_g']/7:.1f}g/day)")
-        output.append(f"Total Carbs: {weekly_totals['carbohydrates_g']:.1f}g (avg {weekly_totals['carbohydrates_g']/7:.1f}g/day)")
-        output.append(f"Total Fat: {weekly_totals['fat_g']:.1f}g (avg {weekly_totals['fat_g']/7:.1f}g/day)")
+        output.append(f"Total Calories: {weekly_totals['calories']:.0f} kcal (avg {weekly_totals['calories']/days_with_meals:.0f}/day)")
+        output.append(f"Total Protein: {weekly_totals['protein_g']:.1f}g (avg {weekly_totals['protein_g']/days_with_meals:.1f}g/day)")
+        output.append(f"Total Carbs: {weekly_totals['carbohydrates_g']:.1f}g (avg {weekly_totals['carbohydrates_g']/days_with_meals:.1f}g/day)")
+        output.append(f"Total Fat: {weekly_totals['fat_g']:.1f}g (avg {weekly_totals['fat_g']/days_with_meals:.1f}g/day)")
         output.append("")
-        output.append(f"Protein %: {weekly_totals['protein_g']*4/weekly_totals['calories']*100:.1f}%")
-        output.append(f"Carbs %: {weekly_totals['carbohydrates_g']*4/weekly_totals['calories']*100:.1f}%")
-        output.append(f"Fat %: {weekly_totals['fat_g']*9/weekly_totals['calories']*100:.1f}%")
+        if total_cals > 0:
+            output.append(f"Protein %: {weekly_totals['protein_g']*4/total_cals*100:.1f}%")
+            output.append(f"Carbs %: {weekly_totals['carbohydrates_g']*4/total_cals*100:.1f}%")
+            output.append(f"Fat %: {weekly_totals['fat_g']*9/total_cals*100:.1f}%")
+        else:
+            output.append("Macro %: Not available (no nutrition data for selected recipes)")
 
         output.append("\n" + "=" * 100)
         output.append("✓ All nutrition values are actual data from Gousto recipes")
@@ -242,11 +312,8 @@ def create_nutrition_meal_plan(
     if len(candidates) < 21:
         logger.warning(f"Only {len(candidates)} recipes available, may have duplicates")
 
-    # Generate meal plan using the filtered recipes
-    # For now, use the existing meal planner logic but could be enhanced
-    meal_plan = planner.generate_weekly_meal_plan(
-        min_protein_score=40.0,
-        max_carb_score=30.0
-    )
+    # Build the plan from the actual nutrition-filtered candidates so the output
+    # genuinely reflects the requested macros (rather than the keyword scorer).
+    meal_plan = planner.generate_weekly_meal_plan_from_candidates(candidates)
 
     return planner.format_nutrition_meal_plan(meal_plan)

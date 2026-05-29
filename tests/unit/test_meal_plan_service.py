@@ -124,7 +124,7 @@ class TestMealPlanService:
         meal_plan_service.nutrition_planner.filter_by_actual_nutrition = Mock(
             return_value=[(sample_recipe_with_nutrition, {})]
         )
-        meal_plan_service.nutrition_planner.generate_weekly_meal_plan = Mock(
+        meal_plan_service.nutrition_planner.generate_weekly_meal_plan_from_candidates = Mock(
             return_value=sample_meal_plan
         )
 

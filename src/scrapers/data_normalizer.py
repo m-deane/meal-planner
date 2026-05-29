@@ -97,22 +97,26 @@ class IngredientParser:
         else:
             ingredient_name = original
 
-        multiplier_match = re.search(r'\s+x(\d+)$', ingredient_name)
-        if multiplier_match:
-            multiplier = int(multiplier_match.group(1))
-            ingredient_name = ingredient_name[:multiplier_match.start()].strip()
-
-            if quantity_str and multiplier > 0:
-                try:
-                    base_qty = float(quantity_str)
-                    quantity_str = str(base_qty * multiplier)
-                except ValueError:
-                    pass
-
-        optional_match = re.search(r'\s+x0$', ingredient_name)
-        is_optional = bool(optional_match)
-        if is_optional:
+        # Detect the optional marker (x0) BEFORE the general multiplier, so a
+        # trailing "x0" is treated as "optional" rather than a 0x multiplier
+        # (which would zero out the quantity and violate the quantity>0 DB check).
+        is_optional = False
+        optional_match = re.search(r'\s+x0+$', ingredient_name)
+        if optional_match:
+            is_optional = True
             ingredient_name = ingredient_name[:optional_match.start()].strip()
+        else:
+            multiplier_match = re.search(r'\s+x(\d+)$', ingredient_name)
+            if multiplier_match:
+                multiplier = int(multiplier_match.group(1))
+                ingredient_name = ingredient_name[:multiplier_match.start()].strip()
+
+                if quantity_str and multiplier > 0:
+                    try:
+                        base_qty = float(quantity_str)
+                        quantity_str = str(base_qty * multiplier)
+                    except ValueError:
+                        pass
 
         prep_patterns = [
             r',\s*(.+)$',

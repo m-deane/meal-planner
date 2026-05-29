@@ -63,6 +63,10 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False) -> Engine
     """
     Create and configure SQLAlchemy engine.
 
+    When called with no explicit URL, returns the shared module-level engine
+    (creating it on first use) so that the request path, health checks, and CLI
+    all bind to the same database rather than independently re-resolving the URL.
+
     Args:
         database_url: Database connection string (auto-detected if None)
         echo: Enable SQL query logging
@@ -70,11 +74,17 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False) -> Engine
     Returns:
         Configured SQLAlchemy engine
     """
+    global engine
+
+    # Reuse the shared engine for the default (no explicit URL) case.
+    if database_url is None and engine is not None:
+        return engine
+
     url = database_url or get_database_url()
 
     # SQLite-specific configuration
     if url.startswith('sqlite'):
-        engine = create_engine(
+        new_engine = create_engine(
             url,
             echo=echo,
             connect_args={'check_same_thread': False},
@@ -82,7 +92,7 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False) -> Engine
         )
 
         # Enable foreign keys for SQLite
-        @event.listens_for(engine, "connect")
+        @event.listens_for(new_engine, "connect")
         def set_sqlite_pragma(dbapi_conn, connection_record):
             cursor = dbapi_conn.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
@@ -90,7 +100,7 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False) -> Engine
 
     # PostgreSQL configuration
     else:
-        engine = create_engine(
+        new_engine = create_engine(
             url,
             echo=echo,
             pool_size=10,
@@ -99,11 +109,37 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False) -> Engine
             pool_recycle=3600    # Recycle connections after 1 hour
         )
 
-    return engine
+    # Cache as the shared engine only when resolving the default URL, so explicit
+    # one-off engines (e.g. tests) never clobber the shared instance.
+    if database_url is None:
+        engine = new_engine
+
+    return new_engine
 
 
 # Global session factory
 _SessionFactory: Optional[sessionmaker] = None
+
+
+def configure_database(database_url: Optional[str] = None, echo: bool = False) -> Engine:
+    """
+    Bind the shared engine and session factory to a single database.
+
+    Call this once at application startup (from the FastAPI lifespan) so the
+    request path, health checks, and background work all use the same engine
+    and URL — avoiding the footgun of independently re-resolving the URL.
+
+    Args:
+        database_url: Database connection string (auto-detected if None)
+        echo: Enable SQL query logging
+
+    Returns:
+        The configured shared engine
+    """
+    global engine, _SessionFactory
+    engine = get_engine(database_url, echo=echo)
+    _SessionFactory = sessionmaker(bind=engine, expire_on_commit=False)
+    return engine
 
 
 def get_session_factory(engine: Optional[Engine] = None) -> sessionmaker:

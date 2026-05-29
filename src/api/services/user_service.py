@@ -344,10 +344,35 @@ class UserService:
             logger.warning(f"Password change failed: Invalid current password for user {user_id}")
             return False
 
-        # Set new password
+        # Set new password and revoke existing tokens by bumping token_version
         user.password_hash = UserService.hash_password(new_password)
+        user.token_version = (user.token_version or 0) + 1
         user.updated_at = datetime.utcnow()
         db.commit()
 
         logger.info(f"Password changed successfully for user {user_id}")
+        return True
+
+    @staticmethod
+    def increment_token_version(db: Session, user_id: int) -> bool:
+        """
+        Invalidate all outstanding JWTs for a user (e.g. on logout) by bumping
+        their token_version.
+
+        Args:
+            db: Database session
+            user_id: User ID
+
+        Returns:
+            True if updated, False if the user was not found
+        """
+        user = UserService.get_user_by_id(db, user_id)
+        if not user:
+            return False
+
+        user.token_version = (user.token_version or 0) + 1
+        user.updated_at = datetime.utcnow()
+        db.commit()
+
+        logger.info(f"Revoked tokens for user {user_id}")
         return True

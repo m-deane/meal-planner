@@ -64,6 +64,7 @@ export const DraggableRecipe: React.FC<DraggableRecipeProps> = ({
       style={style}
       {...listeners}
       {...attributes}
+      aria-label={`Recipe: ${recipe.name}. Press space or enter to pick up, arrow keys to move, space to drop.`}
       className={`
         relative bg-white rounded-lg border-2 border-gray-200
         hover:border-indigo-400 hover:shadow-md

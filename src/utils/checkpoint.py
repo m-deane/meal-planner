@@ -74,7 +74,9 @@ class CheckpointManager:
             started_at=datetime.utcnow(),
             last_updated=datetime.utcnow(),
             total_urls=len(urls),
-            pending_urls=urls,
+            # Copy so that mutating pending_urls (mark_success/failure) does not
+            # also mutate the caller's list while it is being iterated.
+            pending_urls=list(urls),
             metadata=metadata or {}
         )
 
@@ -253,13 +255,17 @@ class CheckpointManager:
         """
         Check if session is complete.
 
+        Complete means nothing is pending AND nothing failed — failures are
+        retried on the next resume, so the checkpoint must not be cleared (and
+        the failure record lost) while any failures remain.
+
         Returns:
-            True if all URLs processed or failed
+            True if all URLs were processed successfully
         """
         if not self.data:
             return True
 
-        return len(self.data.pending_urls) == 0
+        return len(self.data.pending_urls) == 0 and len(self.data.failed_urls) == 0
 
     def get_session_duration(self) -> Optional[float]:
         """

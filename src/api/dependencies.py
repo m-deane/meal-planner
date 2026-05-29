@@ -18,6 +18,23 @@ from src.api.config import api_config
 security = HTTPBearer(auto_error=False)
 
 
+def safe_error_detail(message: str, exc: Exception) -> str:
+    """
+    Build an error detail that never leaks internal exception text in
+    production. The underlying error is appended only when debug mode is on.
+
+    Args:
+        message: Safe, user-facing message
+        exc: The caught exception
+
+    Returns:
+        A message string suitable for an HTTP error response
+    """
+    if api_config.api_debug:
+        return f"{message}: {exc}"
+    return message
+
+
 def get_db() -> Generator[Session, None, None]:
     """
     Database session dependency for FastAPI endpoints.
@@ -98,19 +115,28 @@ def decode_access_token(token: str) -> dict:
 
 
 def get_current_user(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)]
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
+    db: Annotated[Optional[Session], Depends(get_db)] = None,
 ) -> dict:
     """
     Dependency to get current authenticated user from JWT token.
 
+    In addition to verifying the token signature, this reloads the user from
+    the database and rejects the request if the account is inactive/deleted or
+    if the token has been revoked (its ``ver`` claim no longer matches the
+    user's ``token_version``). The DB lookup is skipped when no session is
+    available (e.g. direct unit-test calls).
+
     Args:
         credentials: HTTP Bearer token from Authorization header
+        db: Database session (injected by FastAPI)
 
     Returns:
         User information from token payload
 
     Raises:
-        HTTPException: 401 if token is missing or invalid
+        HTTPException: 401 if token is missing, invalid, revoked, or the user
+            is inactive
 
     Example:
         @app.get("/profile")
@@ -137,14 +163,37 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        return payload
-
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Reload the user to enforce account status and token revocation.
+    if db is not None:
+        from src.database.models import User
+
+        try:
+            user = db.query(User).filter(User.id == int(user_id)).first()
+        except (TypeError, ValueError):
+            user = None
+
+        if user is None or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is inactive or no longer exists",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if payload.get("ver", 0) != user.token_version:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    return payload
 
 
 def get_current_user_optional(

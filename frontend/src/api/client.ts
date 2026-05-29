@@ -6,7 +6,7 @@ import axios from 'axios';
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { APIError } from '../types';
 
-const API_BASE_URL = (import.meta.env['VITE_API_BASE_URL'] as string | undefined) ?? 'http://localhost:8000';
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
 
 /**
  * Create configured axios instance.

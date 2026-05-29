@@ -2,12 +2,16 @@
 API-specific configuration extending the base application config.
 """
 
+import sys
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import SettingsConfigDict
 
 from src.config import Config as BaseConfig
+
+# Well-known placeholder secret shipped in the repo. Must never be used in production.
+DEFAULT_JWT_SECRET = "your-secret-key-change-this-in-production"
 
 
 class APIConfig(BaseConfig):
@@ -170,17 +174,49 @@ class APIConfig(BaseConfig):
 
     @field_validator("jwt_secret")
     @classmethod
-    def validate_jwt_secret(cls, v: str) -> str:
-        """Validate JWT secret is set in production."""
-        if v == "your-secret-key-change-this-in-production":
-            import warnings
-            warnings.warn(
-                "Using default JWT secret! Change this in production via JWT_SECRET environment variable.",
-                UserWarning
-            )
+    def validate_jwt_secret_length(cls, v: str) -> str:
+        """Validate JWT secret meets the minimum length requirement."""
         if len(v) < 32:
             raise ValueError("jwt_secret must be at least 32 characters long")
         return v
+
+    @model_validator(mode="after")
+    def validate_security_settings(self) -> "APIConfig":
+        """
+        Enforce production-safe security defaults.
+
+        - The default (publicly-known) JWT secret is rejected outside of
+          local development / automated test runs, where a clear warning is
+          emitted instead. This prevents the app from booting in production
+          with a forgeable signing key.
+        - CORS may never combine a wildcard origin with credentialed requests,
+          which would expose the credentialed API to any origin.
+        """
+        running_under_pytest = "pytest" in sys.modules
+
+        if self.jwt_secret == DEFAULT_JWT_SECRET:
+            if self.api_debug or running_under_pytest:
+                import warnings
+                warnings.warn(
+                    "Using the default JWT secret. Set a strong, unique JWT_SECRET "
+                    "environment variable (e.g. `openssl rand -hex 32`) before deploying.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            else:
+                raise ValueError(
+                    "Refusing to start with the default JWT secret. Set the JWT_SECRET "
+                    "environment variable to a strong, unique value (e.g. "
+                    "`openssl rand -hex 32`)."
+                )
+
+        if self.cors_allow_credentials and "*" in self.cors_origins:
+            raise ValueError(
+                "CORS cannot allow credentials together with a wildcard '*' origin. "
+                "Specify explicit allowed origins when cors_allow_credentials is True."
+            )
+
+        return self
 
     @field_validator("jwt_algorithm")
     @classmethod

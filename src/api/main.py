@@ -19,7 +19,7 @@ from src.api.middleware import (
     RateLimitMiddleware,
     register_exception_handlers,
 )
-from src.database.connection import check_connection, get_engine
+from src.database.connection import check_connection, configure_database
 from src.utils.logger import get_logger
 
 logger = get_logger("api.main")
@@ -42,8 +42,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info(f"API Version: {api_config.api_version}")
     logger.info(f"Database: {api_config.database_url}")
 
-    # Verify database connection
-    engine = get_engine(api_config.database_url, echo=api_config.database_echo)
+    # Bind the shared engine + session factory to the configured database so
+    # every request, health check, and background task uses the same engine.
+    engine = configure_database(api_config.database_url, echo=api_config.database_echo)
 
     if not check_connection(engine):
         logger.error("Failed to connect to database!")
@@ -80,10 +81,20 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
 
-    # Build CORS origins list, adding HF Spaces origin if deployed there
+    # Build CORS origins list. When deployed to Hugging Face Spaces, derive the
+    # exact Space origin from SPACE_ID (e.g. "owner/space" -> "owner-space.hf.space")
+    # instead of a wildcard, which would be unsafe with credentialed requests.
     cors_origins = list(api_config.cors_origins)
-    if os.environ.get("SPACE_ID"):
-        cors_origins.append("*")
+    space_id = os.environ.get("SPACE_ID")
+    if space_id:
+        cors_origins.append(f"https://{space_id.replace('/', '-')}.hf.space")
+    # Allow operators to add explicit production origins via env (comma-separated).
+    extra_origins = os.environ.get("CORS_EXTRA_ORIGINS", "")
+    cors_origins.extend(
+        origin.strip() for origin in extra_origins.split(",") if origin.strip()
+    )
+    # De-duplicate while preserving order.
+    cors_origins = list(dict.fromkeys(cors_origins))
 
     # Configure middleware (order matters - CORS first, then rate limit, then logging)
     app.add_middleware(
@@ -99,6 +110,15 @@ def create_app() -> FastAPI:
 
     # Add request/response logging middleware
     app.add_middleware(LoggingMiddleware)
+
+    # Add baseline security response headers
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        return response
 
     # Register exception handlers
     register_exception_handlers(app)
@@ -136,16 +156,21 @@ def create_app() -> FastAPI:
         # Serve static assets (JS, CSS, images)
         app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="static-assets")
 
+        frontend_root = frontend_dist.resolve()
+        index_file = frontend_root / "index.html"
+
         # SPA fallback: serve index.html for all non-API routes
         @app.get("/{full_path:path}", tags=["frontend"])
         async def serve_spa(request: Request, full_path: str):
             """Serve the React SPA for any non-API route."""
-            # Check if a static file exists at the requested path
-            file_path = frontend_dist / full_path
-            if full_path and file_path.is_file():
-                return FileResponse(file_path)
+            # Resolve the requested path and ensure it stays within the build
+            # directory to prevent path traversal (e.g. "../../etc/passwd").
+            if full_path:
+                candidate = (frontend_root / full_path).resolve()
+                if candidate.is_file() and candidate.is_relative_to(frontend_root):
+                    return FileResponse(candidate)
             # Otherwise serve index.html (SPA routing)
-            return FileResponse(frontend_dist / "index.html")
+            return FileResponse(index_file)
     else:
         # No frontend build - serve API health check at root
         @app.get("/", tags=["health"])

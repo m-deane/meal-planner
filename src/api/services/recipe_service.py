@@ -81,7 +81,21 @@ class RecipeService:
             order_by=order_by
         )
 
-        total_count = self.query.get_recipe_count()
+        # Count must reflect the same filters as the page, not all recipes.
+        total_count = self.query.count_filtered_recipes(
+            category_ids=category_ids,
+            categories=categories,
+            dietary_tag_ids=dietary_tag_ids,
+            dietary_tags=dietary_tags,
+            exclude_allergen_ids=exclude_allergen_ids,
+            exclude_allergens=exclude_allergens,
+            max_cooking_time=max_cooking_time,
+            difficulty=difficulty,
+            min_calories=min_calories,
+            max_calories=max_calories,
+            min_protein=min_protein,
+            max_carbs=max_carbs,
+        )
 
         return {
             'recipes': [self._serialize_recipe_summary(r) for r in recipes],

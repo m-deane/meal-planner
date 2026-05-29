@@ -54,14 +54,17 @@ class MealPlanner:
         'smoked salmon', 'avocado toast', 'yogurt'
     }
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, seed: Optional[int] = None):
         """
         Initialize meal planner.
 
         Args:
             session: Database session
+            seed: Optional RNG seed for reproducible plans (e.g. in tests or
+                "regenerate the same plan"). When None, plans are random.
         """
         self.session = session
+        self._rng = random.Random(seed)
 
     def _name_protein_score(self, recipe: Recipe) -> float:
         """Score protein likelihood from recipe name and description alone."""
@@ -313,14 +316,17 @@ class MealPlanner:
                     if not available:
                         available = breakfast_recipes  # Allow reuse if necessary
 
-                    recipe, _, _ = random.choice(available)
+                    recipe, _, _ = self._rng.choice(available)
                     meal_plan[day]['breakfast'] = recipe
                     used_recipes.add(recipe.id)
-                else:
-                    # Use regular recipe if no breakfast found
-                    if lunch_dinner_recipes:
-                        recipe, _, _ = random.choice(lunch_dinner_recipes)
-                        meal_plan[day]['breakfast'] = recipe
+                elif lunch_dinner_recipes:
+                    # Fall back to a main recipe, still avoiding same-day reuse
+                    available = [r for r in lunch_dinner_recipes if r[0].id not in used_recipes]
+                    if not available:
+                        available = lunch_dinner_recipes
+                    recipe, _, _ = self._rng.choice(available)
+                    meal_plan[day]['breakfast'] = recipe
+                    used_recipes.add(recipe.id)
 
             # Lunch
             if include_lunch:
@@ -329,7 +335,7 @@ class MealPlanner:
                     available = lunch_dinner_recipes
 
                 if available:
-                    recipe, _, _ = random.choice(available)
+                    recipe, _, _ = self._rng.choice(available)
                     meal_plan[day]['lunch'] = recipe
                     used_recipes.add(recipe.id)
 
@@ -340,7 +346,7 @@ class MealPlanner:
                     available = lunch_dinner_recipes
 
                 if available:
-                    recipe, _, _ = random.choice(available)
+                    recipe, _, _ = self._rng.choice(available)
                     meal_plan[day]['dinner'] = recipe
                     used_recipes.add(recipe.id)
 
