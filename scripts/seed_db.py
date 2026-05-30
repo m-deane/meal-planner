@@ -43,6 +43,23 @@ def run_seed_file(path: str, insert_only: bool = False) -> None:
     print(f"  Done: {path}", flush=True)
 
 
+def run_backfill() -> None:
+    """Derive allergen links + ingredient categories from ingredient names.
+
+    Recipes loaded from the raw SQL dumps bypass the scraper's allergen/category
+    population, leaving recipe_allergens empty. This idempotent pass fills them
+    in via the shared food taxonomy. Connects through SQLAlchemy to the same DB.
+    """
+    try:
+        from src.database.connection import session_scope
+        from src.database.seed import backfill_allergens_and_categories
+        with session_scope() as s:
+            stats = backfill_allergens_and_categories(s)
+        print(f"  Allergen/category backfill: {stats}", flush=True)
+    except Exception as e:  # never let backfill failure break seeding
+        print(f"  Backfill skipped ({e})", flush=True)
+
+
 try:
     count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
     if count > 0:
@@ -54,7 +71,11 @@ try:
             run_seed_file(os.path.join(base_dir, "seed_ingredients.sql"))
         else:
             print(f"Ingredients already seeded ({ing_count} rows) — skipping.", flush=True)
+        conn.close()
+        run_backfill()
         sys.exit(0)
+except SystemExit:
+    raise
 except Exception:
     pass
 
@@ -67,3 +88,4 @@ count = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
 ing_count = conn.execute("SELECT COUNT(*) FROM ingredients").fetchone()[0]
 print(f"Seeded {count} recipes, {ing_count} ingredients.", flush=True)
 conn.close()
+run_backfill()

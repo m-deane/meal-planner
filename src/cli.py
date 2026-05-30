@@ -299,6 +299,33 @@ def init_db():
 
 
 @cli.command()
+def backfill_allergens():
+    """Backfill recipe_allergens links and ingredient categories from ingredient names.
+
+    Use this after loading recipes via the SQL seed dumps (which bypass the
+    scraper's allergen/category population), e.g. on an existing production DB
+    where recipe_allergens is empty. Idempotent — safe to re-run.
+    """
+    from src.database.seed import backfill_allergens_and_categories
+
+    session = next(get_db_session())
+    try:
+        click.echo("Backfilling allergen links and ingredient categories...")
+        stats = backfill_allergens_and_categories(session)
+        click.echo(
+            f"✓ Done. Ingredients updated: {stats['ingredients_updated']}; "
+            f"recipe-allergen links added: {stats['recipe_allergen_links_added']} "
+            f"across {stats['recipes_linked']} recipes."
+        )
+    except Exception as e:
+        logger.error(f"Allergen backfill failed: {e}", exc_info=True)
+        click.echo(f"\n✗ Error: {e}", err=True)
+        sys.exit(1)
+    finally:
+        session.close()
+
+
+@cli.command()
 def clear_checkpoint():
     """Clear checkpoint file to start fresh."""
     try:

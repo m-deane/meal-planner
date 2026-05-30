@@ -3,10 +3,92 @@ Seed data for initial database setup.
 Populates units, allergens, dietary tags, and categories.
 """
 
+from typing import Dict
+
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from .models import Unit, Allergen, DietaryTag, Category, SchemaVersion
+from .models import (
+    Unit, Allergen, DietaryTag, Category, SchemaVersion,
+    Recipe, Ingredient, RecipeAllergen,
+)
+
+
+def backfill_allergens_and_categories(session: Session) -> Dict[str, int]:
+    """
+    Populate allergen links and ingredient metadata for recipes that were loaded
+    by a path that bypasses the scraper (e.g. the raw SQL seed dumps in data/).
+
+    Without this, `recipe_allergens` is effectively empty for seeded recipes, so
+    the table-based half of allergen filtering has nothing to work with (the
+    name-scanner still runs, but defense-in-depth depends on both). This derives
+    allergens from each recipe's ingredient names via the shared food taxonomy
+    and is idempotent: it only adds missing links and only fills NULL categories.
+
+    Args:
+        session: An open SQLAlchemy session (caller commits or relies on the
+            commit performed here).
+
+    Returns:
+        Counts dict: ingredients_updated, recipe_allergen_links_added,
+        recipes_linked.
+    """
+    # Local import to avoid a circular import at module load time.
+    from src.utils.food_taxonomy import detect_allergens, categorize_ingredient
+
+    ingredients_updated = 0
+    for ingredient in session.query(Ingredient).all():
+        name = ingredient.normalized_name or ingredient.name or ''
+        changed = False
+        if ingredient.category is None:
+            ingredient.category = categorize_ingredient(name)
+            changed = True
+        is_allergen = bool(detect_allergens(name))
+        if bool(ingredient.is_allergen) != is_allergen:
+            ingredient.is_allergen = is_allergen
+            changed = True
+        if changed:
+            ingredients_updated += 1
+
+    allergen_ids = {a.name: a.id for a in session.query(Allergen).all()}
+
+    links_added = 0
+    recipes_linked = 0
+    for recipe in session.query(Recipe).all():
+        detected = set()
+        for ri in recipe.ingredients_association:
+            ingredient = getattr(ri, 'ingredient', None)
+            if ingredient is not None and ingredient.name:
+                detected |= detect_allergens(ingredient.name)
+
+        if not detected:
+            continue
+
+        existing_ids = {a.id for a in recipe.allergens}
+        added_here = False
+        for allergen_name in detected:
+            allergen_id = allergen_ids.get(allergen_name)
+            if allergen_id is None:
+                # Allergen lookup table is normally seeded; create defensively.
+                allergen = Allergen(name=allergen_name)
+                session.add(allergen)
+                session.flush()
+                allergen_ids[allergen_name] = allergen.id
+                allergen_id = allergen.id
+            if allergen_id not in existing_ids:
+                session.add(RecipeAllergen(recipe_id=recipe.id, allergen_id=allergen_id))
+                existing_ids.add(allergen_id)
+                links_added += 1
+                added_here = True
+        if added_here:
+            recipes_linked += 1
+
+    session.commit()
+    return {
+        'ingredients_updated': ingredients_updated,
+        'recipe_allergen_links_added': links_added,
+        'recipes_linked': recipes_linked,
+    }
 
 
 def seed_initial_data(engine: Engine) -> None:
