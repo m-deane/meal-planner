@@ -100,3 +100,27 @@ class TestCategorisation:
 
     def test_empty_is_other(self):
         assert categorize_ingredient("") == "other"
+
+
+class TestPluralAwareMatching:
+    """ALG-3: single-token lexicon entries match their regular singular/plural."""
+
+    @pytest.mark.parametrize("name,allergen", [
+        ("three cheeses platter", "dairy"),      # 'cheese' -> cheeses
+        ("salted macadamias", "tree nuts"),      # 'macadamia' -> macadamias
+        ("two lobsters", "shellfish"),           # 'lobster' -> lobsters
+        ("grilled sardine", "fish"),             # 'sardines' -> sardine
+        ("toasted hazelnut", "tree nuts"),       # singular present, plural also
+    ])
+    def test_plural_or_singular_detected(self, name, allergen):
+        assert ingredient_contains_allergen(name, allergen) is True
+
+    def test_plus_s_does_not_overmatch_es(self):
+        # The +s (not +es) rule must NOT let 'cod' match 'codes'.
+        assert ingredient_contains_allergen("printed qr codes", "fish") is False
+
+    def test_plural_preserves_false_positive_guards(self):
+        # Word boundaries still hold with plural variants.
+        assert ingredient_contains_allergen("eggplant", "eggs") is False
+        assert ingredient_contains_allergen("butternut squash", "dairy") is False
+        assert ingredient_contains_allergen("peanut butter", "dairy") is False
