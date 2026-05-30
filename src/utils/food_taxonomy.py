@@ -159,15 +159,35 @@ def _normalize(name: str) -> str:
     return re.sub(r'\s+', ' ', (name or '').lower()).strip()
 
 
+def _singular_plural_variants(token: str) -> set:
+    """
+    Return a single token plus its regular singular/plural counterpart so that
+    lexicon entries match both forms (e.g. "almond" matches "almonds" and
+    "cashews" matches "cashew"). Only a simple +s / -s transform is applied to
+    avoid the over-matching of an "(?:s|es)?" suffix (which would let "cod"
+    match "codes"). Word boundaries still apply, so this never matches a
+    sub-word (e.g. "egg" still does not match "eggplant").
+    """
+    variants = {token}
+    if len(token) > 3:
+        if token.endswith('s'):
+            variants.add(token[:-1])     # cashews -> cashew
+        else:
+            variants.add(token + 's')    # almond -> almonds
+    return variants
+
+
 def _phrase_in(haystack: str, phrase: str) -> bool:
     """
     Whole-word/phrase containment. Multi-word or hyphenated phrases use plain
-    substring matching; single tokens require word boundaries so "egg" does not
-    match "eggplant".
+    substring matching; single tokens require word boundaries (so "egg" does not
+    match "eggplant") and match their regular singular/plural form.
     """
     if ' ' in phrase or '-' in phrase:
         return phrase in haystack
-    return re.search(rf'\b{re.escape(phrase)}\b', haystack) is not None
+    variants = _singular_plural_variants(phrase)
+    alternation = '|'.join(re.escape(v) for v in sorted(variants, key=len, reverse=True))
+    return re.search(rf'\b(?:{alternation})\b', haystack) is not None
 
 
 def ingredient_contains_allergen(ingredient_name: str, allergen_name: str) -> bool:
