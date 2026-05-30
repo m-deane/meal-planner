@@ -8,7 +8,7 @@ from unittest.mock import patch, Mock
 import pytest
 from click.testing import CliRunner
 
-from src.cli import cli, discover, export, stats, clear_checkpoint
+from src.cli import cli, discover, export, stats, clear_checkpoint, meal_plan
 
 
 class TestCLI:
@@ -115,6 +115,42 @@ class TestCLI:
         assert result.exit_code == 0
         assert 'Category Breakdown' in result.output
 
+
+    @patch('src.meal_planner.nutrition_planner.NutritionMealPlanner')
+    @patch('src.cli.get_db_session')
+    def test_meal_plan_with_nutrition_uses_candidate_builder(
+        self, mock_get_session, mock_planner_cls, runner, tmp_path
+    ):
+        """--with-nutrition must use the merged candidate builder, not the
+        inline sequential-fill loop that only filled 2 of 7 days."""
+        mock_session = Mock()
+        mock_get_session.return_value = iter([mock_session])
+
+        planner = Mock()
+        mock_planner_cls.return_value = planner
+
+        # Provide enough candidates to fill a full week (3 meals x 7 days).
+        candidates = [(Mock(), {}) for _ in range(30)]
+        planner.filter_by_actual_nutrition.return_value = candidates
+
+        # The builder returns a populated 7-day plan.
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        full_plan = {d: {'breakfast': Mock(), 'dinner': Mock()} for d in days}
+        planner.generate_weekly_meal_plan_from_candidates.return_value = full_plan
+        planner.format_nutrition_meal_plan.return_value = "FORMATTED PLAN"
+
+        out_path = tmp_path / "plan.md"
+        result = runner.invoke(
+            meal_plan,
+            ['--with-nutrition', '--output', str(out_path)],
+        )
+
+        assert result.exit_code == 0, result.output
+        # The merged builder must be used and fed the candidate list.
+        planner.generate_weekly_meal_plan_from_candidates.assert_called_once_with(candidates)
+        # And its result is what gets formatted (all 7 days), not an inline dict.
+        planner.format_nutrition_meal_plan.assert_called_once_with(full_plan)
+        assert out_path.exists()
 
     @patch('src.cli.create_checkpoint_manager')
     def test_clear_checkpoint_command(self, mock_create_checkpoint, runner):

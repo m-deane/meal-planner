@@ -7,6 +7,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import Mock, patch
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from src.api.services.favorites_service import FavoritesService
 from src.database.models import FavoriteRecipe, Recipe, User, Image
@@ -129,6 +130,34 @@ class TestFavoritesService:
 
         assert exc_info.value.status_code == 409
         assert "already in favorites" in exc_info.value.detail
+
+    def test_add_favorite_integrity_error_does_not_leak(self, service, mock_db, sample_recipe):
+        """An IntegrityError on insert must not leak the raw SQL statement,
+        bound parameters or constraint names to the client (SEC-2)."""
+        mock_query = Mock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        # Recipe exists, not yet favorited (e.g. deleted between check and insert).
+        mock_query.first.side_effect = [sample_recipe, None]
+
+        secret = "FOREIGN KEY constraint failed [SQL: INSERT INTO favorite_recipes ...] [parameters: (1, 999)]"
+        mock_db.add = Mock()
+        mock_db.commit = Mock(side_effect=IntegrityError(secret, params={"recipe_id": 999}, orig=Exception(secret)))
+        mock_db.rollback = Mock()
+
+        with patch.object(FavoriteRecipe, '__init__', return_value=None):
+            with patch('src.api.services.favorites_service.FavoriteRecipe', return_value=Mock(spec=FavoriteRecipe)):
+                with pytest.raises(HTTPException) as exc_info:
+                    service.add_favorite(user_id=1, recipe_id=999, notes="Test")
+
+        assert exc_info.value.status_code == 400
+        detail = exc_info.value.detail
+        assert detail == "Could not add recipe to favorites"
+        # The raw exception text must not appear anywhere in the response detail.
+        assert "INSERT" not in detail
+        assert "constraint" not in detail.lower()
+        assert "parameters" not in detail.lower()
+        mock_db.rollback.assert_called_once()
 
     def test_remove_favorite_success(self, service, mock_db, sample_favorite):
         """Test removing a favorite successfully."""

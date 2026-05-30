@@ -11,6 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
 from src.database.models import FavoriteRecipe, Recipe, User
+from src.utils.logger import get_logger
+
+logger = get_logger("api.services.favorites")
 
 
 class FavoritesService:
@@ -113,9 +116,15 @@ class FavoritesService:
             return self._serialize_favorite(favorite)
         except IntegrityError as e:
             self.db.rollback()
+            # Log the full exception server-side; never leak the raw SQL
+            # statement, bound parameters or constraint names to the client.
+            logger.error(
+                f"IntegrityError adding favorite (user_id={user_id}, "
+                f"recipe_id={recipe_id}): {e}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to add favorite: {str(e)}"
+                detail="Could not add recipe to favorites"
             )
 
     def remove_favorite(self, user_id: int, recipe_id: int) -> bool:

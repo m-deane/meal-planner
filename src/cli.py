@@ -474,17 +474,9 @@ def meal_plan(
                 click.echo(f"⚠️  Warning: Only {len(candidates)} recipes match criteria.")
                 click.echo("    Meal plan may have duplicate recipes.\n")
 
-            # Build meal plan
-            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            meal_plan_dict = {}
-
-            recipe_index = 0
-            for day in days:
-                meal_plan_dict[day] = {}
-                for meal_type in ['breakfast', 'lunch', 'dinner']:
-                    if recipe_index < len(candidates):
-                        meal_plan_dict[day][meal_type] = candidates[recipe_index][0]
-                        recipe_index += 1
+            # Build meal plan using the merged candidate builder, which fills
+            # all 7 days with the breakfast/main split and respects the seed.
+            meal_plan_dict = planner.generate_weekly_meal_plan_from_candidates(candidates)
 
             # Format
             formatted = planner.format_nutrition_meal_plan(meal_plan_dict)

@@ -333,6 +333,61 @@ class TestMealPlansRouter:
             assert "weekly_totals" in data
 
 
+class TestMultiWeekRouter:
+    """Test multi-week planning endpoints, focusing on error leakage (SEC-1)."""
+
+    SECRET = "secret internal detail: table multi_week_x column foo at 0xdeadbeef"
+
+    @pytest.fixture
+    def client(self, db_session):
+        """Create test client with mocked database."""
+        with patch("src.api.main.check_connection", return_value=True):
+            app = create_app()
+
+            def override_get_db():
+                try:
+                    yield db_session
+                finally:
+                    pass
+
+            from src.api.dependencies import get_db
+            app.dependency_overrides[get_db] = override_get_db
+
+            with TestClient(app) as test_client:
+                yield test_client
+
+    def test_generate_multi_week_does_not_leak_exception(self, client):
+        """A generic failure must not leak str(e) (api_debug=False in tests)."""
+        with patch(
+            "src.api.routers.multi_week.MultiWeekPlanner",
+            side_effect=RuntimeError(self.SECRET),
+        ):
+            response = client.post("/meal-plans/generate-multi-week")
+
+        assert response.status_code == 500
+        detail = response.json()["detail"]
+        assert self.SECRET not in detail
+        assert detail == "Failed to generate multi-week meal plan"
+
+    def test_calculate_variety_score_does_not_leak_exception(self, client):
+        """A generic failure must not leak str(e) (api_debug=False in tests)."""
+        # Reach the generic handler after recipe_ids parsing by making the
+        # planner constructor raise inside the try block.
+        with patch(
+            "src.api.routers.multi_week.MultiWeekPlanner",
+            side_effect=RuntimeError(self.SECRET),
+        ):
+            response = client.post(
+                "/meal-plans/calculate-variety-score",
+                json={"recipe_ids": [1, 2, 3]},
+            )
+
+        assert response.status_code == 500
+        detail = response.json()["detail"]
+        assert self.SECRET not in detail
+        assert detail == "Failed to calculate variety score"
+
+
 class TestShoppingListsRouter:
     """Test shopping list endpoints."""
 
