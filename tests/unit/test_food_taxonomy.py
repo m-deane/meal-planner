@@ -69,6 +69,92 @@ class TestAllergenDetection:
     def test_no_allergens(self):
         assert detect_allergens("carrot") == set()
 
+    @pytest.mark.parametrize("name,allergen", [
+        # ALG-1: named cheeses are dairy.
+        ("camembert", "dairy"),
+        ("brie", "dairy"),
+        ("burrata", "dairy"),
+        ("gruyere", "dairy"),
+        ("gruyère", "dairy"),
+        ("gorgonzola", "dairy"),
+        ("stilton", "dairy"),
+        ("quark", "dairy"),
+        ("skyr", "dairy"),
+        ("gouda", "dairy"),
+        ("emmental", "dairy"),
+        ("manchego", "dairy"),
+        ("pecorino", "dairy"),
+        ("comte", "dairy"),
+        ("comté", "dairy"),
+        ("taleggio", "dairy"),
+        ("provolone", "dairy"),
+        ("soft cheese", "dairy"),
+        ("goats cheese", "dairy"),
+        ("cheesecake", "dairy"),
+        # ALG-2: Italian breads/pastas are gluten.
+        ("ciabatta", "gluten"),
+        ("focaccia", "gluten"),
+        ("baguette", "gluten"),
+        ("linguine", "gluten"),
+        ("farfalle", "gluten"),
+        ("fusilli", "gluten"),
+        ("rigatoni", "gluten"),
+        ("tortiglioni", "gluten"),
+        ("lasagne sheets", "gluten"),
+        ("lasagna", "gluten"),
+        ("ravioli", "gluten"),
+        ("tortellini", "gluten"),
+        ("freekeh", "gluten"),
+        ("sourdough", "gluten"),
+        ("bagel", "gluten"),
+        ("crumpet", "gluten"),
+        # ALG-4: named fish species/products.
+        ("monkfish", "fish"),
+        ("swordfish", "fish"),
+        ("eel", "fish"),
+        ("whitebait", "fish"),
+        ("kipper", "fish"),
+        ("caviar", "fish"),
+        ("roe", "fish"),
+        ("surimi", "fish"),
+        ("sea bream", "fish"),
+        ("seabream", "fish"),
+        ("snapper", "fish"),
+        ("sole", "fish"),
+        ("sprat", "fish"),
+        # ALG-5: named tree-nut products.
+        ("pine kernel", "tree nuts"),
+        ("pine kernels", "tree nuts"),
+        ("cobnut", "tree nuts"),
+        ("frangipane", "tree nuts"),
+        ("gianduja", "tree nuts"),
+        ("amaretti", "tree nuts"),
+    ])
+    def test_named_allergen_products(self, name, allergen):
+        assert ingredient_contains_allergen(name, allergen) is True
+
+    def test_pine_kernel_seed_mix_detected(self):
+        # Real seed false negative: "pine kernel & seed mix".
+        assert "tree nuts" in detect_allergens("pine kernel & seed mix")
+
+    @pytest.mark.parametrize("name,allergen", [
+        # ALG-2 additive must not break existing gluten-free exclusions.
+        ("gluten-free bread", "gluten"),
+        ("rice noodles", "gluten"),
+    ])
+    def test_gluten_exclusions_preserved(self, name, allergen):
+        assert ingredient_contains_allergen(name, allergen) is False
+
+    @pytest.mark.parametrize("name,allergen", [
+        # ALG-5 additive must not break existing tree-nut exclusions.
+        ("butternut squash", "tree nuts"),
+        ("water chestnut", "tree nuts"),
+        ("peanut", "tree nuts"),
+        ("doughnut", "tree nuts"),
+    ])
+    def test_tree_nut_exclusions_preserved(self, name, allergen):
+        assert ingredient_contains_allergen(name, allergen) is False
+
     def test_known_allergens_cover_14_fic(self):
         # The 14 UK FIC allergens seeded in the DB should all be representable.
         names = set(known_allergens())
