@@ -128,4 +128,41 @@ Highest-value gaps to close next:
 
 ---
 
-_Last updated as part of the post-review remediation phase._
+## Post-ultra-review backlog (2026-05-30)
+
+A second, adversarial multi-dimensional ultra-review was run against the merged
+remediation. Full report: [`.claude_plans/ultra-review-2026-05-30.md`](.claude_plans/ultra-review-2026-05-30.md).
+It confirmed the prior fixes hold, and surfaced **50 findings (Critical 4 · High 9 ·
+Medium 11 · Low 14; 0 refuted)**, mostly residual/pre-existing gaps.
+
+**Already shipped** (autopilot, PR #2 + the `fix/allergen-criticals` follow-up): the
+named-food allergen lexicon gaps (cheeses, breads/pastas, fish, nuts), the broken
+CLI `meal-plan --with-nutrition`, the two error-leak paths, plus plural-aware
+allergen matching (ALG-3) and the `recipe_allergens` backfill (SEED-1).
+
+**Highest-value remaining items** (see the report for the full ranked 39-row backlog):
+
+- **Domain/data**
+  - `SEED-2` Normalise seeded ingredient names that embed quantities/units (degrades
+    every name heuristic and breaks aggregation) — then re-run the allergen backfill.
+  - `SEED-3` Backfill `ingredient.category`/`is_allergen` consistently.
+  - `COST-1` Seed real `IngredientPrice` data + pack-size rounding (still flat averages).
+- **Functionality**
+  - `F2/F4` Parse `x0`/`xN`/prep when a parenthesised quantity precedes them
+    (the realistic `Name (300g) x0` Gousto format).
+- **Architecture / performance**
+  - `ARCH-01` Replace the `limit=10000` count in `/recipes/safe` with a real count query.
+  - `ARCH-02` Fix `list_recipes` pagination total in the allergen and search branches.
+  - `ARCH-03/04` Eager-load ingredients in `MealPlanner` scoring and during serialization (N+1).
+  - `ARCH-05/06` Global `HTTPException` handler; API versioning + typed generate responses.
+- **Frontend**
+  - `FE-01` Consolidate the two unsynchronised nutrition-goal stores.
+  - `FE-02/03/06` Real icon elements in `RecipeList`, debounce sidebar search, route
+    401 handling through the auth boundary and clear the persisted store.
+- **Tests**
+  - `TQ-1/TQ-2` Cover `nutrition_scraper.py` (0%) to move toward the 80% gate.
+  - `TQ-7` Integration test for the scraper resume loop.
+
+---
+
+_Last updated 2026-05-30 after the second ultra-review (see report above)._
