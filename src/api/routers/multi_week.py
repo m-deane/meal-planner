@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
-from src.api.dependencies import DatabaseSession, OptionalUser
+from src.api.dependencies import DatabaseSession, OptionalUser, safe_error_detail
 from src.database.models import Recipe, Ingredient, RecipeIngredient
 from src.meal_planner.multi_week_planner import MultiWeekPlanner, VarietyConfig
 from src.meal_planner.cost_estimator import CostEstimator
@@ -187,7 +187,7 @@ def generate_multi_week_plan(
         logger.error(f"Error generating multi-week plan: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate multi-week meal plan: {str(e)}"
+            detail=safe_error_detail("Failed to generate multi-week meal plan", e)
         )
 
 
@@ -335,7 +335,7 @@ def calculate_variety_score(
         logger.error(f"Error calculating variety score: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate variety score: {str(e)}"
+            detail=safe_error_detail("Failed to calculate variety score", e)
         )
 
 
